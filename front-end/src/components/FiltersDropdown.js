@@ -142,14 +142,6 @@ export default function FiltersDropdown({ filters, applyFilters, resetFilters })
       <>
         <div className="filters-title">
           <div>{t(`carriera.proposte_di_tesi.${name}`)}</div>
-          <Button
-            className={`link-${appliedTheme}-dropdown p-0`}
-            onClick={() => setSelected(prev => ({ ...prev, [name]: [] }))}
-            variant="link"
-            size="sm"
-          >
-            {t(`carriera.proposte_di_tesi.reset`)}
-          </Button>
         </div>
         {isMulti ? (
           <Select
