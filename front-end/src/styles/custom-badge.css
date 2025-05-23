@@ -34,14 +34,14 @@
 .teacher_light,
 .teacher_light:focus {
   color: var(--info-700);
-  background-color: var(--info-100);
+  background-color: var(--info-200);
   border-color: var(--info-600);
 }
 
 .teacher_light.clickable:hover,
 .teacher_light.clickable.active {
   color: var(--info-700) !important;
-  background-color: var(--info-200) !important;
+  background-color: var(--info-300) !important;
   border-color: var(--info-600) !important;
   cursor: pointer;
 }
@@ -64,14 +64,14 @@
 .keyword_light,
 .keyword_light:focus {
   color: var(--gray-600);
-  background-color: var(--gray-100);
+  background-color: var(--gray-200);
   border-color: var(--gray-500);
 }
 
 .keyword_light.clickable:hover,
 .keyword_light.clickable.active {
   color: var(--gray-600) !important;
-  background-color: var(--gray-200) !important;
+  background-color: var(--gray-300) !important;
   border-color: var(--gray-500) !important;
   cursor: pointer;
 }
@@ -94,14 +94,14 @@
 .internal_light,
 .internal_light:focus {
   color: var(--amber-700);
-  background-color: var(--amber-50);
+  background-color: var(--amber-100);
   border-color: var(--amber-600);
 }
 
 .internal_light.clickable:hover,
 .internal_light.clickable.active {
   color: var(--amber-700) !important;
-  background-color: var(--amber-100) !important;
+  background-color: var(--amber-200) !important;
   border-color: var(--amber-600) !important;
   cursor: pointer;
 }
@@ -124,14 +124,14 @@
 .external_light,
 .external_light:focus {
   color: var(--amber-700);
-  background-color: var(--amber-50);
+  background-color: var(--amber-100);
   border-color: var(--amber-600);
 }
 
 .external_light.clickable:hover,
 .external_light.clickable.active {
   color: var(--amber-700) !important;
-  background-color: var(--amber-100) !important;
+  background-color: var(--amber-200) !important;
   border-color: var(--amber-600) !important;
   cursor: pointer;
 }
@@ -139,7 +139,7 @@
 .external_dark,
 .external_dark:focus {
   color: var(--amber-800);
-  background-color: var(--amber-100);
+  background-color: var(--amber-200);
   border-color: var(--amber-600);
 }
 
@@ -156,7 +156,7 @@
 .abroad_light,
 .abroad_light:focus {
   color: var(--trueGray-600);
-  background-color: var(--trueGray-50);
+  background-color: var(--trueGray-100);
   border-color: var(--trueGray-500);
 }
 
@@ -224,7 +224,7 @@
 .sorting-DESC_light,
 .sorting-DESC_light:focus {
   color: var(--trueGray-600);
-  background-color: var(--trueGray-50);
+  background-color: var(--trueGray-100);
   border-color: var(--trueGray-500);
 }
 
@@ -259,7 +259,7 @@
 
 .success_light {
   color: var(--success-700);
-  background-color: var(--success-50);
+  background-color: var(--success-100);
   border-color: var(--success-600);
 }
 
@@ -271,7 +271,7 @@
 
 .warning_light {
   color: var(--warning-700);
-  background-color: var(--warning-50);
+  background-color: var(--warning-100);
   border-color: var(--warning-600);
 }
 
@@ -283,7 +283,7 @@
 
 .error_light {
   color: var(--error-700);
-  background-color: var(--error-50);
+  background-color: var(--error-100);
   border-color: var(--error-600);
 }
 
