@@ -76,6 +76,7 @@ export default function SortDropdown({ sorting, applySorting }) {
             }}
           />
         )}
+        <div className="vr" />
         {t('carriera.proposte_di_tesi.order')}
         {/* Display the count of applied sorting */}
         {sorting.sortBy !== 'id' && <Badge className={`top-0 squared-badge-${appliedTheme}`}>1</Badge>}

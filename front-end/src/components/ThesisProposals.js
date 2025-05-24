@@ -123,7 +123,7 @@ export default function ThesisProposals() {
                     value={state.searchQuery}
                     onChange={handleSearchbarChange}
                   />
-                  <i className="fa-solid fa-magnifying-glass search-icon" />
+                  <i className="fa-solid fa-magnifying-glass search-icon" style={{color: 'var(--primary)'}} />
                 </InputGroup>
               </Form>
               <FiltersDropdown filters={state.filters} applyFilters={applyFilters} resetFilters={resetFilters} />
