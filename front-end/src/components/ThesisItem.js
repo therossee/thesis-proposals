@@ -43,12 +43,6 @@ function ThesisItem(props) {
           </div>
           <div className="info-container mb-2">
             <div className="title-container">
-              <i className="fa-regular fa-calendar-clock fa-fw" />
-              {t('carriera.proposte_di_tesi.expires')}: {moment(props.expirationDate).format("DD/MM/YYYY")}
-            </div>
-          </div>
-          <div className="info-container mb-2">
-            <div className="title-container">
               <i className="fa-regular fa-user fa-fw" />
               {t('carriera.proposte_di_tesi.supervisors')}:
             </div>

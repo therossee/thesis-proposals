@@ -93,7 +93,7 @@ const validTypeContent = [
 
 export default function CustomBadge({ variant, content, type, filters, applyFilters, removeProps, resetSorting }) {
   const { theme } = useContext(ThemeContext);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
 
   const handleRemoveFilter = () => {
@@ -317,6 +317,7 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
   };
 
   const renderTranslatedContent = () => {
+    moment.locale(i18n.language);
     switch (variant) {
       case 'internal':
         return t('carriera.proposte_di_tesi.internal_thesis');
@@ -327,11 +328,12 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
       case 'abroad':
         return t('carriera.proposte_di_tesi.abroad_thesis');
       case 'success':
-        return t('carriera.proposta_di_tesi.disponibile');
+        /*return t('carriera.proposta_di_tesi.disponibile')*/
+        return t('carriera.proposte_di_tesi.expires') + ": " + moment(content).format('D MMMM YYYY');
       case 'warning':
-        return t('carriera.proposta_di_tesi.in_scadenza');
+        return t('carriera.proposte_di_tesi.expires') + ": " + moment(content).format('D MMMM YYYY');
       case 'error':
-        return t('carriera.proposta_di_tesi.scaduta');
+        return t('carriera.proposte_di_tesi.expires') + ": " + moment(content).format('D MMMM YYYY');
       default:
         return t('carriera.proposta_di_tesi.badge_errato');
     }
