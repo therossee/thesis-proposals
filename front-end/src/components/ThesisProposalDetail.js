@@ -240,10 +240,10 @@ function MyModal({ show, handleClose, sendApplication }) {
       </Modal.Body>
       <Modal.Footer className="modal-footer-custom">
         <Button className={`btn-${appliedTheme} mb-3`} size="md" onClick={handleClose}>
-          {t('carriera.proposta_di_tesi.chiudi')}
+          <i className="fa-solid fa-xmark"></i>{t('carriera.proposta_di_tesi.chiudi')}
         </Button>
         <Button className={`btn-${appliedTheme} mb-3`} size="md" onClick={() => sendApplication()}>
-          {t('carriera.proposta_di_tesi.prosegui')}
+          <i className="fa-solid fa-arrow-up-right-from-square"></i>{t('carriera.proposta_di_tesi.prosegui')}
         </Button>
       </Modal.Footer>
     </Modal>

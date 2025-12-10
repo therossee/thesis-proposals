@@ -4,6 +4,7 @@
   background: color-mix(in srgb, var(--background) 35%, rgba(15, 23, 42, 0.55));
   backdrop-filter: blur(2px);
   z-index: 1050;
+  border: none;
 }
 
 .modal-container {
@@ -26,6 +27,8 @@
   padding: 1rem 1.5rem;
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
+  border: none;
+  display: flex;
 }
 
 .modal-footer-custom {
@@ -40,10 +43,12 @@
 
 .modal-body-custom {
   padding: 1.5rem;
+  padding-top: 0.5rem;
   color: var(--text);
   max-height: min(60vh, 460px);
   font-size: var(--font-size-sm);
   overflow-y: auto;
+  display: flex;
 }
 
 .modal-close-btn {
@@ -72,33 +77,4 @@
   .modal-body-custom {
     padding: 1.25rem;
   }
-}
-
-.btn-close-modal {
-  font-weight: var(--font-weight-medium);
-  border: var(--border-default);
-  border-color: var(--orange-600) !important;
-  border-radius: 3px !important;
-  background-color: var(--orange-500) !important;
-  color: var(--white) !important;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-close-modal:hover {
-  background-color: var(--orange-700) !important;
-}
-
-.btn-close-modal:active {
-  border-color: var(--orange-500) !important;
-  background-color: var(--orange-500) !important;
-  box-shadow: none !important;
-  color: var(--white) !important;
-}
-
-.btn-close-modal.disabled {
-  border-color: var(--orange-300) !important;
-  background-color: var(--orange-200) !important;
-  color: var(--white) !important;
 }
