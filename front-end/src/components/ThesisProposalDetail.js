@@ -63,7 +63,7 @@ function ThesisProposalDetail(props) {
       })),
     })
       .then(() => {
-        alert('Candidatura inviata con successo!');
+        
       })
       .catch((error) => {
         console.error('Error sending thesis application:', error);

@@ -51,15 +51,6 @@
   display: flex;
 }
 
-.modal-close-btn {
-  border: none;
-  background: transparent;
-  color: var(--text);
-  font-size: 1.25rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
 [data-theme='dark'] .modal-container {
   box-shadow: 0 22px 46px rgba(0, 0, 0, 0.55);
 }
