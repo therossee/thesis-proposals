@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useContext, useState } from 'react';
 
-import { Card, Col, Row, Button } from 'react-bootstrap';
+import { Card, Col, Row, Button, Modal } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import Linkify from 'react-linkify';
 import { ThemeContext } from '../App';
@@ -15,6 +15,7 @@ import PropTypes from 'prop-types';
 
 import '../styles/text.css';
 import '../styles/utilities.css';
+import '../styles/modal.css';
 import CustomBadge from './CustomBadge';
 
 
@@ -40,11 +41,13 @@ function ThesisProposalDetail(props) {
     types,
   } = props.thesisProposal;
 
-  const isEligible = props.eligible;
+  const isEligible = props.isEligible;
+  const setIsEligible = props.setIsEligible;
   const loggedStudentId = props.loggedStudentId; // This should be set to the logged-in student's ID
 
   const supervisors = [supervisor, ...internalCoSupervisors];
   const [sending, setSending] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const sendApplication = () => {
     if (sending) return;
@@ -67,6 +70,8 @@ function ThesisProposalDetail(props) {
       })
       .finally(() => {
         setSending(false);
+        setIsEligible(false);
+        setShowModal(false);
       });
   };
 
@@ -154,10 +159,15 @@ function ThesisProposalDetail(props) {
                   </MyBlock>
                 </div>
               )}
-              <MyButton isEligible={isEligible} sendApplication={sendApplication} />
+              <MyButton setShowModal={setShowModal} />
             </div>
           </Card.Body>
         </Card>
+        <MyModal
+          show={showModal}
+          handleClose={() => setShowModal(false)}
+          sendApplication={sendApplication}
+        />
       </div>
     );
   }
@@ -201,11 +211,43 @@ function MyButton(props) {
   const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
   const { t } = useTranslation();
   const isEligible = props.isEligible;
-  const sendApplication = props.sendApplication;
+  const setShowModal = props.setShowModal;
   return (
-    <Button className={`btn-${appliedTheme} mb-3`} size="md" onClick={sendApplication} disabled={!isEligible}>
+    <Button className={`btn-${appliedTheme} mb-3`} size="md" onClick={() => setShowModal(true)} disabled={!isEligible}>
       {t('carriera.proposta_di_tesi.candidatura')}
     </Button>);
+}
+
+function MyModal({ show, handleClose, sendApplication }) {
+  const { t } = useTranslation();
+  const { theme } = useContext(ThemeContext);
+  const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
+
+
+  return (
+    <Modal
+      show={show}
+      onHide={handleClose}
+      contentClassName="modal-container"
+      backdropClassName="modal-backdrop-custom"
+      centered
+    >
+      <Modal.Header closeButton={false} className="modal-header-custom">
+        <Modal.Title>{t('carriera.proposta_di_tesi.candidatura')}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body className="modal-body-custom">
+        {t('carriera.proposta_di_tesi.modal_contenuto')}
+      </Modal.Body>
+      <Modal.Footer className="modal-footer-custom">
+        <Button className={`btn-${appliedTheme} mb-3`} size="md" onClick={handleClose}>
+          {t('carriera.proposta_di_tesi.chiudi')}
+        </Button>
+        <Button className={`btn-${appliedTheme} mb-3`} size="md" onClick={() => sendApplication()}>
+          {t('carriera.proposta_di_tesi.prosegui')}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
 }
 
 ThesisProposalDetail.propTypes = {

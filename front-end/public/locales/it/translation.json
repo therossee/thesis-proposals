@@ -97,7 +97,10 @@
             "in_scadenza": "In scadenza",
             "scaduta": "Scaduta",
             "stato": "Stato proposta",
-            "candidatura": "Invia candidatura"
+            "candidatura": "Invia candidatura",
+            "chiudi": "Chiudi",
+            "modal_contenuto": "Sei sicuro di voler inviare la candidatura per questa proposta di tesi?",
+            "prosegui": "Invia"
         }
     },
     "Accedi": "Accedi",

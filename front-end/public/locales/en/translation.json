@@ -97,7 +97,10 @@
             "in_scadenza": "Expiring",
             "scaduta": "Expired",
             "stato": "Proposal status",
-            "candidatura": "Apply for this proposal"
+            "candidatura": "Apply for this proposal",
+            "chiudi": "Close",
+            "modal_contenuto": "Are you sure you want to apply for this thesis proposal?",
+            "prosegui": "Apply"
         }
     },
     "Accedi": "Login",
