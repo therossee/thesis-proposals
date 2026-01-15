@@ -3272,7 +3272,7 @@ VALUES
 -- ↓ thesis_proposal_supervisor_cosupervisor table ↓
 -- ------------------------------------------------------------
 INSERT INTO
-    thesis_proposal_supervisor_cosupervisor (thesis_proposal_id, teacher_id, is_supervisor)
+    thesis_proposal_supervisor_cosupervisor (thesis_proposal_id, supervisor_id, is_supervisor)
 VALUES
     (13169, 38485, 1),
     (13275, 3019, 1),

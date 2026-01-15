@@ -57,7 +57,7 @@ const filterByThesisSupervisor = async supervisor => {
   const thesisIds = await ThesisProposalSupervisorCoSupervisor.findAll({
     attributes: ['thesis_proposal_id'],
     where: {
-      teacher_id: supervisor,
+      supervisor_id: supervisor,
     },
   });
 

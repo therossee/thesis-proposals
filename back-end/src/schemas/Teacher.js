@@ -13,14 +13,14 @@ const teacherSchema = z
     'thesis-proposal-supervisor-cosupervisor': z
       .object({ is_supervisor: z.boolean() })
       .optional(),
-    ThesisApplicationSupervisor: z
+    'thesis-application-supervisor-cosupervisor': z
       .object({ is_supervisor: z.boolean() })
       .optional(),
   })
   .transform(teacher => {
     const isSupervisor =
       teacher['thesis-proposal-supervisor-cosupervisor']?.is_supervisor ??
-      teacher.ThesisApplicationSupervisor?.is_supervisor ??
+      teacher['thesis-application-supervisor-cosupervisor']?.is_supervisor ??
       null;
 
     return {

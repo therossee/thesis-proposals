@@ -34,7 +34,6 @@ function PropostaDiTesi() {
 
   useEffect(() => {
     if (!loggedStudent) return;
-    console.log('Checking eligibility for student:', loggedStudent);
     API.checkStudentEligibility(loggedStudent.id)
       .then(eligible => {
         setIsEligible(eligible.eligible);

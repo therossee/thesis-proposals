@@ -53,13 +53,11 @@ function ThesisProposalDetail(props) {
     if (sending) return;
     setSending(true);
     API.createThesisApplication({
-      student_id: loggedStudentId, // This should be set to the logged-in student's ID
       thesis_proposal_id: id,
       topic: topic,
       company: props.thesisProposal.company || null,
       supervisors: supervisors.map(sup => ({
-        teacher_id: sup.id,
-        is_supervisor: sup.id === supervisor.id,
+        
       })),
       description: description || '',
     })
