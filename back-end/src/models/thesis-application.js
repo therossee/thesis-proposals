@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: false
         },
-        submissionDate: {
+        submission_date: {
             type: DataTypes.DATE,
             allowNull: false,
             field: 'submission_date'

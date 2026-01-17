@@ -1,24 +1,19 @@
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 const { QueryTypes } = require('sequelize');
+const { z } = require('zod');
 const {
   sequelize,
   Company,
-  Student,
-  Supervisor,
-  ThesisProposal,
+  Teacher,
   ThesisApplication,
   ThesisApplicationSupervisorCoSupervisor,
   ThesisApplicationStudent,
   ThesisApplicationCompany,
-  ThesisApplicationProposal
+  ThesisApplicationProposal,
 } = require('../models');
 const thesisApplicationRequestSchema = require('../schemas/ThesisApplicationRequest');
 const thesisApplicationResponseSchema = require('../schemas/ThesisApplicationResponse');
-const thesisApplicationStatusSchema = require('../schemas/ThesisApplicationStatus');
-const getPaginationParams = require('../utils/paginationParams'); // Assumo esista come nel file proposals
-const student = require('../models/student');
-
-const camelToSnakeCase = str => str.replace(/([A-Z])/g, '_$1').toLowerCase();
+const selectTeacherAttributes = require('../utils/selectTeacherAttributes');
 
 
 
@@ -27,87 +22,97 @@ const camelToSnakeCase = str => str.replace(/([A-Z])/g, '_$1').toLowerCase();
 // ==========================================
 
 
-
-
 const createThesisApplication = async (req, res) => {
   const t = await sequelize.transaction();
 
   try {
-    const payload = thesisApplicationRequestSchema.parse(req.body);
-    const {
-      student_id,
-      thesis_proposal_id,
-      topic,
-      description,
-      company,
-      supervisors,
-      companyId,
-      proposal,
-      thesisProposal
-    } = payload;
 
-    let companyIdValue = companyId ?? company?.id ?? null;
-
-    if (!companyIdValue && company) {
-      const companyName = company.corporateName || company.name;
-      if (companyName) {
-        const [comp] = await Company.findOrCreate({
-          where: { corporateName: companyName },
-          transaction: t
-        });
-        companyIdValue = comp.id;
+    const applicationData = thesisApplicationRequestSchema.parse(req.body);
+    const supervisorData = await Teacher.findByPk(applicationData.supervisor.id, 
+      { 
+        attributes: selectTeacherAttributes(true), 
+      });
+    const coSupervisorsData = [];
+    if (applicationData.coSupervisors) {
+      for (const coSup of applicationData.coSupervisors) {
+        const coSupervisor = await Teacher.findByPk(coSup.id, { attributes: selectTeacherAttributes(true) });
+        if (coSupervisor) coSupervisorsData.push(coSupervisor);
       }
     }
+    const loggedStudent = await sequelize.query(
+      `
+      SELECT 
+        s.*
+      FROM student s
+      INNER JOIN logged_student ls ON s.id = ls.student_id
+      LIMIT 1
+      `,
+      { type: QueryTypes.SELECT },
+    );
 
-    const thesisProposalId = thesis_proposal_id ?? thesisProposal?.id ?? proposal?.id ?? null;
-
+    // Create ThesisApplication
     const newApplication = await ThesisApplication.create({
-      topic,
-      status: 'pending'
+      topic: applicationData.topic,
+      status: 'pending',
+      submission_date: new Date().toISOString()
     }, { transaction: t });
-
+    console.log('After Application Creation');
+    // Link Student
     await ThesisApplicationStudent.create({
       thesis_application_id: newApplication.id,
-      student_id
+      student_id: loggedStudent[0].id,
     }, { transaction: t });
-
-    if (thesisProposalId) {
-      await ThesisApplicationProposal.create({
-        thesis_application_id: newApplication.id,
-        thesis_proposal_id: thesisProposalId
-      }, { transaction: t });
-    }
-
-    if (companyIdValue) {
+    console.log('After Student Link');
+    // Link Company if provided
+    if (applicationData.company) {
       await ThesisApplicationCompany.create({
         thesis_application_id: newApplication.id,
-        company_id: companyIdValue
+        company_id: applicationData.company.id,
       }, { transaction: t });
     }
-
-    if (supervisors && supervisors.length > 0) {
-      const supervisorData = supervisors.map(sup => ({
+    console.log('After Company Link');
+    // Link Proposal if provided
+    if (applicationData.proposal) {
+      await ThesisApplicationProposal.create({
         thesis_application_id: newApplication.id,
-        supervisor_id: sup.supervisor_id,
-        is_supervisor: sup.is_supervisor
-      }));
-      await ThesisApplicationSupervisorCoSupervisor.bulkCreate(supervisorData, { transaction: t });
+        thesis_proposal_id: applicationData.proposal.id,
+      }, { transaction: t });
     }
-
+    console.log('After Proposal Link');
+    // Link Supervisor and Co-Supervisors
+    const supervisors = [applicationData.supervisor, ...(applicationData.coSupervisors || [])];
+    for (const supervisor of supervisors) {
+      await ThesisApplicationSupervisorCoSupervisor.create({
+        thesis_application_id: newApplication.id,
+        teacher_id: supervisor.id,
+        is_supervisor: supervisor.id === applicationData.supervisor.id,
+      }, { transaction: t });
+    }
+    console.log('After Supervisors Link');
     await t.commit();
+    const responsePayload = {
+      id: newApplication.id,
+      topic: newApplication.topic,
+      supervisor: supervisorData,
+      coSupervisors: coSupervisorsData,
+      company: newApplication.company || null,
+      proposal: newApplication.proposal || null,
+      submissionDate: newApplication.submission_date.toISOString(),
+      status: newApplication.status || 'pending',
+    };
 
-    // Fetch dell'oggetto creato per restituirlo formattato
-    const createdApp = await ThesisApplication.findByPk(newApplication.id, {
-      include: getApplicationIncludes()
-    });
-
-    res.status(201).json(thesisApplicationResponseSchema.parse(createdApp.toJSON()));
+    const validatedResponse = await thesisApplicationResponseSchema.parseAsync(responsePayload);
+    return res.status(201).json(validatedResponse);
   } catch (error) {
-    await t.rollback();
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    console.error(error?.stack);
+    if (t && !t.finished) await t.rollback();
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+    return res.status(500).json({ error: error.message });
   }
 };
-
 
 const checkStudentEligibility = async (req, res) => {
   try {
@@ -128,14 +133,18 @@ const checkStudentEligibility = async (req, res) => {
 
     const applicationIds = links.map(l => l.thesis_application_id);
 
-    const activeApplication = await ThesisApplication.findAll({
-      where: {
-        id: { [Op.in]: applicationIds },
-        status: { [Op.in]: ['pending', 'approved'] }
-      }
-    });
+    let eligible = true;
+    if (applicationIds.length > 0) {
+      const activeApplication = await ThesisApplication.findAll({
+        where: {
+          id: { [Op.in]: applicationIds },
+          status: { [Op.in]: ['pending', 'approved'] }
+        }
+      });
+      if (activeApplication.length > 0) eligible = false;
+    }
 
-    res.json({ studentId: loggedStudent[0].id, eligible: activeApplication.length === 0 });
+    res.json({ studentId: loggedStudent[0].id, eligible });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -154,27 +163,29 @@ const getStudentActiveApplication = async (req, res) => {
 
     const applicationIds = links.map(l => l.thesis_application_id);
 
+    if (applicationIds.length === 0) {
+      return res.status(404).json({ error: 'No application found' });
+    }
+
     const activeApplication = await ThesisApplication.findOne({
       where: {
         id: { [Op.in]: applicationIds },
         status: { [Op.in]: ['pending', 'accepted', 'conclusion_requested', 'conclusion_accepted', 'done'] }
-      },
-      include: getApplicationIncludes()
+      }
+      // Add include if needed
     });
 
     if (!activeApplication) {
       return res.status(404).json({ error: 'No active application found for the student' });
     }
 
-    // Normalize included teachers key to match schema expectations
     const activeAppJson = activeApplication.toJSON();
-    if (!activeAppJson.teachers && activeAppJson.Teachers) {
-      activeAppJson.teachers = activeAppJson.Teachers;
-    }
+    // format if needed
 
-    const formattedApplication = thesisApplicationSchema.parse(activeAppJson);
+    // We can use the response schema here if fully populated
+    // res.json(thesisApplicationResponseSchema.parse(activeAppJson));
+    res.json(activeAppJson);
 
-    res.json(formattedApplication);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -183,7 +194,7 @@ const getStudentActiveApplication = async (req, res) => {
 
 const deleteLastThesisApplication = async (req, res) => {
   const t = await sequelize.transaction();
-  
+
   try {
     const loggedStudent = await sequelize.query(
       `
@@ -201,12 +212,15 @@ const deleteLastThesisApplication = async (req, res) => {
       transaction: t
     });
 
+    if (!links.length) {
+      await t.rollback();
+      return res.status(404).json({ error: 'No application found to delete' });
+    }
+
     const applicationIds = links.map(l => l.thesis_application_id);
 
     const lastApplication = await ThesisApplication.findOne({
-      where: {
-        id: { [Op.in]: applicationIds }
-      },
+      where: { id: { [Op.in]: applicationIds } },
       order: [['id', 'DESC']],
       transaction: t
     });
@@ -216,17 +230,26 @@ const deleteLastThesisApplication = async (req, res) => {
       return res.status(404).json({ error: 'No application found to delete' });
     }
 
+    // Must delete link rows first or rely on CASCADE
+    // Since we have manual link tables, explicit delete is safer
+
     await ThesisApplicationSupervisorCoSupervisor.destroy({
-      where: {
-        thesis_application_id: lastApplication.id
-      },
+      where: { thesis_application_id: lastApplication.id },
+      transaction: t
+    });
+
+    await ThesisApplicationCompany.destroy({
+      where: { thesis_application_id: lastApplication.id },
+      transaction: t
+    });
+
+    await ThesisApplicationProposal.destroy({
+      where: { thesis_application_id: lastApplication.id },
       transaction: t
     });
 
     await ThesisApplicationStudent.destroy({
-      where: {
-        thesis_application_id: lastApplication.id
-      },
+      where: { thesis_application_id: lastApplication.id },
       transaction: t
     });
 

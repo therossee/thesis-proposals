@@ -1,3 +1,5 @@
+const teacher = require("./teacher");
+
 module.exports = (sequelize, DataTypes) => {
   const ThesisApplicationSupervisorCoSupervisor = sequelize.define(
     'thesis-application-supervisor-cosupervisor',
@@ -10,11 +12,11 @@ module.exports = (sequelize, DataTypes) => {
           key: 'id',
         },
       },
-      supervisor_id: {
+      teacher_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         references: {
-          model: 'supervisor',
+          model: 'teacher',
           key: 'id',
         },
       },

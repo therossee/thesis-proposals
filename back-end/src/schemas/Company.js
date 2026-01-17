@@ -13,8 +13,8 @@ const companySchema = z.object({
 })
 .transform((company) => ({
   id: company.id,
-  corporateName: company.corporateName,
-  registeredOffice: company.registeredOffice,
+  corporate_name: company.corporateName,
+  registered_office: company.registeredOffice,
 }));
 
 module.exports = companySchema;

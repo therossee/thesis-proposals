@@ -160,6 +160,14 @@ CREATE TABLE IF NOT EXISTS thesis_proposal_type (
     FOREIGN KEY (type_id) REFERENCES type(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS thesis_proposal_company (
+    thesis_proposal_id INT NOT NULL,
+    company_id INT NOT NULL,
+    PRIMARY KEY (thesis_proposal_id, company_id),
+    FOREIGN KEY (thesis_proposal_id) REFERENCES thesis_proposal(id) ON DELETE CASCADE,
+    FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE RESTRICT -- RESTRICT policy in order to pay attention to the deletion of a company
+);
+
 -- Table for linking thesis proposals with supervisors and cosupervisors
 CREATE TABLE IF NOT EXISTS thesis_proposal_supervisor_cosupervisor (
     thesis_proposal_id INT NOT NULL,
@@ -185,11 +193,11 @@ CREATE TABLE IF NOT EXISTS thesis_application (
 
 CREATE TABLE IF NOT EXISTS thesis_application_supervisor_cosupervisor(
     thesis_application_id INT NOT NULL,
-    supervisor_id INT NOT NULL,
+    teacher_id INT NOT NULL,
     is_supervisor BOOLEAN NOT NULL, -- if true then supervisor, else cosupervisor
-    PRIMARY KEY (thesis_application_id, supervisor_id),
+    PRIMARY KEY (thesis_application_id, teacher_id),
     FOREIGN KEY (thesis_application_id) REFERENCES thesis_application(id) ON DELETE CASCADE,
-    FOREIGN KEY (supervisor_id) REFERENCES teacher(id) ON DELETE RESTRICT -- RESTRICT policy because why should you delete a teacher?
+    FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE RESTRICT -- RESTRICT policy because why should you delete a teacher?
 );
 
 CREATE TABLE IF NOT EXISTS thesis_application_company(
@@ -197,7 +205,7 @@ CREATE TABLE IF NOT EXISTS thesis_application_company(
     company_id INT NOT NULL,
     PRIMARY KEY (thesis_application_id, company_id),
     FOREIGN KEY (thesis_application_id) REFERENCES thesis_application(id) ON DELETE CASCADE,
-    FOREIGN KEY (company_id) REFERENCES company(id)
+    FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE RESTRICT -- RESTRICT policy in order to pay attention to the deletion of a company
 );
 
 CREATE TABLE IF NOT EXISTS thesis_application_student(

@@ -43,6 +43,8 @@ db.Student = Student;
 db.ThesisApplication = ThesisApplication;
 db.ThesisApplicationSupervisorCoSupervisor = ThesisApplicationSupervisorCoSupervisor;
 db.ThesisApplicationStudent = ThesisApplicationStudent;
+db.ThesisApplicationProposal = ThesisApplicationProposal;
+db.ThesisApplicationCompany = ThesisApplicationCompany;
 db.LoggedStudent = LoggedStudent;
 db.Company = Company;
 

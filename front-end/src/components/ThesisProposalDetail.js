@@ -43,7 +43,6 @@ function ThesisProposalDetail(props) {
 
   const isEligible = props.isEligible;
   const setIsEligible = props.setIsEligible;
-  const loggedStudentId = props.loggedStudentId; // This should be set to the logged-in student's ID
 
   const supervisors = [supervisor, ...internalCoSupervisors];
   const [sending, setSending] = useState(false);
@@ -53,19 +52,19 @@ function ThesisProposalDetail(props) {
     if (sending) return;
     setSending(true);
     API.createThesisApplication({
-      thesis_proposal_id: id,
+      proposal: props.thesisProposal,
       topic: topic,
       company: props.thesisProposal.company || null,
-      supervisors: supervisors.map(sup => ({
-        
-      })),
-      description: description || '',
+      supervisor: props.thesisProposal.supervisor,
+      coSupervisors: internalCoSupervisors,
     })
       .then(() => {
-
+        alert('Candidatura inviata con successo!');
       })
       .catch((error) => {
         console.error('Error sending thesis application:', error);
+        setIsEligible(true);
+        alert('Si è verificato un errore durante l\'invio della candidatura. Riprova più tardi.');
       })
       .finally(() => {
         setSending(false);

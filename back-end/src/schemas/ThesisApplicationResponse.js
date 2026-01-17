@@ -9,10 +9,10 @@ const thesisProposalOverviewSchema = require('./ThesisProposalOverview');
 const thesisApplicationResponseSchema = z.object({
     id: z.number(),
     topic: z.string(),
-    supervisor: z.object(teacherSchema),
+    supervisor: teacherSchema,
     coSupervisors: z.array(teacherSchema).default([]).nullable(),
-    proposal: z.object(thesisProposalOverviewSchema).nullable(),
-    company: z.object(companySchema).nullable(),
+    proposal: thesisProposalOverviewSchema.nullable(),
+    company: companySchema.nullable(),
     submissionDate: z.string().datetime(),
     status: thesisApplicationStatusSchema,
 })

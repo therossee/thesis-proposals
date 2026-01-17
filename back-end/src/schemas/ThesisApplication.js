@@ -12,20 +12,20 @@ const thesisApplicationSchema = z.object({
     topic: z.string(),
     student: z.object(studentSchema),
     supervisor: z.object(teacherSchema),
-    coSupervisors: z.array(teacherSchema).default([]).nullable(),
+    co_supervisors: z.array(teacherSchema).default([]).nullable(),
     company: z.object(companySchema).nullable(),
     proposal: z.object(thesisProposalOverviewSchema).nullable(),
-    submissionDate: z.string().datetime(),
+    submission_date: z.string().datetime(),
     status: thesisApplicationStatusSchema,
 })
 .transform((application) => ({
     id: application.id,
     topic: application.topic,
     supervisor: application.supervisor,
-    coSupervisors: application.coSupervisors,
+    co_supervisors: application.co_supervisors,
     company: application.company,
     proposal: application.proposal,
-    submissionDate: application.submissionDate,
+    submission_date: application.submission_date,
     status: application.status,
 }));
 

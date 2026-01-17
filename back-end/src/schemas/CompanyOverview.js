@@ -5,7 +5,7 @@ const companyOverviewSchema = z.object({
   corporateName: z.string()
 }).transform((company) => ({
   id: company.id,
-  corporateName: company.corporateName,
+  corporate_name: company.corporateName,
 }));
 
 module.exports = companyOverviewSchema;
