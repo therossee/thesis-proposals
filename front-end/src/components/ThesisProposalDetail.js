@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useContext, useState } from 'react';
 
-import { Card, Col, Row, Button, Modal } from 'react-bootstrap';
+import { Card, Col, Row, Button, Modal, Toast } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import Linkify from 'react-linkify';
 import { ThemeContext } from '../App';
-import '../styles/utilities.css';
 import { getSystemTheme } from '../utils/utils';
 import API from '../API';
 
@@ -16,6 +15,7 @@ import PropTypes from 'prop-types';
 import '../styles/text.css';
 import '../styles/utilities.css';
 import '../styles/custom-modal.css';
+import '../styles/custom-toast.css';
 import CustomBadge from './CustomBadge';
 
 
@@ -47,6 +47,9 @@ function ThesisProposalDetail(props) {
   const supervisors = [supervisor, ...internalCoSupervisors];
   const [sending, setSending] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [success, setSuccess] = useState(true);
+  const { t } = useTranslation();
 
   const sendApplication = () => {
     if (sending) return;
@@ -59,12 +62,14 @@ function ThesisProposalDetail(props) {
       coSupervisors: internalCoSupervisors,
     })
       .then(() => {
-        alert('Candidatura inviata con successo!');
+        setIsEligible(false);
+        setSuccess(true);
+        setShowToast(true);
       })
       .catch((error) => {
-        console.error('Error sending thesis application:', error);
         setIsEligible(true);
-        alert('Si è verificato un errore durante l\'invio della candidatura. Riprova più tardi.');
+        setSuccess(false);
+        setShowToast(true);
       })
       .finally(() => {
         setSending(false);
@@ -79,6 +84,30 @@ function ThesisProposalDetail(props) {
 
   else {
     return (
+      <>
+      <div className="custom-toast-wrapper">
+        <Toast
+          onClose={() => setShowToast(false)}
+          show={showToast}
+          delay={5000}
+          autohide
+          className={`custom-toast ${success ? 'custom-toast--success' : 'custom-toast--error'}`}
+        >
+          <Toast.Header className="d-flex align-items-center gap-2">
+            <span className="custom-toast__icon">
+              <i
+                className={success ? 'fa-regular fa-circle-check' : 'fa-regular fa-circle-xmark'}
+                aria-hidden="true"
+              />
+            </span>
+            <strong className="custom-toast__message">
+              {success
+                ? t('carriera.proposta_di_tesi.successo')
+                : t('carriera.proposta_di_tesi.errore')}
+            </strong>
+          </Toast.Header>
+        </Toast>
+      </div>
       <div className="proposals-container">
         <Card className="mb-3 roundCard py-2">
           {topic && (
@@ -167,6 +196,7 @@ function ThesisProposalDetail(props) {
           sendApplication={sendApplication}
         />
       </div>
+      </>
     );
   }
 }
@@ -226,22 +256,26 @@ function MyModal({ show, handleClose, sendApplication }) {
     <Modal
       show={show}
       onHide={handleClose}
-      contentClassName="modal-container"
-      backdropClassName="modal-backdrop-custom"
+      contentClassName="modal-content"
+      backdropClassName="modal-overlay"
       centered
     >
-      <Modal.Header closeButton={false} className="modal-header-custom">
-        <Modal.Title>{t('carriera.proposta_di_tesi.candidatura')}</Modal.Title>
+      <Modal.Header closeButton={true} className="modal-header">
+        <Modal.Title className="modal-title">
+          <i className="fa-regular fa-circle-exclamation" />
+          {` `}{t('carriera.proposta_di_tesi.candidatura')}
+        </Modal.Title>
       </Modal.Header>
-      <Modal.Body className="modal-body-custom">
+      <Modal.Body className="modal-body">
         {t('carriera.proposta_di_tesi.modal_contenuto')}
       </Modal.Body>
-      <Modal.Footer className="modal-footer-custom">
-        <Button className={`btn-${appliedTheme} mb-3`} size="md" onClick={handleClose}>
-          <i className="fa-solid fa-xmark"></i>{t('carriera.proposta_di_tesi.chiudi')}
+      <Modal.Footer className="modal-footer">
+        <Button className="modal-cancel mb-3" size="md" onClick={handleClose}>
+          {t('carriera.proposta_di_tesi.chiudi')}
         </Button>
-        <Button className={`btn-${appliedTheme} mb-3`} size="md" onClick={() => sendApplication()}>
-          <i className="fa-solid fa-arrow-up-right-from-square"></i>{t('carriera.proposta_di_tesi.prosegui')}
+        <Button className="modal-confirm mb-3" size="md" onClick={() => sendApplication()}>
+          <i className="fa-regular fa-arrow-up-right-from-square"></i>
+          {t('carriera.proposta_di_tesi.prosegui')}
         </Button>
       </Modal.Footer>
     </Modal>

@@ -100,7 +100,9 @@
             "candidatura": "Invia candidatura",
             "chiudi": "Chiudi",
             "modal_contenuto": "Sei sicuro di voler inviare la candidatura per questa proposta di tesi?",
-            "prosegui": "Invia"
+            "prosegui": "Invia",
+            "successo": "Candidatura inviata con successo",
+            "errore": "Errore durante l'invio della candidatura"
         },
         "tesi": {
             "title": "Tesi",

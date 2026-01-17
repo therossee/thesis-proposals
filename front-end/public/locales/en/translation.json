@@ -100,7 +100,9 @@
             "candidatura": "Apply for this proposal",
             "chiudi": "Close",
             "modal_contenuto": "Are you sure you want to apply for this thesis proposal?",
-            "prosegui": "Apply"
+            "prosegui": "Apply",
+            "successo": "Application submitted successfully",
+            "errore": "Error while submitting the application"
         },
         "tesi": {
             "title": "Thesis",
