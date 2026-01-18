@@ -25,13 +25,32 @@ const companyInputAdapter = z.preprocess((input) => {
 
 
 
-const thesisApplicationRequestSchema = z.object({
+const thesisApplicationRequestSchema = z.preprocess(
+  (input) => {
+    // Convert camelCase to snake_case
+    if (input && typeof input === 'object') {
+      return {
+        ...input,
+        thesis_proposal: input.thesisProposal || input.thesis_proposal,
+        co_supervisors: input.coSupervisors || input.co_supervisors,
+      };
+    }
+    return input;
+  }, z.object({
   topic: z.string(),
   description: z.string().optional(),
   supervisor: teacherInputAdapter,
   co_supervisors: z.array(teacherInputAdapter).default([]).nullable(),
   company: companyInputAdapter.nullable().optional(),
-  proposal: thesisProposalMinimalSchema.nullable().optional(),
-});
+  thesis_proposal: thesisProposalMinimalSchema.nullable().optional(),
+})
+.transform((request) => ({
+  topic: request.topic,
+  description: request.description,
+  supervisor: request.supervisor,
+  coSupervisors: request.co_supervisors,
+  company: request.company,
+  thesisProposal: request.thesis_proposal,
+})));
 
 module.exports = thesisApplicationRequestSchema;

@@ -11,6 +11,7 @@ const {
 const thesisApplicationRequestSchema = require('../schemas/ThesisApplicationRequest');
 const thesisApplicationResponseSchema = require('../schemas/ThesisApplicationResponse');
 const selectTeacherAttributes = require('../utils/selectTeacherAttributes');
+const thesisApplicationStatusHistorySchema = require('../schemas/ThesisApplicationStatusHistory');
 
 
 
@@ -24,7 +25,15 @@ const createThesisApplication = async (req, res) => {
 
   try {
 
-    const applicationData = thesisApplicationRequestSchema.parse(req.body);
+    console.log('=== RAW REQUEST BODY ===');
+    console.log('req.body:', JSON.stringify(req.body, null, 2));
+    console.log('req.body.thesisProposal:', req.body.thesisProposal);
+    
+    const applicationData = await thesisApplicationRequestSchema.parseAsync(req.body);
+    
+    console.log('=== AFTER SCHEMA PARSING ===');
+    console.log('applicationData:', JSON.stringify(applicationData, null, 2));
+    console.log('applicationData.thesisProposal:', applicationData.thesisProposal);
     const supervisorData = await Teacher.findByPk(applicationData.supervisor.id, 
       { 
         attributes: selectTeacherAttributes(true), 
@@ -47,15 +56,26 @@ const createThesisApplication = async (req, res) => {
       { type: QueryTypes.SELECT },
     );
 
-    // Create ThesisApplication
+        // Create ThesisApplication
     const newApplication = await ThesisApplication.create({
       topic: applicationData.topic,
       student_id: loggedStudent[0].id,
-      thesis_proposal_id: applicationData.proposal ? applicationData.proposal.id : null,
+      thesis_proposal_id: applicationData.thesisProposal ? applicationData.thesisProposal.id : null,
       company_id: applicationData.company ? applicationData.company.id : null,
       status: 'pending',
       submission_date: new Date().toISOString()
     }, { transaction: t });
+
+    // Fetch the complete proposal if it exists
+    let proposalData = null;
+    if (newApplication.thesis_proposal_id) {
+      const { ThesisProposal } = require('../models');
+      proposalData = await ThesisProposal.findByPk(newApplication.thesis_proposal_id);
+      if (proposalData) {
+        proposalData = proposalData.toJSON();
+      }
+    }
+
     // Link Supervisor and Co-Supervisors
     const supervisors = [applicationData.supervisor, ...(applicationData.coSupervisors || [])];
     for (const supervisor of supervisors) {
@@ -72,19 +92,28 @@ const createThesisApplication = async (req, res) => {
       new_status: newApplication.status || 'pending',
       change_date: newApplication.submission_date,
     }, { transaction: t });
-    await t.commit();
+        await t.commit();
+
+    console.log('=== NEW APPLICATION CREATED ===');
+    console.log('newApplication:', JSON.stringify(newApplication, null, 2));
+    
     const responsePayload = {
       id: newApplication.id,
       topic: newApplication.topic,
       supervisor: supervisorData,
-      coSupervisors: coSupervisorsData,
+      co_supervisors: coSupervisorsData || [],
       company: newApplication.company || null,
-      proposal: newApplication.proposal || null,
-      submissionDate: newApplication.submission_date.toISOString(),
+      thesis_proposal: proposalData || null,
+      submission_date: newApplication.submission_date.toISOString(),
       status: newApplication.status || 'pending',
     };
 
+    console.log('responsePayload before validation:', JSON.stringify(responsePayload, null, 2));  
+
     const validatedResponse = await thesisApplicationResponseSchema.parseAsync(responsePayload);
+    
+    console.log('validatedResponse after schema parsing:', JSON.stringify(validatedResponse, null, 2));
+    
     return res.status(201).json(validatedResponse);
   } catch (error) {
     console.error(error);
@@ -187,7 +216,7 @@ const getLastStudentApplication = async (req, res) => {
       supervisor: supervisorData,
       coSupervisors: coSupervisorsData,
       company: app.company || null,
-      proposal: app.proposal || null,
+      thesisProposal: app.thesis_proposal || null,
       submissionDate: app.submission_date.toISOString(),
       status: app.status || 'pending',
     };
@@ -198,6 +227,30 @@ const getLastStudentApplication = async (req, res) => {
 
   } catch (error) {
     console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getStatusHistoryApplication = async (req, res) => {
+  try {
+    const applicationId = req.query.applicationId;
+    if (!applicationId) {
+      return res.status(400).json({ error: 'Missing applicationId parameter' });
+    }
+
+    const statusHistory = await ThesisApplicationStatusHistory.findAll({
+      where: { thesis_application_id: applicationId },
+      order: [['change_date', 'ASC']],
+    });
+
+    const historyResponse = statusHistory.map(record => {
+      return thesisApplicationStatusHistorySchema.parse(record.toJSON());
+    });
+    
+    res.json(historyResponse);
+  }
+  catch (error) {
+    console.error('Error fetching status history of thesis application:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -262,5 +315,6 @@ module.exports = {
   createThesisApplication,
   checkStudentEligibility,
   getLastStudentApplication,
+  getStatusHistoryApplication,
   deleteLastThesisApplication,
 };

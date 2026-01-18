@@ -140,6 +140,17 @@ async function checkStudentEligibility(studentId) {
   }
 }
 
+async function getStatusHistoryApplication(applicationId) {
+  try {
+    const response = await axios.get(`${URL}/thesis-applications/status-history`, {
+      params: { applicationId }
+    });
+    return response.data; 
+  } catch (error) {
+    console.error('Error fetching status history of thesis application:', error);
+  }
+}
+
 async function getLoggedStudentThesis(){
   try {
     const response = await axios.get(`${URL}/thesis`);
@@ -149,6 +160,8 @@ async function getLoggedStudentThesis(){
   }
 
 }
+
+
 
 
 // ------------------------------------
@@ -213,7 +226,8 @@ const API = {
   createThesisApplication,
   getLastStudentApplication,
   checkStudentEligibility,
-  getLoggedStudentThesis
+  getLoggedStudentThesis,
+  getStatusHistoryApplication
 };
 
 export default API;

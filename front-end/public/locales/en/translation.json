@@ -129,7 +129,8 @@
             "date_conclusion_requested": "Conclusion request date",
             "date_conclusion_confirmation": "Conclusion confirmation date",
             "supervisors": "Supervisors",
-            "your_thesis": "Your thesis: "
+            "your_thesis": "Your thesis: ",
+            "your_application": "Your application: "
         }
     },
     "Accedi": "Login",

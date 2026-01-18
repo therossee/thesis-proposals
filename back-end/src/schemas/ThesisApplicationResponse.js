@@ -3,27 +3,27 @@ const { z } = require('zod');
 const teacherSchema = require('./Teacher');
 const companySchema = require('./Company');
 const thesisApplicationStatusSchema = require('./ThesisApplicationStatus');
-const thesisProposalOverviewSchema = require('./ThesisProposalOverview');
+const thesisProposalMinimalSchema = require('./ThesisProposalMinimal');
 
 
 const thesisApplicationResponseSchema = z.object({
     id: z.number(),
     topic: z.string(),
     supervisor: teacherSchema,
-    coSupervisors: z.array(teacherSchema).default([]).nullable(),
-    proposal: thesisProposalOverviewSchema.nullable(),
+    co_supervisors: z.array(teacherSchema).default([]).nullable(),
+    thesis_proposal: thesisProposalMinimalSchema.nullable(),
     company: companySchema.nullable(),
-    submissionDate: z.string().datetime(),
+    submission_date: z.string().datetime(),
     status: thesisApplicationStatusSchema,
 })
 .transform((response) => ({
     id: response.id,
     topic: response.topic,
     supervisor: response.supervisor,
-    coSupervisors: response.coSupervisors,
+    coSupervisors: response.co_supervisors,
     company: response.company,
-    proposal: response.proposal,
-    submissionDate: response.submissionDate,
+    thesisProposal: response.thesis_proposal,
+    submissionDate: response.submission_date,
     status: response.status,
 }));
 

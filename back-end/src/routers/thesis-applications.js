@@ -4,11 +4,13 @@ const {
   createThesisApplication,
   deleteLastThesisApplication,
   checkStudentEligibility,
-  getLastStudentApplication
+  getLastStudentApplication,
+  getStatusHistoryApplication
 } = require('../controllers/thesis-applications');
 
 router.get('/eligibility', checkStudentEligibility);
 router.get('/', getLastStudentApplication);
+router.get('/status-history', getStatusHistoryApplication);
 router.post('/', createThesisApplication);
 router.delete('/', deleteLastThesisApplication);
 

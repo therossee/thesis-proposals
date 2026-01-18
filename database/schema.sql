@@ -212,6 +212,7 @@ CREATE TABLE IF NOT EXISTS thesis_application_status_history(
     thesis_application_id INT NOT NULL,
     old_status ENUM('pending', 'approved', 'rejected', 'canceled'),
     new_status ENUM('pending', 'approved', 'rejected', 'canceled') NOT NULL,
+    note VARCHAR(255),
     change_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     FOREIGN KEY (thesis_application_id) REFERENCES thesis_application(id) ON DELETE CASCADE

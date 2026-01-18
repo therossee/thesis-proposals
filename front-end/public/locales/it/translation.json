@@ -131,7 +131,8 @@
             "date_conclusion_requested": "Data richiesta conclusione",
             "date_conclusion_confirmation": "Data conferma conclusione",
             "supervisors": "Relatori",
-            "your_thesis": "La tua tesi: "
+            "your_thesis": "La tua tesi: ",
+            "your_application": "La tua candidatura: "
         }
     },
     "Accedi": "Accedi",

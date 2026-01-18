@@ -14,7 +14,7 @@ const thesisApplicationSchema = z.object({
     supervisor: z.object(teacherSchema),
     co_supervisors: z.array(teacherSchema).default([]).nullable(),
     company: z.object(companySchema).nullable(),
-    proposal: z.object(thesisProposalOverviewSchema).nullable(),
+    thesis_proposal: z.object(thesisProposalOverviewSchema).nullable(),
     submission_date: z.string().datetime(),
     status: thesisApplicationStatusSchema,
 })
@@ -22,9 +22,9 @@ const thesisApplicationSchema = z.object({
     id: application.id,
     topic: application.topic,
     supervisor: application.supervisor,
-    co_supervisors: application.co_supervisors,
+    coSupervisors: application.co_supervisors,
     company: application.company,
-    proposal: application.proposal,
+    thesisProposal: application.thesis_proposal,
     submission_date: application.submission_date,
     status: application.status,
 }));

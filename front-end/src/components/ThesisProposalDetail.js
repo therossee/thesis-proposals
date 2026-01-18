@@ -55,7 +55,10 @@ function ThesisProposalDetail(props) {
     if (sending) return;
     setSending(true);
     API.createThesisApplication({
-      proposal: props.thesisProposal,
+      thesisProposal: {
+        id: id,
+        topic: topic,
+      },
       topic: topic,
       company: props.thesisProposal.company || null,
       supervisor: props.thesisProposal.supervisor,
