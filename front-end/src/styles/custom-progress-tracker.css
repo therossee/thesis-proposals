@@ -98,3 +98,29 @@
   color: var(--text);
   line-height: 1.4;
 }
+
+.progress-step-date {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.progress-step-note {
+  font-size: var(--font-size-xs);
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+  background-color: var(--surface);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--border-radius);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  line-height: 1.4;
+}
+
+.progress-step-circle i {
+  font-size: 0.7rem;
+  color: var(--text);
+}

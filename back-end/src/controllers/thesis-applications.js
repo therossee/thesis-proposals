@@ -4,6 +4,8 @@ const { z } = require('zod');
 const {
   sequelize,
   Teacher,
+  Student,
+  ThesisProposal,
   ThesisApplication,
   ThesisApplicationSupervisorCoSupervisor,
   ThesisApplicationStatusHistory,
@@ -12,6 +14,7 @@ const thesisApplicationRequestSchema = require('../schemas/ThesisApplicationRequ
 const thesisApplicationResponseSchema = require('../schemas/ThesisApplicationResponse');
 const selectTeacherAttributes = require('../utils/selectTeacherAttributes');
 const thesisApplicationStatusHistorySchema = require('../schemas/ThesisApplicationStatusHistory');
+const thesisApplicationSchema = require('../schemas/ThesisApplication');
 
 
 
@@ -192,7 +195,6 @@ const getLastStudentApplication = async (req, res) => {
     // Fetch proposal if exists
     let proposalData = null;
     if (app.thesis_proposal_id) {
-      const { ThesisProposal } = require('../models');
       const proposal = await ThesisProposal.findByPk(app.thesis_proposal_id);
       if (proposal) {
         proposalData = proposal.toJSON();
@@ -321,10 +323,74 @@ const deleteLastThesisApplication = async (req, res) => {
   }
 };
 
+const getAllThesisApplications = async (req, res) => {
+  try {
+    const students = await Student.findAll();
+    const allApplications = await ThesisApplication.findAll({
+      order: [['submission_date', 'DESC']],
+    });
+
+    const applicationsResponse = [];
+
+    for (const app of allApplications) {
+      // Fetch proposal if exists
+      let proposalData = null;
+      if (app.thesis_proposal_id) {
+        const proposal = await ThesisProposal.findByPk(app.thesis_proposal_id);
+        if (proposal) {
+          proposalData = proposal.toJSON();
+        }
+      }
+      
+      // Fetch supervisor and co-supervisors
+      const supervisorLinks = await ThesisApplicationSupervisorCoSupervisor.findAll({
+        where: { thesis_application_id: app.id },
+      });
+      let supervisorData = null;
+      const coSupervisorsData = [];
+      for (const link of supervisorLinks) {
+        const teacher = await Teacher.findByPk(link.teacher_id, {
+          attributes: selectTeacherAttributes(true),
+        });
+        if (teacher) {
+          if (link.is_supervisor) {
+            supervisorData = teacher;
+          }
+          else {
+            coSupervisorsData.push(teacher);
+          }
+        }
+      }
+      
+      const responsePayload = {
+        id: app.id,
+        topic: app.topic,
+        student: students.find(s => s.id === app.student_id) || null,
+        supervisor: supervisorData,
+        co_supervisors: coSupervisorsData, // snake_case!
+        company: app.company || null,
+        thesis_proposal: proposalData, // snake_case! e usa proposalData
+        submission_date: app.submission_date.toISOString(), // snake_case!
+        status: app.status || 'pending',
+      };
+      
+      const appJson = thesisApplicationSchema.parse(responsePayload);
+      applicationsResponse.push(appJson);
+    }
+
+    res.json(applicationsResponse);
+  }
+  catch (error) {
+    console.error('Error fetching all thesis applications:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createThesisApplication,
   checkStudentEligibility,
   getLastStudentApplication,
+  getAllThesisApplications,
   getStatusHistoryApplication,
   deleteLastThesisApplication,
 };

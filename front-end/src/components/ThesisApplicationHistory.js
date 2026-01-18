@@ -24,15 +24,6 @@ export default function ThesisApplicationHistory(props) {
         console.error('Error fetching status history:', error);
         setStatusHistory([]);
       });
-
-    // Fetch student statistics
-    /*API.getStudentApplicationStats()
-      .then((data) => {
-        setStudentStats(data);
-      })
-      .catch((error) => {
-        console.error('Error fetching student stats:', error);
-      });*/
   }, [thesisApplication]);
 
   const getAverageResponseTime = () => {
@@ -155,7 +146,10 @@ export default function ThesisApplicationHistory(props) {
               </h3>
             </Card.Header>
             <Card.Body>
-              <ApplicationProgressTracker status={thesisApplication.status} />
+              <ApplicationProgressTracker 
+                status={thesisApplication.status}
+                statusHistory={statusHistory}
+              />
             </Card.Body>
           </Card>
         </Col>

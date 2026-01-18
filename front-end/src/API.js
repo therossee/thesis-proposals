@@ -161,6 +161,16 @@ async function getLoggedStudentThesis(){
 
 }
 
+async function getAllThesisApplications(){
+  try {
+    const response = await axios.get(`${URL}/thesis-applications/all`);
+    return response.data;
+  }
+  catch (error) {
+    console.error('Error fetching all thesis applications:', error);
+  }
+}
+
 
 
 
@@ -227,7 +237,8 @@ const API = {
   getLastStudentApplication,
   checkStudentEligibility,
   getLoggedStudentThesis,
-  getStatusHistoryApplication
+  getStatusHistoryApplication,
+  getAllThesisApplications
 };
 
 export default API;

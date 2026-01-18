@@ -20,6 +20,7 @@ import LaureaEdEsameFinale from './pages/carriera/LaureaEdEsameFinale';
 import PropostaDiTesi from './pages/carriera/PropostaDiTesi';
 import ProposteDiTesi from './pages/carriera/ProposteDiTesi';
 import Tesi from './pages/carriera/Tesi';
+import Test from './pages/servizi/Test';
 import { getSystemTheme, scrollTop } from './utils/utils';
 
 export const FavoritesContext = createContext(null);
@@ -117,6 +118,7 @@ function App() {
                     <Route path="/servizi" element={<Servizi />} />
                     <Route path="/help" element={<Help />} />
                     <Route path="*" element={<PageNotFound />} />
+                    <Route path="/servizi/test" element={<Test />} />
                   </Routes>
                   <FloatingButton />
                 </Col>

@@ -1,12 +1,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
+import moment from 'moment';
 import '../styles/custom-progress-tracker.css';
 
-export default function ApplicationProgressTracker({ status }) {
+export default function ApplicationProgressTracker({ status, statusHistory }) {
   const { t } = useTranslation();
-  
-  // Primo step sempre uguale
+    const getHistoryForStatus = (targetStatus) => {
+    if (!statusHistory || statusHistory.length === 0) return null;
+    return statusHistory.find(h => h.newStatus === targetStatus);
+  };
+    // Primo step sempre uguale
   const firstStep = {
     key: 'pending',
     label: t('carriera.tesi.progress_application.pending'),
@@ -55,13 +59,19 @@ export default function ApplicationProgressTracker({ status }) {
       circleClass = step.key;
     }
     
+    const historyEntry = getHistoryForStatus(step.key);
+    
     return (
       <div 
         key={step.key}
         className="progress-step"
       >
         <div className="progress-step-marker">
-          <div className={`progress-step-circle ${circleClass}`} />
+          <div className={`progress-step-circle ${circleClass}`}>
+            {isActive && step.key === 'approved' && <i className="fa-solid fa-check" />}
+            {isActive && step.key === 'rejected' && <i className="fa-solid fa-xmark" />}
+            {isActive && step.key === 'canceled' && <i className="fa-solid fa-ban" />}
+          </div>
         </div>
         <div className="progress-step-content">
           <h6 className={`progress-step-title ${isActive ? `active active-${step.key}` : ''}`}>
@@ -70,6 +80,20 @@ export default function ApplicationProgressTracker({ status }) {
           <p className="progress-step-description">
             {step.description}
           </p>
+          {historyEntry && (
+            <>
+              <div className="progress-step-date">
+                <i className="fa-solid fa-clock me-1" />
+                {moment(historyEntry.changeDate).format('DD/MM/YYYY - HH:mm')}
+              </div>
+              {historyEntry.note && (
+                <div className="progress-step-note">
+                  <i className="fa-solid fa-comment me-1" />
+                  {historyEntry.note}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     );
@@ -84,4 +108,12 @@ export default function ApplicationProgressTracker({ status }) {
 
 ApplicationProgressTracker.propTypes = {
   status: PropTypes.oneOf(['pending', 'approved', 'rejected', 'canceled']).isRequired,
+  statusHistory: PropTypes.arrayOf(
+    PropTypes.shape({
+      oldStatus: PropTypes.string,
+      newStatus: PropTypes.string.isRequired,
+      note: PropTypes.string,
+      changeDate: PropTypes.string.isRequired,
+    })
+  ),
 };

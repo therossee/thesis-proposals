@@ -127,6 +127,12 @@
                 "forms": "Modulistica",
                 "guide": "Guide e tutorial"
             },
+            "status_app": {
+                "pending": "In valutazione",
+                "approved": "Approvata",
+                "rejected": "Respinta",
+                "canceled": "Ritirata"
+            },
             "progress_application": {
                 "pending": "In fase di valutazione",
                 "pending_description": "La candidatura è stata trasmessa correttamente ed è in fase di revisione da parte del docente relatore. Durante questo periodo, lo studente non ha ancora la possibilità di visualizzare l'esito o il dettaglio del giudizio. Il sistema provvederà a inviare una notifica automatica non appena la procedura di valutazione sarà conclusa.",

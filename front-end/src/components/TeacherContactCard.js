@@ -1,12 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Card, Collapse, Button } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
+import { ThemeContext } from '../App';
 import '../styles/teacher-contact-card.css';
 
 export default function TeacherContactCard({ supervisor, coSupervisors }) {
   const { t } = useTranslation();
+  const { theme } = React.useContext(ThemeContext);
   const [showCoSupervisors, setShowCoSupervisors] = useState(false);
+
+  // Determina il tema effettivo considerando anche "auto"
+  const getEffectiveTheme = () => {
+    if (theme === 'auto') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return theme;
+  };
+
+  const effectiveTheme = getEffectiveTheme();
+
 
   const getInitials = (firstName, lastName) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`;
@@ -21,7 +34,7 @@ export default function TeacherContactCard({ supervisor, coSupervisors }) {
         </h5>
         <div className="supervisor-main">
           <div className="contact-item d-flex align-items-start gap-3">
-            <div className="contact-avatar contact-avatar-primary">
+            <div className={`contact-avatar-${effectiveTheme}`}>
               {getInitials(supervisor.firstName, supervisor.lastName)}
             </div>
             <div className="contact-info flex-grow-1">
@@ -51,8 +64,8 @@ export default function TeacherContactCard({ supervisor, coSupervisors }) {
                 aria-expanded={showCoSupervisors}
                 className="p-0 text-decoration-none d-flex align-items-center gap-2"
               >
-                <i className={`fa-solid fa-chevron-${showCoSupervisors ? 'up' : 'down'}`} />
-                <span>
+                <i className={`fa-solid fa-chevron-${showCoSupervisors ? 'up' : 'down'} cosupervisor-button`} />
+                <span className="cosupervisor-button">
                   {t('carriera.tesi.contacts.co_supervisors')}
                 </span>
               </Button>
@@ -62,7 +75,7 @@ export default function TeacherContactCard({ supervisor, coSupervisors }) {
                   <div className="d-flex flex-column gap-3">
                     {coSupervisors.map((coSupervisor, index) => (
                       <div key={index} className="contact-item d-flex align-items-start gap-3">
-                        <div className="contact-avatar contact-avatar-secondary">
+                        <div className={`contact-avatar-${effectiveTheme}`}>
                           {getInitials(coSupervisor.firstName, coSupervisor.lastName)}
                         </div>
                         <div className="contact-info flex-grow-1">

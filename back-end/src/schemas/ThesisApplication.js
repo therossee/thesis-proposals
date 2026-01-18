@@ -10,22 +10,23 @@ const thesisProposalOverviewSchema = require('./ThesisProposalOverview');
 const thesisApplicationSchema = z.object({
     id: z.number(),
     topic: z.string(),
-    student: z.object(studentSchema),
-    supervisor: z.object(teacherSchema),
+    student: studentSchema,
+    supervisor: teacherSchema,
     co_supervisors: z.array(teacherSchema).default([]).nullable(),
-    company: z.object(companySchema).nullable(),
-    thesis_proposal: z.object(thesisProposalOverviewSchema).nullable(),
+    company: companySchema.nullable(),
+    thesis_proposal: thesisProposalOverviewSchema.nullable(),
     submission_date: z.string().datetime(),
     status: thesisApplicationStatusSchema,
 })
 .transform((application) => ({
     id: application.id,
     topic: application.topic,
+    student: application.student,
     supervisor: application.supervisor,
     coSupervisors: application.co_supervisors,
     company: application.company,
     thesisProposal: application.thesis_proposal,
-    submission_date: application.submission_date,
+    submissionDate: application.submission_date,
     status: application.status,
 }));
 
