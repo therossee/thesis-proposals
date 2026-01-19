@@ -6,7 +6,9 @@ import '../styles/custom-progress-tracker.css';
 
 export default function ApplicationProgressTracker({ status, statusHistory }) {
   const { t } = useTranslation();
-    const getHistoryForStatus = (targetStatus) => {
+  const [expandedNote, setExpandedNote] = React.useState(null);
+
+  const getHistoryForStatus = (targetStatus) => {
     if (!statusHistory || statusHistory.length === 0) return null;
     return statusHistory.find(h => h.newStatus === targetStatus);
   };
@@ -80,17 +82,28 @@ export default function ApplicationProgressTracker({ status, statusHistory }) {
           <p className="progress-step-description">
             {step.description}
           </p>
-          {historyEntry && (
+          {historyEntry && historyEntry.newStatus !== 'pending' && (
             <>
               <div className="progress-step-date">
                 <i className="fa-solid fa-clock me-1" />
                 {moment(historyEntry.changeDate).format('DD/MM/YYYY - HH:mm')}
               </div>
               {historyEntry.note && (
-                <div className="progress-step-note">
-                  <i className="fa-solid fa-comment me-1" />
-                  {historyEntry.note}
-                </div>
+                <>
+                  <div 
+                    className="progress-step-note-toggle"
+                    onClick={() => setExpandedNote(expandedNote === step.key ? null : step.key)}
+                  >
+                    <i className="fa-solid fa-comment me-2" />
+                    {expandedNote === step.key ? t('carriera.tesi.progress_application.hide_note') : t('carriera.tesi.progress_application.show_note')}
+                    <i className={`fa-solid fa-chevron-${expandedNote === step.key ? 'up' : 'down'} ms-2`} />
+                  </div>
+                  {expandedNote === step.key && (
+                    <div className="progress-step-note">
+                      <p style={{ whiteSpace: 'pre-line' }}>{historyEntry.note}</p>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}

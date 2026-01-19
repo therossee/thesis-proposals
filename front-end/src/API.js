@@ -171,6 +171,14 @@ async function getAllThesisApplications(){
   }
 }
 
+async function updateThesisApplicationStatus(updateData) {
+  try {
+    const response = await axios.put(`${URL}/test/thesis-application`, updateData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating thesis application status:', error);
+  }
+}
 
 
 
@@ -238,7 +246,8 @@ const API = {
   checkStudentEligibility,
   getLoggedStudentThesis,
   getStatusHistoryApplication,
-  getAllThesisApplications
+  getAllThesisApplications,
+  updateThesisApplicationStatus
 };
 
 export default API;

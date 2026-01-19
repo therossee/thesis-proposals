@@ -143,7 +143,9 @@
                 "rejected": "Respinta",
                 "rejected_description": "Il docente relatore ha espresso parere negativo in merito alla candidatura presentata, che risulta pertanto respinta. Lo studente ha la possibilità di consultare eventuali motivazioni o note integrative inserite dal docente accedendo direttamente alla sezione dello storico delle attività.",
                 "canceled": "Ritirata",
-                "canceled_description": "Hai deciso di ritirare questa candidatura."
+                "canceled_description": "Hai deciso di ritirare questa candidatura. Di conseguenza, la proposta di tesi non è più in valutazione e non potrà essere presa in considerazione dal docente relatore. Se desideri, puoi presentare una nuova candidatura per un'altra proposta di tesi disponibile.",
+                "show_note": "Visualizza nota del relatore",
+                "hide_note": "Nascondi nota del relatore"
             },
             "company": {
                 "name": "Azienda",

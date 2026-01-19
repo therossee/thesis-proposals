@@ -107,17 +107,63 @@
   align-items: center;
 }
 
+.progress-step-note-toggle {
+  font-size: var(--font-size-xs);
+  color: var(--primary);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.2s ease;
+  font-weight: var(--font-weight-medium);
+}
+
+.progress-step-note-toggle:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
 .progress-step-note {
   font-size: var(--font-size-xs);
   color: var(--text);
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem;
   background-color: var(--surface);
-  border-left: 3px solid var(--primary);
+  border: 1px solid var(--border);
   border-radius: var(--border-radius);
   margin-top: 0.5rem;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.5rem;
   line-height: 1.4;
+  width: auto;
+}
+
+.progress-step-note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  transition: opacity 0.2s ease;
+}
+
+.progress-step-note-header:hover {
+  opacity: 0.8;
+}
+
+.progress-step-note-header i.fa-chevron-up,
+.progress-step-note-header i.fa-chevron-down {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.progress-step-note p {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  line-height: 1.5;
+  border-top: 1px solid var(--border);
 }
 
 .progress-step-circle i {

@@ -35,8 +35,8 @@ export default function Test() {
             });
     }, [setBodyDataLoading]);
 
-    const openStatusChangeModal = (applicationId, newStatus) => {
-        setSelectedApplication(applicationId);
+    const openStatusChangeModal = (application, newStatus) => {
+        setSelectedApplication(application);
         setSelectedStatus(newStatus);
         setNote('');
         setShowModal(true);
@@ -51,12 +51,16 @@ export default function Test() {
 
     const handleConfirmStatusChange = async () => {
         try {
-            // TODO: Implementare API call
-            console.log(`Changing application ${selectedApplication} to status: ${selectedStatus}`);
+            console.log(`Changing application ${selectedApplication.id} to status: ${selectedStatus}`);
             console.log(`Note: ${note}`);
-            // await API.updateThesisApplicationStatus(selectedApplication, selectedStatus, note);
+            await API.updateThesisApplicationStatus({
+                id: selectedApplication.id,
+                old_status: selectedApplication.status, 
+                new_status: selectedStatus,
+                note: note,
+            });
             
-            // Refresh applications
+            // Refresh applications list
             const data = await API.getAllThesisApplications();
             setThesisApplications(data);
             
@@ -146,13 +150,13 @@ export default function Test() {
 
                                 <hr />
 
-                                <div className="d-flex justify-content-between align-items-center">
+                                {application.status === 'pending' && (<div className="d-flex justify-content-between align-items-center">
                                     <strong>Cambia stato:</strong>
                                     <ButtonGroup size="sm">
                                         <Button 
                                             variant="outline-warning"
                                             disabled={application.status === 'pending'}
-                                            onClick={() => openStatusChangeModal(application.id, 'pending')}
+                                            onClick={() => openStatusChangeModal(application, 'pending')}
                                         >
                                             <i className="fa-solid fa-clock me-1" />
                                             Pending
@@ -160,7 +164,7 @@ export default function Test() {
                                         <Button 
                                             variant="outline-success"
                                             disabled={application.status === 'approved'}
-                                            onClick={() => openStatusChangeModal(application.id, 'approved')}
+                                            onClick={() => openStatusChangeModal(application, 'approved')}
                                         >
                                             <i className="fa-solid fa-check me-1" />
                                             Approve
@@ -168,7 +172,7 @@ export default function Test() {
                                         <Button 
                                             variant="outline-danger"
                                             disabled={application.status === 'rejected'}
-                                            onClick={() => openStatusChangeModal(application.id, 'rejected')}
+                                            onClick={() => openStatusChangeModal(application, 'rejected')}
                                         >
                                             <i className="fa-solid fa-xmark me-1" />
                                             Reject
@@ -176,13 +180,13 @@ export default function Test() {
                                         <Button 
                                             variant="outline-secondary"
                                             disabled={application.status === 'canceled'}
-                                            onClick={() => openStatusChangeModal(application.id, 'canceled')}
+                                            onClick={() => openStatusChangeModal(application, 'canceled')}
                                         >
                                             <i className="fa-solid fa-ban me-1" />
                                             Cancel
                                         </Button>
                                     </ButtonGroup>
-                                </div>
+                                </div>)}
                             </Card.Body>
                         </Card>
                     ))
@@ -198,7 +202,7 @@ export default function Test() {
                 </Modal.Header>
                 <Modal.Body>
                     <p className="mb-3">
-                        Stai per cambiare lo stato della candidatura <strong>#{selectedApplication}</strong> in:{' '}
+                        Stai per cambiare lo stato della candidatura <strong>#{selectedApplication?.id}</strong> in:{' '}
                         <strong>{getStatusLabel(selectedStatus)}</strong>
                     </p>
                     <Form.Group>

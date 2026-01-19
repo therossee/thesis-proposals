@@ -7,7 +7,7 @@ import { BodyDataLoadingContext } from '../../App';
 import CustomBadge from '../../components/CustomBadge';
 import CustomBreadcrumb from '../../components/CustomBreadcrumb';
 import Thesis from '../../components/Thesis';
-import ThesisApplicationHistory from '../../components/ThesisApplicationHistory';
+import ThesisApplication from '../../components/ThesisApplication';
 
 
 export default function Tesi() {
@@ -53,7 +53,7 @@ useEffect(() => {
       } else if (thesis) {
         return <Thesis thesis={thesis}  />;
       } else if (thesisApplication) {
-        return <ThesisApplicationHistory thesisApplication={thesisApplication}  />;
+        return <ThesisApplication thesisApplication={thesisApplication}  />;
       } else {
         return <CustomBadge variant="error" content={t('carriera.tesi.error')} />;
       }

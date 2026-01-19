@@ -133,15 +133,17 @@
             "your_application": "Your application: ",
             "progress_application": {
                 "pending": "Submitted",
-                "pending_description": "Your application has been submitted and will be evaluated by the supervising professor. You will receive a notification as soon as there are updates.",
+                "pending_description": "Your application has been correctly submitted and is under review by the supervisor. During this period, you cannot yet view the outcome or details of the evaluation. The system will send an automatic notification as soon as the evaluation procedure is completed.",
                 "approved": "Approved",
-                "approved_description": "Your application has been approved by the supervising professor.",
+                "approved_description": "Your application has been evaluated positively by the supervisor and is approved. You are now authorized to proceed with the subsequent obligations provided for in the thesis initiation process, following the timing and methods indicated by the regulations.",
                 "rejected": "Rejected",
-                "rejected_description": "Your application has been rejected by the supervising professor.",
+                "rejected_description": "The supervisor has expressed a negative opinion regarding the application submitted, which is therefore rejected. You have the opportunity to consult any reasons or additional notes entered by the supervisor by accessing the activity history section directly.",
                 "canceled": "Canceled",
-                "canceled_description": "Your application has been canceled.",
+                "canceled_description": "You have decided to withdraw this application. As a result, the thesis proposal is no longer under evaluation and cannot be considered by the supervisor. If you wish, you can submit a new application for another available thesis proposal.",
                 "outcome": "Application outcome",
-                "outcome_description": "Here you will see the outcome of your application."
+                "outcome_description": "In questa sezione verrà visualizzato il giudizio definitivo espresso dal docente relatore al termine della fase istruttoria. Lo studente riceverà una comunicazione formale non appena i risultati saranno resi pubblici e disponibili per la consultazione.",
+                "show_note": "Show supervisor's note",
+                "hide_note": "Hide supervisor's note"
             }
         }
     },
