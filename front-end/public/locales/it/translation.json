@@ -193,6 +193,10 @@
             "success_application_canceled_content": "Ora puoi candidarti per altre proposte di tesi.",
             "error_application_canceled_content": "Si è verificato un errore durante il ritiro della candidatura. Riprova più tardi.",
             "cancel_application_note_placeholder": "Inserisci qui il motivo del ritiro (opzionale)..."
+        },
+        "richiesta_tesi": {
+            "title": "Richiesta Tesi",
+            "description": "Invia la tua richiesta di tesi personalizzata."
         }
     },
     "Accedi": "Accedi",

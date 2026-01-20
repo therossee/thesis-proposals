@@ -206,6 +206,17 @@ async function startThesisFromApplication(applicationData) {
   }
 }
 
+// ------------------------------------
+// Companies API
+async function getCompanies() {
+  try {
+    const response = await axios.get(`${URL}/companies`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching companies:', error);
+  }
+}
+
 
 
 
@@ -277,6 +288,7 @@ const API = {
   updateThesisApplicationStatus,
   cancelThesisApplication,
   startThesisFromApplication,
+  getCompanies
 };
 
 export default API;

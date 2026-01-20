@@ -26,6 +26,7 @@ const ThesisApplication = require('./thesis-application')(sequelize, Sequelize.D
 const ThesisApplicationSupervisorCoSupervisor = require('./thesis-application-supervisor-cosupervisor')(sequelize, Sequelize.DataTypes);
 const ThesisApplicationStatusHistory = require('./thesis-application-status-history')(sequelize, Sequelize.DataTypes);
 const Company = require('./company')(sequelize, Sequelize.DataTypes);
+const CompanyOffice = require('./company-office')(sequelize, Sequelize.DataTypes);
 
 const db = {};
 
@@ -50,7 +51,7 @@ db.Thesis = Thesis;
 db.ThesisSupervisorCoSupervisor = ThesisSupervisorCoSupervisor;
 db.LoggedStudent = LoggedStudent;
 db.Company = Company;
-
+db.CompanyOffice = CompanyOffice;
 // Define relationships
 
 // DegreeProgramme and Collegio (one-to-many)
@@ -165,6 +166,11 @@ Thesis.belongsToMany(Teacher, {
   through: ThesisSupervisorCoSupervisor,
   foreignKey: 'thesis_id',
   otherKey: 'teacher_id',
+});
+
+Company.hasOne(CompanyOffice, {
+  foreignKey: 'company_id',
+  as: 'registered_office',
 });
 
 

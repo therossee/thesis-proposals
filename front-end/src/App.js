@@ -19,6 +19,7 @@ import Servizi from './pages/Servizi';
 import LaureaEdEsameFinale from './pages/carriera/LaureaEdEsameFinale';
 import PropostaDiTesi from './pages/carriera/PropostaDiTesi';
 import ProposteDiTesi from './pages/carriera/ProposteDiTesi';
+import RichiestaTesi from './pages/carriera/RichiestaTesi';
 import Tesi from './pages/carriera/Tesi';
 import Test from './pages/servizi/Test';
 import { getSystemTheme, scrollTop } from './utils/utils';
@@ -114,6 +115,7 @@ function App() {
                     <Route path="/carriera/proposte_di_tesi/:id" element={<PropostaDiTesi />} />
                     <Route path="/carriera/laurea_ed_esame_finale" element={<LaureaEdEsameFinale />} />
                     <Route path="/carriera/tesi" element={<Tesi />} />
+                    <Route path="/carriera/richiesta_tesi" element={<RichiestaTesi />} />
                     <Route path="/opportunita" element={<Opportunita />} />
                     <Route path="/servizi" element={<Servizi />} />
                     <Route path="/help" element={<Help />} />

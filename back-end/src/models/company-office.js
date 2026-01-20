@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
         company_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
+            primaryKey: true,
             references: {
                 model: 'company',
                 key: 'id'
@@ -22,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(100),
             allowNull: false
         },
-        postalCode: {
+        postal_code: {
             type: DataTypes.STRING(20),
             allowNull: true
         },

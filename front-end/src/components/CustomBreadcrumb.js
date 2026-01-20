@@ -49,6 +49,11 @@ const breadcrumbConfig = {
    label: 'carriera.tesi.title',
    path: '/carriera/tesi',
   },
+  richiesta_tesi: {
+    icon: <i className="fa-solid fa-file-circle-plus me-2" />,
+    label: 'carriera.richiesta_tesi.title',
+    path: '/carriera/richiesta_tesi',
+  },
 };
 
 export default function CustomBreadcrumb() {

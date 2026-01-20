@@ -188,6 +188,10 @@
             "error_application_canceled": "Error canceling application.",
             "success_application_canceled_content": "You can now apply for other thesis proposals.",
             "error_application_canceled_content": "An error occurred while canceling the application. Please try again later."
+        },
+        "richiesta_tesi": {
+            "title": "Thesis Request",
+            "description": "Submit your personalized thesis request."
         }
     },
     "Accedi": "Login",
