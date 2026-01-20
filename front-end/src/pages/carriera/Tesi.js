@@ -6,6 +6,7 @@ import CustomBreadcrumb from '../../components/CustomBreadcrumb';
 import Thesis from '../../components/Thesis';
 import ThesisApplication from '../../components/ThesisApplication';
 import ThesisNotFound from '../../components/ThesisNotFound';
+import LoadingModal from '../../components/LoadingModal';
 
 
 
@@ -72,7 +73,7 @@ useEffect(() => {
 
     const renderContent = () => {
       if (isLoading) {
-        return <></>;
+        return <LoadingModal show={isLoading} onHide={() => setIsLoading(false)} />;
       } else if (thesis) {
         return <Thesis thesis={thesis}  />;
       } else if (thesisApplication) {

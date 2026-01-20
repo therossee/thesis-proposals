@@ -2,12 +2,12 @@ import React, { useContext } from 'react';
 
 import { Button, Card } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import { FaRegCircleQuestion, FaArrowLeft } from 'react-icons/fa6';
+import { FaRectangleXmark, FaArrowLeft } from 'react-icons/fa6';
 
 import { ThemeContext } from '../App';
 import { getSystemTheme } from '../utils/utils';
 
-export default function ThesisNotFound() {
+export default function Ineligible() {
   const { t } = useTranslation();
   const { theme } = useContext(ThemeContext);
   const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
@@ -15,11 +15,11 @@ export default function ThesisNotFound() {
     <Card className="mt-3 roundCard">
       <Card.Body className="d-flex flex-column align-items-center my-4">
         <div className="pol-headline pol-headline--with-bar" style={{ color: 'var(--primary)' }}>
-          <h3 className="bold-weight">{t('carriera.tesi.not_found')}</h3>
+          <h3 className="bold-weight">{t('carriera.richiesta_tesi.not_eligible')}</h3>
         </div>
-        <FaRegCircleQuestion size={100} style={{ color: 'var(--primary)' }} strokeWidth={1} />
+        <FaRectangleXmark size={100} style={{ color: 'var(--primary)' }} strokeWidth={1} />
         <div className="mb-3 mt-2 text-center" style={{ color: 'var(--text)' }}>
-          <p> {t('carriera.tesi.message_not_found')} </p>
+          <p> {t('carriera.richiesta_tesi.not_eligible_message')} </p>
         </div>
         <Button className={`btn-${appliedTheme}`} size="sm" onClick={() => window.history.back()}>
           <FaArrowLeft size={16} />

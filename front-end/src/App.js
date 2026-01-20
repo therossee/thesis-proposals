@@ -116,6 +116,7 @@ function App() {
                     <Route path="/carriera/laurea_ed_esame_finale" element={<LaureaEdEsameFinale />} />
                     <Route path="/carriera/tesi" element={<Tesi />} />
                     <Route path="/carriera/richiesta_tesi" element={<RichiestaTesi />} />
+                    <Route path="/carriera/richiesta_tesi/:id" element={<RichiestaTesi />} />
                     <Route path="/opportunita" element={<Opportunita />} />
                     <Route path="/servizi" element={<Servizi />} />
                     <Route path="/help" element={<Help />} />

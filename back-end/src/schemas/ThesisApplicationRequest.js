@@ -7,7 +7,6 @@ const thesisProposalMinimalSchema = require('./ThesisProposalMinimal');
 
 const thesisApplicationRequestSchema =  z.object({
   topic: z.string(),
-  description: z.string().optional(),
   supervisor: teacherOverviewSchema,
   co_supervisors: z.array(teacherOverviewSchema).default([]).nullable(),
   company: companyOverviewSchema.nullable().optional(),

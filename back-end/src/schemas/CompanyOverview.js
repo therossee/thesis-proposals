@@ -2,10 +2,10 @@ const { z } = require('zod');
 
 const companyOverviewSchema = z.object({
   id: z.number(),
-  corporateName: z.string()
+  corporate_name: z.string()
 }).transform((company) => ({
   id: company.id,
-  corporate_name: company.corporateName,
+  corporateName: company.corporate_name,
 }));
 
 module.exports = companyOverviewSchema;

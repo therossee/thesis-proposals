@@ -58,6 +58,7 @@ const validVariants = [
   'keyword',
   'internal',
   'external',
+  'external-company',
   'italy',
   'abroad',
   'type',
@@ -69,7 +70,7 @@ const validVariants = [
   'error',
   'app_status',
 ];
-const validTypes = ['reset', 'truncated'];
+const validTypes = ['reset', 'truncated', 'single_select'];
 const validTypeContent = [
   'analisi dati',
   'data analysis',
@@ -193,6 +194,20 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
     );
   };
 
+  const renderSingleSelectBadge = () => {
+    const contentText = content?.content || null;
+    const selectedVariant = variant === 'external-company' ? 'external' : variant;
+    return (
+      <Button
+        key="custom-badge-button"
+        className={`custom-badge badge ${selectedVariant}_${appliedTheme} reset clickable`}
+      >
+        <div className="custom-badge-icon">{renderIcon(contentText)}</div>
+        {contentText ? <span className="custom-badge-text">{contentText}</span> : renderTranslatedContent()}
+      </Button>
+    );
+  };
+
   const renderPositionBadge = () => {
     return (
       <OverlayTrigger
@@ -233,6 +248,7 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
       case 'internal':
         return <i className="fa-regular fa-building-columns fa-lg" />;
       case 'external':
+      case 'external-company':
         return <i className="fa-regular fa-building-circle-arrow-right fa-lg" />;
       case 'italy':
         return <span className="fi fi-it" style={{ borderRadius: '3px' }} />;
@@ -380,7 +396,7 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
   if (
     !validVariants.includes(variant) ||
     (type && !validTypes.includes(type)) ||
-    (['teacher', 'keyword', 'type', 'sorting-ASC', 'sorting-DESC', 'status', 'success', 'warning', 'error', 'app_status'].includes(
+    (['teacher', 'keyword', 'external-company', 'type', 'sorting-ASC', 'sorting-DESC', 'status', 'success', 'warning', 'error', 'app_status'].includes(
       variant,
     ) &&
       !content) ||
@@ -402,6 +418,8 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
     switch (type) {
       case 'reset':
         return <div className="custom-badge-container">{renderResetBadge()}</div>;
+      case 'single_select':
+        return <div className="custom-badge-container">{renderSingleSelectBadge()}</div>;
       case 'truncated':
         return <div className="custom-badge-container">{renderTruncatedBadge()}</div>;
       default:
