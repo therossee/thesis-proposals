@@ -101,8 +101,8 @@
             "chiudi": "Close",
             "modal_contenuto": "Are you sure you want to apply for this thesis proposal?",
             "prosegui": "Apply",
-            "successo": "Application submitted successfully",
-            "errore": "Error while submitting the application"
+            "successo": "Application submitted successfully! You can check the status of your application on the page related to your thesis.",
+            "errore": "Error while submitting the application. Please try again later."
         },
         "tesi": {
             "title": "Thesis",
@@ -123,15 +123,35 @@
                 "plagiarism": "How to avoid plagiarism",
                 "italian_version": "Italian version",
                 "english_version": "English version",
-                "plagiarism_link": "https://youtu.be/FxwDKfmcCUU"
+                "plagiarism_link": "https://youtu.be/FxwDKfmcCUU",
+                "thesis_template": "Thesis template (LaTeX)",
+                "copyright_link": "https://didattica.polito.it/tesi/DirittoAutoreTesi.pdf",
+                "thesis_cover_word": "Thesis cover page (Word)",
+                "thesis_cover_word_link": "https://didattica.polito.it/portal/pls/portal/sviluppo.dsk_condiviso.download_file?p_id=131377&dsk=57554",
+                "logo": "Politecnico di Torino Logo",
+                "logo_link": "https://didattica.polito.it/portal/pls/portal/sviluppo.dsk_condiviso.download_file?p_id=131376&dsk=57554"
             },
-            "submission_date": "Thesis application date",
+            "next_steps": {
+                "title": "Next steps for graduation",
+                "step_1_title": "Thesis in progress",
+                "step_2_title": "Thesis conclusion confirmation",
+                "step_3_title": "AlmaLaurea questionnaire",
+                "step_4_title": "Final exam registration",
+                "step_5_title": "Final thesis",
+                "step_1": "Your thesis is currently in progress under the supervision of the assigned supervisor.",
+                "step_2": "Request confirmation of the thesis conclusion from the supervisor once the work is completed.",
+                "step_3": "Complete the AlmaLaurea questionnaire by the established deadline. The link to access the questionnaire will be available in this section.",
+                "step_4": "Register for the final exam through this page once you have obtained confirmation of the thesis conclusion.",
+                "step_5": "Upload the final version of the thesis following the instructions provided by the supervisor and the regulations."
+            },
+            "submission_date": "Thesis request date",
             "date_conclusion_requested": "Conclusion request date",
             "date_conclusion_confirmation": "Conclusion confirmation date",
             "supervisors": "Supervisors",
-            "your_thesis": "Your thesis: ",
+            "your_thesis": "Your thesis",
             "your_application": "Your application: ",
             "progress_application": {
+                "title": "Application status",
                 "pending": "Submitted",
                 "pending_description": "Your application has been correctly submitted and is under review by the supervisor. During this period, you cannot yet view the outcome or details of the evaluation. The system will send an automatic notification as soon as the evaluation procedure is completed.",
                 "approved": "Approved",
@@ -141,10 +161,22 @@
                 "canceled": "Canceled",
                 "canceled_description": "You have decided to withdraw this application. As a result, the thesis proposal is no longer under evaluation and cannot be considered by the supervisor. If you wish, you can submit a new application for another available thesis proposal.",
                 "outcome": "Application outcome",
-                "outcome_description": "In questa sezione verrà visualizzato il giudizio definitivo espresso dal docente relatore al termine della fase istruttoria. Lo studente riceverà una comunicazione formale non appena i risultati saranno resi pubblici e disponibili per la consultazione.",
+                "outcome_description": "In this section, the final judgment expressed by the supervisor at the end of the evaluation phase will be displayed. The student will receive a formal communication as soon as the results are made public and available for consultation.",
                 "show_note": "Show supervisor's note",
                 "hide_note": "Hide supervisor's note"
-            }
+            },
+            "proceed_to_thesis": "Proceed to start your thesis",
+            "start_thesis": "Start your thesis",
+            "start_thesis_content": "Are you sure you want to start your thesis? Once started, you will no longer be able to apply for other thesis proposals. This action cannot be undone.",
+            "close": "Close",
+            "thesis_company": "Company contacts",
+            "contacts": {
+                "title": "Contacts",
+                "supervisor": "Supervisor",
+                "co_supervisors": "Co-supervisors"
+            },
+            "success_thesis_started": "Thesis started successfully! You can monitor the status of your thesis on this page.",
+            "error_thesis_started": "Error starting thesis."
         }
     },
     "Accedi": "Login",

@@ -9,22 +9,22 @@ const thesisSchema = z.object({
     topic: z.string(),
     student: studentSchema,
     supervisor: teacherSchema,
-    coSupervisors: z.array(teacherSchema).default([]).nullable(),
+    co_supervisors: z.array(teacherSchema).default([]).nullable(),
     company: companySchema.nullable(),
-    thesisApplicationDate: z.string().datetime(),
-    thesisConclusionRequestDate: z.string().datetime().nullable(),
-    thesisConclusionConfirmationDate: z.string().datetime().nullable(),
+    thesis_application_date: z.string().datetime(),
+    thesis_conclusion_request_date: z.string().datetime().nullable(),
+    thesis_conclusion_confirmation_date: z.string().datetime().nullable(),
 })
 .transform((thesis) => ({
     id: thesis.id,
     topic: thesis.topic,
     student: thesis.student,
     supervisor: thesis.supervisor,
-    coSupervisors: thesis.coSupervisors,
+    coSupervisors: thesis.co_supervisors,
     company: thesis.company,
-    thesisApplicationDate: thesis.thesisApplicationDate,
-    thesisConclusionRequestDate: thesis.thesisConclusionRequestDate,
-    thesisConclusionConfirmationDate: thesis.thesisConclusionConfirmationDate,
+    thesisApplicationDate: thesis.thesis_application_date,
+    thesisConclusionRequestDate: thesis.thesis_conclusion_request_date,
+    thesisConclusionConfirmationDate: thesis.thesis_conclusion_confirmation_date,
 }));
 
 module.exports = thesisSchema;

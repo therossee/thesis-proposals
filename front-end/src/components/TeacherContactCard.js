@@ -28,12 +28,12 @@ export default function TeacherContactCard({ supervisor, coSupervisors }) {
   return (
     <Card className="teacher-contact-card">
       <Card.Body>
-        <h5 className="contact-title">
+        <h3 className="thesis-topic">
           <i className="fa-solid fa-address-card me-2" />
           {t('carriera.tesi.contacts.title')}
-        </h5>
+        </h3>
         <div className="supervisor-main">
-          <div className="contact-item d-flex align-items-start gap-3">
+          <div className="contact-item d-flex align-items-start gap-3 mb-3 mt-3">
             <div className={`contact-avatar-${effectiveTheme}`}>
               {getInitials(supervisor.firstName, supervisor.lastName)}
             </div>
@@ -62,7 +62,7 @@ export default function TeacherContactCard({ supervisor, coSupervisors }) {
                 variant="contact-link"
                 onClick={() => setShowCoSupervisors(!showCoSupervisors)}
                 aria-expanded={showCoSupervisors}
-                className="p-0 text-decoration-none d-flex align-items-center gap-2"
+                className="p-0 h3 thesis-topic d-flex align-items-center gap-2"
               >
                 <i className={`fa-solid fa-chevron-${showCoSupervisors ? 'up' : 'down'} cosupervisor-button`} />
                 <span className="cosupervisor-button">

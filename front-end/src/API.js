@@ -180,6 +180,20 @@ async function updateThesisApplicationStatus(updateData) {
   }
 }
 
+// ------------------------------------
+// Thesis Start from Application API
+async function startThesisFromApplication(applicationData) {
+  try {
+    console.log('Starting thesis with data:', applicationData);
+    const response = await axios.post(`${URL}/thesis`, applicationData);
+    return response.data;
+  } catch (error) {
+    console.error('Error starting thesis from application:', error);
+    throw error; 
+  }
+}
+
+
 
 
 // ------------------------------------
@@ -247,7 +261,8 @@ const API = {
   getLoggedStudentThesis,
   getStatusHistoryApplication,
   getAllThesisApplications,
-  updateThesisApplicationStatus
+  updateThesisApplicationStatus,
+  startThesisFromApplication,
 };
 
 export default API;

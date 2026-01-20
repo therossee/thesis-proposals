@@ -10,12 +10,20 @@ const {
   ThesisApplicationSupervisorCoSupervisor,
   ThesisApplicationStatusHistory,
 } = require('../models');
+const snakeCaseKeys = require('snakecase-keys');
 const thesisApplicationRequestSchema = require('../schemas/ThesisApplicationRequest');
 const thesisApplicationResponseSchema = require('../schemas/ThesisApplicationResponse');
 const selectTeacherAttributes = require('../utils/selectTeacherAttributes');
 const thesisApplicationStatusHistorySchema = require('../schemas/ThesisApplicationStatusHistory');
 const thesisApplicationSchema = require('../schemas/ThesisApplication');
+const snakecaseKeys = require('snakecase-keys').default;
 
+const snakeCaseMiddleware = (obj) => {
+    if (obj && typeof obj === 'object') {
+        return snakecaseKeys(obj, { deep: true });
+    }
+    return obj;
+};
 
 
 // ==========================================
@@ -28,19 +36,21 @@ const createThesisApplication = async (req, res) => {
 
   try {
 
-    console.log('=== RAW REQUEST BODY ===');
-    console.log('req.body:', JSON.stringify(req.body, null, 2));
-    console.log('req.body.thesisProposal:', req.body.thesisProposal);
-    
-    const applicationData = await thesisApplicationRequestSchema.parseAsync(req.body);
-    
-    console.log('=== AFTER SCHEMA PARSING ===');
-    console.log('applicationData:', JSON.stringify(applicationData, null, 2));
-    console.log('applicationData.thesisProposal:', applicationData.thesisProposal);
-    const supervisorData = await Teacher.findByPk(applicationData.supervisor.id, 
-      { 
-        attributes: selectTeacherAttributes(true), 
-      });
+    const application_data = await snakeCaseMiddleware(req.body);
+    console.log("Received application data: " + JSON.stringify(application_data, null, 2));
+
+    const applicationData = await thesisApplicationRequestSchema.parseAsync(application_data);
+    console.log("Parsed application data: " + JSON.stringify(applicationData, null, 2));
+
+    // Fetch Supervisor Data
+    const supervisor = await Teacher.findByPk(applicationData.supervisor.id, { attributes: selectTeacherAttributes(true) });
+    if (!supervisor) {
+      throw new Error('Supervisor not found');
+    }
+    const supervisorData = supervisor;
+
+    // Fetch Co-Supervisors Data
+
     const coSupervisorsData = [];
     if (applicationData.coSupervisors) {
       for (const coSup of applicationData.coSupervisors) {
@@ -225,11 +235,12 @@ const getLastStudentApplication = async (req, res) => {
     const responsePayload = {
       id: app.id,
       topic: app.topic,
+      student: loggedStudent[0],
       supervisor: supervisorData,
-      co_supervisors: coSupervisorsData, // snake_case!
+      co_supervisors: coSupervisorsData,
       company: app.company || null,
-      thesis_proposal: proposalData, // snake_case! e usa proposalData
-      submission_date: app.submission_date.toISOString(), // snake_case!
+      thesis_proposal: proposalData,
+      submission_date: app.submission_date.toISOString(),
       status: app.status || 'pending',
     };
 

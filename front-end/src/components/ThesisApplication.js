@@ -1,18 +1,28 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Card, Col, Row } from 'react-bootstrap';
+import { Card, Col, Row, Button, Modal, Toast } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import '../styles/utilities.css';
+import '../styles/thesis-item.css';
 import CustomBadge from './CustomBadge';
+import CustomBlock from './CustomBlock';
 import ApplicationProgressTracker from './ApplicationProgressTracker';
 import TeacherContactCard from './TeacherContactCard';
 import moment from 'moment';
 import API from '../API';
 import PropTypes from 'prop-types';
+import { useContext } from 'react';
+import { ThemeContext } from '../App';
+import { getSystemTheme } from '../utils/utils';
 
-export default function ThesisApplication(props) {
-  const { thesisApplication } = props;
+export default function ThesisApplication({thesisApplication, startThesis}) {
   const teachers = [thesisApplication.supervisor, ...thesisApplication.coSupervisors];
   const [statusHistory, setStatusHistory] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [success, setSuccess] = useState(true);
+  const { theme } = useContext(ThemeContext);
+  const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
+
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -26,12 +36,41 @@ export default function ThesisApplication(props) {
       });
   }, [thesisApplication]);
 
+  const handleStart = () => {
+    startThesis(setShowToast, setSuccess);
+    setShowModal(false);
+  };
+
+
   return thesisApplication && (
+    <>
+      <div className="custom-toast-wrapper">
+        <Toast
+          onClose={() => setShowToast(false)}
+          show={showToast}
+          delay={5000}
+          autohide
+          className={`custom-toast ${success ? 'custom-toast--success' : 'custom-toast--error'}`}
+        >
+          <Toast.Header className="d-flex align-items-center gap-2">
+            <span className="custom-toast__icon">
+              <i
+                className={success ? 'fa-regular fa-circle-check' : 'fa-regular fa-circle-xmark'}
+                aria-hidden="true"
+              />
+            </span>
+            <strong className="custom-toast__message">
+              {success
+                ? t('carriera.tesi.success_thesis_started')
+                : t('carriera.tesi.error_thesis_started')}
+            </strong>
+          </Toast.Header>
+        </Toast>
+      </div>
     <div className="proposals-container">
       <Row className="mb-3">
         <Col>
           <Card className="mb-3 roundCard py-2">
-            {thesisApplication.topic && (
               <Card.Header className="border-0">
                 <Row className='d-flex justify-content-between align-items-center'>
                   <Col xs={12} style={{ marginBottom: '10px' }}>
@@ -42,22 +81,21 @@ export default function ThesisApplication(props) {
                   </Col>
                 </Row>
               </Card.Header>
-            )}
             <Card.Body className="pt-2 pb-0">
-              <MyBlock icon="book-open" title="carriera.proposte_di_tesi.topic">
+              <CustomBlock icon="book-open" title="carriera.proposte_di_tesi.topic">
                 {thesisApplication.topic}
-              </MyBlock>
+              </CustomBlock>
               {thesisApplication.description && (
-                <MyBlock icon="info-circle" title="carriera.proposte_di_tesi.description" ignoreMoreLines>
+                <CustomBlock icon="info-circle" title="carriera.proposte_di_tesi.description" ignoreMoreLines>
                   {thesisApplication.description || '-'}
-                </MyBlock>
+                </CustomBlock>
               )}
 
 
 
-              <MyBlock icon="calendar-clock" title="carriera.tesi.submission_date">
+              <CustomBlock icon="calendar-clock" title="carriera.tesi.submission_date">
                 {moment(thesisApplication.submissionDate).format('DD/MM/YYYY - HH:mm')}
-              </MyBlock>
+              </CustomBlock>
 
             </Card.Body>
           </Card>
@@ -71,7 +109,7 @@ export default function ThesisApplication(props) {
             <Card.Header className="border-0">
               <h3 className="thesis-topic">
                 <i className="fa-solid fa-timeline fa-sm pe-2" />
-                {"Stato della candidatura"}
+                {t("carriera.tesi.progress_application.title")}
               </h3>
             </Card.Header>
             <Card.Body>
@@ -79,45 +117,65 @@ export default function ThesisApplication(props) {
                 status={thesisApplication.status}
                 statusHistory={statusHistory}
               />
+              {thesisApplication.status === 'approved' && (
+                <div className="mt-3 d-flex justify-content-end">
+                  <Button className={`btn-${appliedTheme}`} size="md" onClick={() => setShowModal(true)}>
+                    {t('carriera.tesi.proceed_to_thesis')}
+                  </Button>
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Col>
       </Row>
+      <ThesisStartModal
+        show={showModal}
+        handleClose={() => setShowModal(false)}
+        handleStart={handleStart}
+      />
     </div>
+    </>
   );
 }
 
-function MyBlock({ icon, title, children, ignoreMoreLines }) {
+
+function ThesisStartModal({ show, handleClose, handleStart }) {
   const { t } = useTranslation();
-  const [moreLines, setMoreLines] = useState(false);
-  const contentRef = useRef(null);
+  const { theme } = useContext(ThemeContext);
+  const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
 
-  useEffect(() => {
-    if (ignoreMoreLines) {
-      return;
-    }
-    const element = contentRef.current;
-    if (element) {
-      const computedStyle = window.getComputedStyle(element);
-      const lineHeight = parseFloat(computedStyle.lineHeight);
-      const lines = element.offsetHeight / lineHeight;
-
-      setMoreLines(lines > 1);
-    }
-  }, [children, ignoreMoreLines]);
 
   return (
-    <div className={moreLines ? 'text-container' : 'info-container mb-3'}>
-      <div className={`title-container ${moreLines ? 'pb-1' : ''}`}>
-        {icon && <i className={`fa-regular fa-${icon} fa-fw`} />}
-        {t(title)}:
-      </div>
-      <div ref={contentRef} className={`info-detail ${moreLines ? 'aligned mb-3' : ''}`}>
-        {children}
-      </div>
-    </div>
+    <Modal
+      show={show}
+      onHide={handleClose}
+      contentClassName="modal-content"
+      backdropClassName="modal-overlay"
+      centered
+    >
+      <Modal.Header closeButton={true} className="modal-header">
+        <Modal.Title className="modal-title">
+          <i className="fa-regular fa-circle-exclamation" />
+          {` `}{t('carriera.tesi.start_thesis')}
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body className="modal-body">
+        {t('carriera.tesi.start_thesis_content')}
+      </Modal.Body>
+      <Modal.Footer className="modal-footer">
+        <Button className="modal-cancel mb-3" size="md" onClick={handleClose}>
+          {t('carriera.tesi.close')}
+        </Button>
+        <Button className="modal-confirm mb-3" size="md" onClick={handleStart}>
+          <i className="fa-regular fa-arrow-up-right-from-square"></i>
+          {t('carriera.proposta_di_tesi.prosegui')}
+        </Button>
+      </Modal.Footer>
+    </Modal>
   );
-}
+};
+
+
 ThesisApplication.propTypes = {
   thesisApplication: PropTypes.shape({
     id: PropTypes.number.isRequired,
@@ -143,9 +201,8 @@ ThesisApplication.propTypes = {
   }).isRequired,
 };
 
-MyBlock.propTypes = {
-  icon: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-  ignoreMoreLines: PropTypes.bool,
+ThesisStartModal.propTypes = {
+  show: PropTypes.bool.isRequired,
+  handleClose: PropTypes.func.isRequired,
+  startThesis: PropTypes.func.isRequired,
 };

@@ -101,16 +101,15 @@
             "chiudi": "Chiudi",
             "modal_contenuto": "Sei sicuro di voler inviare la candidatura per questa proposta di tesi?",
             "prosegui": "Invia",
-            "successo": "Candidatura inviata con successo",
-            "errore": "Errore durante l'invio della candidatura"
+            "successo": "Candidatura inviata con successo! Puoi verificare lo stato della tua candidatura nella pagina relativa alla tua tesi.",
+            "errore": "Errore durante l'invio della candidatura. Riprova più tardi."
         },
         "tesi": {
             "title": "Tesi",
             "section_description": "Sezione dedicata alla gestione della tesi di laurea, con la possibilità di caricare il lavoro finale e monitorare lo stato della valutazione.",
             "your_application": "La tua candidatura: ",
             "error": "Error while rendering the active thesis",
-            "submission_date": "Data di presentazione",
-            "response_time": "Tempo di risposta",
+            "submission_date": "Data di richiesta tesi",
             "days": "giorni",
             "hours": "ore",
             "status": "Stato corrente",
@@ -120,20 +119,8 @@
                 "supervisor": "Relatore",
                 "co_supervisors": "Co-relatori"
             },
-            "useful_links": {
-                "title": "Link utili",
-                "thesis_regulations": "Regolamento tesi",
-                "faq": "Domande frequenti",
-                "forms": "Modulistica",
-                "guide": "Guide e tutorial"
-            },
-            "status_app": {
-                "pending": "In valutazione",
-                "approved": "Approvata",
-                "rejected": "Respinta",
-                "canceled": "Ritirata"
-            },
             "progress_application": {
+                "title": "Stato della candidatura",
                 "pending": "In fase di valutazione",
                 "pending_description": "La candidatura è stata trasmessa correttamente ed è in fase di revisione da parte del docente relatore. Durante questo periodo, lo studente non ha ancora la possibilità di visualizzare l'esito o il dettaglio del giudizio. Il sistema provvederà a inviare una notifica automatica non appena la procedura di valutazione sarà conclusa.",
                 "outcome": "Esito",
@@ -153,10 +140,43 @@
                 "contact": "Referente aziendale"
             },
             "utilities": {
+                "title": "Risorse utili",
                 "template": "Modulo per tesi in azienda",
                 "italian_version": "Versione italiana",
-                "english_version": "Versione inglese"
-            }
+                "english_version": "Versione inglese",
+                "plagiarism": "Come evitare il plagio",
+                "thesis_template": "Template tesi (LaTeX)",
+                "plagiarism_link": "https://www.youtube.com/watch?v=rFEAPKHMV5U",
+                "copyright": "Informazioni sul diritto d'autore",
+                "copyright_link": "https://didattica.polito.it/tesi/DirittoAutoreTesi.pdf",
+                "thesis_cover_word": "Frontespizio tesi (Word)",
+                "thesis_cover_word_link": "https://didattica.polito.it/portal/pls/portal/sviluppo.dsk_condiviso.download_file?p_id=131377&dsk=57554",
+                "logo": "Logo Politecnico di Torino",
+                "logo_link": "https://didattica.polito.it/portal/pls/portal/sviluppo.dsk_condiviso.download_file?p_id=131376&dsk=57554"
+            },
+            "next_steps": {
+                "title": "Prossimi passi per conseguire il titolo",
+                "step_1_title": "Tesi in corso",
+                "step_2_title": "Conferma conclusione tesi",
+                "step_3_title": "Questionario AlmaLaurea",
+                "step_4_title": "Iscrizione all'esame finale",
+                "step_5_title": "Tesi definitiva",
+                "step_1": "La tua tesi è attualmente in corso di svolgimento sotto la supervisione del relatore assegnato.",
+                "step_2": "Richiedi la conferma di conclusione della tesi al relatore una volta completato il lavoro.",
+                "step_3": "Compila il questionario AlmaLaurea entro la scadenza stabilita. Il link per accedere al questionario sarà disponibile in questa sezione.",
+                "step_4": "Iscriviti all'esame finale attraverso questa pagina una volta ottenuta la conferma di conclusione della tesi.",
+                "step_5": "Carica la versione definitiva della tesi seguendo le indicazioni fornite dal relatore e dal regolamento."
+            },
+            "proceed_to_thesis": "Procedi per iniziare la tesi",
+            "start_thesis": "Inizia la tesi",
+            "start_thesis_content": "Sei sicuro di voler iniziare la tua tesi? Una volta iniziata, non potrai più candidarti per altre proposte di tesi. L'azione non può essere annullata.",
+            "thesis_started_success": "Tesi iniziata con successo",
+            "thesis_started_error": "Errore durante l'inizio della tesi",
+            "close": "Chiudi",
+            "your_thesis": "La tua tesi",
+            "thesis_company": "Contatti aziendali",
+            "success_thesis_started": "Tesi iniziata con successo! Puoi monitorare lo stato della tua tesi in questa pagina.",
+            "error_thesis_started": "Errore durante l'inizio della tesi."
         }
     },
     "Accedi": "Accedi",

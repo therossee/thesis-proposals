@@ -6,6 +6,7 @@ import Linkify from 'react-linkify';
 import { ThemeContext } from '../App';
 import { getSystemTheme } from '../utils/utils';
 import API from '../API';
+import CustomBlock from './CustomBlock';
 
 
 import moment from 'moment';
@@ -133,67 +134,67 @@ function ThesisProposalDetail(props) {
                 <CustomBadge key={item.id} variant="type" content={item.type} />
               ))}
             </div>
-            <MyBlock icon="user" title="carriera.proposte_di_tesi.supervisors" ignoreMoreLines>
+            <CustomBlock icon="user" title="carriera.proposte_di_tesi.supervisors" ignoreMoreLines>
               <CustomBadge variant="teacher" content={supervisors.map(s => s.lastName + ' ' + s.firstName)} />
-            </MyBlock>
+            </CustomBlock>
             {keywords.length > 0 ? (
-              <MyBlock icon="key" title="carriera.proposte_di_tesi.keywords" ignoreMoreLines>
+              <CustomBlock icon="key" title="carriera.proposte_di_tesi.keywords" ignoreMoreLines>
                 <CustomBadge variant="keyword" content={keywords.map(item => item.keyword)} />
-              </MyBlock>
+              </CustomBlock>
             ) : null}
             {externalCoSupervisors && (
-              <MyBlock icon="user-plus" title="carriera.proposta_di_tesi.relatori_esterni">
+              <CustomBlock icon="user-plus" title="carriera.proposta_di_tesi.relatori_esterni">
                 <Linkify>{externalCoSupervisors}</Linkify>
-              </MyBlock>
+              </CustomBlock>
             )}
             {description && (
-              <MyBlock icon="memo" title="carriera.proposta_di_tesi.descrizione">
+              <CustomBlock icon="memo" title="carriera.proposta_di_tesi.descrizione">
                 <Linkify>{description}</Linkify>
-              </MyBlock>
+              </CustomBlock>
             )}
             {requiredSkills && (
-              <MyBlock icon="head-side-brain" title="carriera.proposta_di_tesi.conoscenze_richieste">
+              <CustomBlock icon="head-side-brain" title="carriera.proposta_di_tesi.conoscenze_richieste">
                 <Linkify>{requiredSkills}</Linkify>
-              </MyBlock>
+              </CustomBlock>
             )}
             {additionalNotes && (
-              <MyBlock icon="notes" title="carriera.proposta_di_tesi.note">
+              <CustomBlock icon="notes" title="carriera.proposta_di_tesi.note">
                 <Linkify>{additionalNotes}</Linkify>
-              </MyBlock>
+              </CustomBlock>
             )}
             {link && (
-              <MyBlock icon="link" title="Link">
+              <CustomBlock icon="link" title="Link">
                 <Linkify>{link}</Linkify>
-              </MyBlock>
+              </CustomBlock>
             )}
             {attachmentUrl && (
-              <MyBlock icon="paperclip" title="carriera.proposta_di_tesi.allegato">
+              <CustomBlock icon="paperclip" title="carriera.proposta_di_tesi.allegato">
                 <a
                   href={`https://didattica.polito.it/pls/portal30/sviluppo.tesi_proposte.download_alleg?idts=${id}&lang=IT`}
                   className="info-detail d-flex align-items-center"
                 >
                   {attachmentUrl}
                 </a>
-              </MyBlock>
+              </CustomBlock>
             )}
             {creationDate && (
-              <MyBlock icon="calendar" title="carriera.proposte_di_tesi.creationDate">
+              <CustomBlock icon="calendar" title="carriera.proposte_di_tesi.creationDate">
                 {moment(creationDate).format('DD/MM/YYYY')}
-              </MyBlock>
+              </CustomBlock>
             )}
             <div className="d-flex align-items-start justify-content-between">
               {expirationDate && (
                 <div className="flex-grow-1 me-3">
-                  <MyBlock icon="calendar-clock" title="carriera.proposte_di_tesi.expirationDate">
+                  <CustomBlock icon="calendar-clock" title="carriera.proposte_di_tesi.expirationDate">
                     {moment(expirationDate).format('DD/MM/YYYY')}
-                  </MyBlock>
+                  </CustomBlock>
                 </div>
               )}
-              <MyButton setShowModal={setShowModal} isEligible={isEligible} />
+              <ApplicationButton setShowModal={setShowModal} isEligible={isEligible} />
             </div>
           </Card.Body>
         </Card>
-        <MyModal
+        <ProposalModal
           show={showModal}
           handleClose={() => setShowModal(false)}
           sendApplication={sendApplication}
@@ -204,40 +205,9 @@ function ThesisProposalDetail(props) {
   }
 }
 
-function MyBlock({ icon, title, children, ignoreMoreLines }) {
-  const { t } = useTranslation();
-  const [moreLines, setMoreLines] = useState(false);
-  const contentRef = useRef(null);
-
-  useEffect(() => {
-    if (ignoreMoreLines) {
-      return;
-    }
-    const element = contentRef.current;
-    if (element) {
-      const computedStyle = window.getComputedStyle(element);
-      const lineHeight = parseFloat(computedStyle.lineHeight);
-      const lines = element.offsetHeight / lineHeight;
-
-      setMoreLines(lines > 1);
-    }
-  }, [children, ignoreMoreLines]);
-
-  return (
-    <div className={moreLines ? 'text-container' : 'info-container mb-3'}>
-      <div className={`title-container ${moreLines ? 'pb-1' : ''}`}>
-        {icon && <i className={`fa-regular fa-${icon} fa-fw`} />}
-        {t(title)}:
-      </div>
-      <div ref={contentRef} className={`info-detail ${moreLines ? 'aligned mb-3' : ''}`}>
-        {children}
-      </div>
-    </div>
-  );
-}
 
 
-function MyButton(props) {
+function ApplicationButton(props) {
   const { theme } = useContext(ThemeContext);
   const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
   const { t } = useTranslation();
@@ -249,7 +219,7 @@ function MyButton(props) {
     </Button>);
 }
 
-function MyModal({ show, handleClose, sendApplication }) {
+function ProposalModal({ show, handleClose, sendApplication }) {
   const { t } = useTranslation();
   const { theme } = useContext(ThemeContext);
   const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
@@ -306,11 +276,15 @@ ThesisProposalDetail.propTypes = {
   }).isRequired,
 };
 
-MyBlock.propTypes = {
-  icon: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-  ignoreMoreLines: PropTypes.bool,
+ApplicationButton.propTypes = {
+  isEligible: PropTypes.bool.isRequired,
+  setShowModal: PropTypes.func.isRequired,
+};
+
+ProposalModal.propTypes = {
+  show: PropTypes.bool.isRequired,
+  handleClose: PropTypes.func.isRequired,
+  sendApplication: PropTypes.func.isRequired,
 };
 
 export default ThesisProposalDetail;
