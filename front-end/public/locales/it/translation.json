@@ -101,8 +101,10 @@
             "chiudi": "Chiudi",
             "modal_contenuto": "Sei sicuro di voler inviare la candidatura per questa proposta di tesi?",
             "prosegui": "Invia",
-            "successo": "Candidatura inviata con successo! Puoi verificare lo stato della tua candidatura nella pagina relativa alla tua tesi.",
-            "errore": "Errore durante l'invio della candidatura. Riprova più tardi."
+            "successo": "Candidatura inviata con successo!",
+            "successo_content": "Puoi monitorare lo stato della tua candidatura nella pagina relativa alla tua tesi.",
+            "errore": "Errore durante l'invio della candidatura.",
+            "errore_content": "C'è stato un errore nell'invio della candidatura. Riprova più tardi."
         },
         "tesi": {
             "title": "Tesi",
@@ -170,13 +172,16 @@
             "proceed_to_thesis": "Procedi per iniziare la tesi",
             "start_thesis": "Inizia la tesi",
             "start_thesis_content": "Sei sicuro di voler iniziare la tua tesi? Una volta iniziata, non potrai più candidarti per altre proposte di tesi. L'azione non può essere annullata.",
-            "thesis_started_success": "Tesi iniziata con successo",
-            "thesis_started_error": "Errore durante l'inizio della tesi",
             "close": "Chiudi",
             "your_thesis": "La tua tesi",
             "thesis_company": "Contatti aziendali",
-            "success_thesis_started": "Tesi iniziata con successo! Puoi monitorare lo stato della tua tesi in questa pagina.",
-            "error_thesis_started": "Errore durante l'inizio della tesi."
+            "success_thesis_started": "Tesi iniziata con successo!",
+            "success_thesis_started_content": "Puoi monitorare lo stato della tua tesi in questa pagina.",
+            "error_thesis_started": "Errore durante l'inizio della tesi.",
+            "error_thesis_started_content": "C'è stato un errore nell'inizio della tesi. Riprova più tardi.",
+            "not_found": "Non c'è nulla qui...",
+            "message_not_found": "Nessuna candidatura o tesi attiva trovata",
+            "reload_page": "Ricarica la pagina"
         }
     },
     "Accedi": "Accedi",

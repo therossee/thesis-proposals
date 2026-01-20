@@ -14,7 +14,7 @@ import { useContext } from 'react';
 import { ThemeContext } from '../App';
 import { getSystemTheme } from '../utils/utils';
 
-export default function ThesisApplication({thesisApplication, startThesis}) {
+export default function ThesisApplication({ thesisApplication, startThesis }) {
   const teachers = [thesisApplication.supervisor, ...thesisApplication.coSupervisors];
   const [statusHistory, setStatusHistory] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -52,25 +52,40 @@ export default function ThesisApplication({thesisApplication, startThesis}) {
           autohide
           className={`custom-toast ${success ? 'custom-toast--success' : 'custom-toast--error'}`}
         >
-          <Toast.Header className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-start gap-2 w-100">
             <span className="custom-toast__icon">
               <i
                 className={success ? 'fa-regular fa-circle-check' : 'fa-regular fa-circle-xmark'}
                 aria-hidden="true"
               />
             </span>
-            <strong className="custom-toast__message">
-              {success
-                ? t('carriera.tesi.success_thesis_started')
-                : t('carriera.tesi.error_thesis_started')}
-            </strong>
-          </Toast.Header>
+            <div className="custom-toast__content">
+              <strong className="custom-toast__title">
+                {success
+                  ? t('carriera.tesi.success_thesis_started')
+                  : t('carriera.tesi.error_thesis_started')}
+              </strong>
+              <p className="custom-toast__message mb-0">
+                {success
+                  ? t('carriera.tesi.success_thesis_started_content')
+                  : t('carriera.tesi.error_thesis_started_content')}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="custom-toast__close"
+              onClick={() => setShowToast(false)}
+              aria-label="Close"
+            >
+              <i className="fa-solid fa-xmark" />
+            </button>
+          </div>
         </Toast>
       </div>
-    <div className="proposals-container">
-      <Row className="mb-3">
-        <Col>
-          <Card className="mb-3 roundCard py-2">
+      <div className="proposals-container">
+        <Row className="mb-3">
+          <Col>
+            <Card className="mb-3 roundCard py-2">
               <Card.Header className="border-0">
                 <Row className='d-flex justify-content-between align-items-center'>
                   <Col xs={12} style={{ marginBottom: '10px' }}>
@@ -81,59 +96,59 @@ export default function ThesisApplication({thesisApplication, startThesis}) {
                   </Col>
                 </Row>
               </Card.Header>
-            <Card.Body className="pt-2 pb-0">
-              <CustomBlock icon="book-open" title="carriera.proposte_di_tesi.topic">
-                {thesisApplication.topic}
-              </CustomBlock>
-              {thesisApplication.description && (
-                <CustomBlock icon="info-circle" title="carriera.proposte_di_tesi.description" ignoreMoreLines>
-                  {thesisApplication.description || '-'}
+              <Card.Body className="pt-2 pb-0">
+                <CustomBlock icon="book-open" title="carriera.proposte_di_tesi.topic">
+                  {thesisApplication.topic}
                 </CustomBlock>
-              )}
+                {thesisApplication.description && (
+                  <CustomBlock icon="info-circle" title="carriera.proposte_di_tesi.description" ignoreMoreLines>
+                    {thesisApplication.description || '-'}
+                  </CustomBlock>
+                )}
 
 
 
-              <CustomBlock icon="calendar-clock" title="carriera.tesi.submission_date">
-                {moment(thesisApplication.submissionDate).format('DD/MM/YYYY - HH:mm')}
-              </CustomBlock>
+                <CustomBlock icon="calendar-clock" title="carriera.tesi.submission_date">
+                  {moment(thesisApplication.submissionDate).format('DD/MM/YYYY - HH:mm')}
+                </CustomBlock>
 
-            </Card.Body>
-          </Card>
-              <TeacherContactCard
-                supervisor={thesisApplication.supervisor}
-                coSupervisors={thesisApplication.coSupervisors}
-              />
-        </Col>
-        <Col>
-          <Card className="mb-3 roundCard py-2">
-            <Card.Header className="border-0">
-              <h3 className="thesis-topic">
-                <i className="fa-solid fa-timeline fa-sm pe-2" />
-                {t("carriera.tesi.progress_application.title")}
-              </h3>
-            </Card.Header>
-            <Card.Body>
-              <ApplicationProgressTracker 
-                status={thesisApplication.status}
-                statusHistory={statusHistory}
-              />
-              {thesisApplication.status === 'approved' && (
-                <div className="mt-3 d-flex justify-content-end">
-                  <Button className={`btn-${appliedTheme}`} size="md" onClick={() => setShowModal(true)}>
-                    {t('carriera.tesi.proceed_to_thesis')}
-                  </Button>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-      <ThesisStartModal
-        show={showModal}
-        handleClose={() => setShowModal(false)}
-        handleStart={handleStart}
-      />
-    </div>
+              </Card.Body>
+            </Card>
+            <TeacherContactCard
+              supervisor={thesisApplication.supervisor}
+              coSupervisors={thesisApplication.coSupervisors}
+            />
+          </Col>
+          <Col>
+            <Card className="mb-3 roundCard py-2">
+              <Card.Header className="border-0">
+                <h3 className="thesis-topic">
+                  <i className="fa-solid fa-timeline fa-sm pe-2" />
+                  {t("carriera.tesi.progress_application.title")}
+                </h3>
+              </Card.Header>
+              <Card.Body>
+                <ApplicationProgressTracker
+                  status={thesisApplication.status}
+                  statusHistory={statusHistory}
+                />
+                {thesisApplication.status === 'approved' && (
+                  <div className="mt-3 d-flex justify-content-end">
+                    <Button className={`btn-${appliedTheme}`} size="md" onClick={() => setShowModal(true)}>
+                      {t('carriera.tesi.proceed_to_thesis')}
+                    </Button>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+        <ThesisStartModal
+          show={showModal}
+          handleClose={() => setShowModal(false)}
+          handleStart={handleStart}
+        />
+      </div>
     </>
   );
 }

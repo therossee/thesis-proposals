@@ -15,16 +15,16 @@
 
 .custom-toast {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	gap: 12px;
 	min-width: 280px;
 	border-radius: 9px;
-	border: 1px solid var(--gray-400, #9ca3af);
+	border: 1px solid var(--gray-400);
 	background: #fff;
 	padding: 12px 16px;
 	box-shadow: 0 18px 44px rgba(15, 23, 42, 0.18);
 	font-family: var(--font-family);
-	color: var(--text-800, #1f2937);
+	color: var(--text-800);
     width: auto;
 }
 
@@ -47,6 +47,7 @@
 	height: 28px;
 	border-radius: 50%;
 	flex: 0 0 auto;
+	margin-top: 2px;
 }
 
 .custom-toast__content {
@@ -54,6 +55,7 @@
 	flex-direction: column;
 	gap: 4px;
 	flex: 1;
+	min-width: 0;
 }
 
 .custom-toast__title {
@@ -65,7 +67,7 @@
 .custom-toast__message {
 	font-size: 14px;
 	line-height: 150%;
-	color: var(--text-600, #4b5563);
+	color: var(--text);
 }
 
 .custom-toast__close {
@@ -74,11 +76,14 @@
 	justify-content: center;
 	border: 0;
 	background: transparent;
-	color: var(--text-600, #4b5563);
+	color: var(--text-600);
 	cursor: pointer;
 	padding: 4px;
 	border-radius: 999px;
 	transition: background-color 0.2s ease;
+	flex: 0 0 auto;
+	margin-left: auto;
+	margin-top: -4px;
 }
 
 .custom-toast__close:hover {
@@ -87,38 +92,38 @@
 
 /* Success toast */
 .custom-toast--success {
-	border-color: var(--success-700, #0f8038);
-	background: var(--success-100, #dcfce7);
-	color: var(--success-700, #0f8038);
+	border-color: var(--success-700);
+	background: var(--success-100);
+	color: var(--success-700);
 }
 
 .custom-toast--success .custom-toast__icon {
-	background: var(--success-200, #bbf7d0);
-	color: var(--success-700, #0f8038);
+	background: var(--success-200);
+	color: var(--success-700);
 }
 
 .custom-toast--success .custom-toast__title,
 .custom-toast--success .custom-toast__message,
 .custom-toast--success .toast-header,
 .custom-toast--success .toast-body {
-	color: var(--success-700, #0f8038);
+	color: var(--success-700);
 }
 
 /* Error toast */
 .custom-toast--error {
-	border-color: var(--error-700, #b91c1c);
-	background: var(--error-100, #fee2e2);
-	color: var(--error-700, #b91c1c);
+	border-color: var(--error-700);
+	background: var(--error-100);
+	color: var(--error-700);
 }
 
 .custom-toast--error .custom-toast__icon {
-	background: var(--error-200, #fecaca);
-	color: var(--error-700, #b91c1c);
+	background: var(--error-200);
+	color: var(--error-700);
 }
 
 .custom-toast--error .custom-toast__title,
 .custom-toast--error .custom-toast__message,
 .custom-toast--error .toast-header,
 .custom-toast--error .toast-body {
-	color: var(--error-700, #b91c1c);
+	color: var(--error-700);
 }

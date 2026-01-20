@@ -36,7 +36,6 @@ const steps = [
 
 const renderStep = (step, index) => {
   const isActive = step.key === activeStep;
-  console.log(`Step: ${step.key}, Active: ${isActive}`); // Debugging line
   
   return (
     <div 

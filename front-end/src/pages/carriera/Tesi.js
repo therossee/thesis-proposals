@@ -4,10 +4,10 @@ import { useTranslation } from 'react-i18next';
 
 import API from '../../API';
 import { BodyDataLoadingContext, LoggedStudentContext } from '../../App';
-import CustomBadge from '../../components/CustomBadge';
 import CustomBreadcrumb from '../../components/CustomBreadcrumb';
 import Thesis from '../../components/Thesis';
 import ThesisApplication from '../../components/ThesisApplication';
+import ThesisNotFound from '../../components/ThesisNotFound';
 
 
 
@@ -28,8 +28,7 @@ const startThesis = (setShowToast, setSuccess) => {
     supervisor: thesisApplication.supervisor,
     coSupervisors: thesisApplication.coSupervisors,
   })
-    .then((data) => {
-      console.log('Thesis started successfully:', data);
+    .then(() => {
       setSuccess(true);
       setShowToast(true);
       
@@ -38,7 +37,7 @@ const startThesis = (setShowToast, setSuccess) => {
       }, 5000);
     })
     .catch((error) => {
-      console.error('Error starting thesis from application:', error);
+      console.error('Error starting thesis:', error);
       setSuccess(false);
       setShowToast(true);
     });
@@ -83,7 +82,7 @@ useEffect(() => {
       } else if (thesisApplication) {
         return <ThesisApplication thesisApplication={thesisApplication} startThesis={startThesis} />;
       } else {
-        return <CustomBadge variant="error" content={t('carriera.tesi.error')} />;
+        return <ThesisNotFound />;
       }
     };
 

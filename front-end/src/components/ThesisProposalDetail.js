@@ -97,19 +97,34 @@ function ThesisProposalDetail(props) {
           autohide
           className={`custom-toast ${success ? 'custom-toast--success' : 'custom-toast--error'}`}
         >
-          <Toast.Header className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-start gap-2 w-100">
             <span className="custom-toast__icon">
               <i
                 className={success ? 'fa-regular fa-circle-check' : 'fa-regular fa-circle-xmark'}
                 aria-hidden="true"
               />
             </span>
-            <strong className="custom-toast__message">
-              {success
-                ? t('carriera.proposta_di_tesi.successo')
-                : t('carriera.proposta_di_tesi.errore')}
-            </strong>
-          </Toast.Header>
+            <div className="custom-toast__content">
+              <strong className="custom-toast__title">
+                {success
+                  ? t('carriera.proposta_di_tesi.successo')
+                  : t('carriera.proposta_di_tesi.errore')}
+              </strong>
+              <p className="custom-toast__message mb-0">
+                {success
+                  ? t('carriera.proposta_di_tesi.successo_content')
+                  : t('carriera.proposta_di_tesi.errore_content')}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="custom-toast__close"
+              onClick={() => setShowToast(false)}
+              aria-label="Close"
+            >
+              <i className="fa-solid fa-xmark" />
+            </button>
+          </div>
         </Toast>
       </div>
       <div className="proposals-container">
