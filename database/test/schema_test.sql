@@ -1,7 +1,7 @@
 /**------------------------------------------------------------------------------------------------------------------------------------
  * ?                                             Portale-PoliTO MySQL Schema (MySQL 8.4.3)
  * @createdOn       :   09 November 2024
- * @lastModifiedOn  :   23 January 2025
+ * @lastModifiedOn  :   21 January 2026
  * @description     :   SQL Schema for the Portale-PoliTO Database. Designed for MySQL 8.4.3
  * @note            :   [1681] Integer display width is deprecated and will be removed in a future release.
                         Therefore, we have removed the display width from the INT data type in the provided original schema as well.
@@ -52,6 +52,13 @@ CREATE TABLE IF NOT EXISTS degree_programme (
     FOREIGN KEY (id_collegio) REFERENCES collegio(id) ON DELETE RESTRICT, -- RESTRICT policy in order to pay attention to the deletion of a collegio
     FOREIGN KEY (container_id) REFERENCES degree_programme_container(id) ON DELETE RESTRICT -- RESTRICT policy in order to pay attention to the deletion of a degree programme container
 );
+
+-- Table for storing companies
+CREATE TABLE IF NOT EXISTS company (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    corporate_name VARCHAR(100) NOT NULL
+);
+
 
 -- Table for storing students' data 
 CREATE TABLE IF NOT EXISTS student (
@@ -141,14 +148,23 @@ CREATE TABLE IF NOT EXISTS thesis_proposal_type (
     FOREIGN KEY (type_id) REFERENCES type(id) ON DELETE CASCADE
 );
 
+-- Table for linking thesis proposals with companies
+CREATE TABLE IF NOT EXISTS thesis_proposal_company (
+    thesis_proposal_id INT NOT NULL,
+    company_id INT NOT NULL,
+    PRIMARY KEY (thesis_proposal_id, company_id),
+    FOREIGN KEY (thesis_proposal_id) REFERENCES thesis_proposal(id) ON DELETE CASCADE,
+    FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE RESTRICT -- RESTRICT policy in order to pay attention to the deletion of a company
+);
+
 -- Table for linking thesis proposals with supervisors and cosupervisors
 CREATE TABLE IF NOT EXISTS thesis_proposal_supervisor_cosupervisor (
     thesis_proposal_id INT NOT NULL,
-    supervisor_id INT NOT NULL, -- provided schema specifies INT(10)
+    teacher_id INT NOT NULL, -- provided schema specifies INT(10)
     is_supervisor BOOLEAN NOT NULL, -- if true then supervisor, else cosupervisor
-    PRIMARY KEY (thesis_proposal_id, supervisor_id),
+    PRIMARY KEY (thesis_proposal_id, teacher_id),
     FOREIGN KEY (thesis_proposal_id) REFERENCES thesis_proposal(id) ON DELETE CASCADE,
-    FOREIGN KEY (supervisor_id) REFERENCES supervisor(id) ON DELETE RESTRICT -- RESTRICT policy because why should you delete a teacher?
+    FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE RESTRICT -- RESTRICT policy because why should you delete a teacher?
 );
 
 -- Table for storing the id of the logged student
@@ -156,6 +172,101 @@ CREATE TABLE IF NOT EXISTS logged_student (
     student_id VARCHAR(6) PRIMARY KEY,
     FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS thesis_application (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id VARCHAR(6) NOT NULL,
+    thesis_proposal_id INT,
+    company_id INT,
+    topic TEXT NOT NULL,
+    submission_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('pending', 'approved', 'rejected', 'canceled') NOT NULL DEFAULT 'pending',
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE RESTRICT, -- RESTRICT policy because why should you delete a student?
+    FOREIGN KEY (thesis_proposal_id) REFERENCES thesis_proposal(id) ON DELETE SET NULL,
+    FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE RESTRICT -- RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS thesis_application_supervisor_cosupervisor(
+    thesis_application_id INT NOT NULL,
+    teacher_id INT NOT NULL,
+    is_supervisor BOOLEAN NOT NULL, -- if true then supervisor, else cosupervisor
+    PRIMARY KEY (thesis_application_id, teacher_id),
+    FOREIGN KEY (thesis_application_id) REFERENCES thesis_application(id) ON DELETE CASCADE,
+    FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE RESTRICT -- RESTRICT policy because why should you delete a teacher?
+);
+
+
+CREATE TABLE IF NOT EXISTS thesis_application_status_history(
+    id INT AUTO_INCREMENT NOT NULL,
+    thesis_application_id INT NOT NULL,
+    old_status ENUM('pending', 'approved', 'rejected', 'canceled'),
+    new_status ENUM('pending', 'approved', 'rejected', 'canceled') NOT NULL,
+    note VARCHAR(255),
+    change_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    FOREIGN KEY (thesis_application_id) REFERENCES thesis_application(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS license(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS thesis(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    topic TEXT NOT NULL,
+    title VARCHAR(255),
+    title_eng VARCHAR(255),
+    language ENUM('it', 'en'),
+    company_id INT,
+    student_id VARCHAR(6) NOT NULL,
+    abstract TEXT,
+    abstract_eng TEXT,
+    thesis_file BLOB,
+    thesis_resume BLOB,
+    license_id INT,
+    thesis_start_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    thesis_conclusion_request_date DATETIME,
+    thesis_conclusion_confirmation_date DATETIME,
+    FOREIGN KEY (license_id) REFERENCES license(id) ON DELETE RESTRICT -- RESTRICT policy because why should you delete a license?
+);
+
+
+CREATE TABLE IF NOT EXISTS thesis_supervisor_cosupervisor(
+    thesis_id INT NOT NULL,
+    teacher_id INT NOT NULL,
+    is_supervisor BOOLEAN NOT NULL, -- if true then supervisor, else cosupervisor
+    PRIMARY KEY (thesis_id, teacher_id),
+    FOREIGN KEY (thesis_id) REFERENCES thesis(id) ON DELETE CASCADE,
+    FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE RESTRICT -- RESTRICT policy because why should you delete a teacher?
+);
+
+
+CREATE TABLE IF NOT EXISTS thesis_keyword(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    thesis_id INT NOT NULL,
+    keyword_id INT NOT NULL,
+    FOREIGN KEY (keyword_id) REFERENCES keyword(id) ON DELETE CASCADE,
+    FOREIGN KEY (thesis_id) REFERENCES thesis(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS embargo_motivation(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    motivation VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS embargo(
+    motivation_id INT NOT NULL,
+    thesis_id INT NOT NULL,
+    other_motivation TEXT,
+    month_duration ENUM('12', '18', '36', 'after_explicit_consent') NOT NULL,
+    PRIMARY KEY (motivation_id, thesis_id),
+    FOREIGN KEY (motivation_id) REFERENCES embargo_motivation(id) ON DELETE CASCADE,
+    FOREIGN KEY (thesis_id) REFERENCES thesis(id) ON DELETE CASCADE
+);
+
 
 /**---------------------------------------------------------------------
  **               SQL Syntax

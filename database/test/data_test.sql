@@ -19,6 +19,16 @@ VALUES
     ("CL017", "Collegio di Ingegneria Elettrica ed Energetica"),
     ("CL018", "Collegio di Ingegneria Civile ed Edile");
 
+INSERT INTO
+    company (id, corporate_name)
+VALUES
+    (1, "Tech Solutions S.r.l."),
+    (2, "Innovatech S.p.A."),
+    (3, "Green Energy Corp."),
+    (4, "AutoMotive Innovations"),
+    (5, "BioHealth Technologies");
+
+
 
 -- ------------------------------------------------------------
 -- ↓ degree_programme_container table ↓
@@ -3272,7 +3282,7 @@ VALUES
 -- ↓ thesis_proposal_supervisor_cosupervisor table ↓
 -- ------------------------------------------------------------
 INSERT INTO
-    thesis_proposal_supervisor_cosupervisor (thesis_proposal_id, supervisor_id, is_supervisor)
+    thesis_proposal_supervisor_cosupervisor (thesis_proposal_id, teacher_id, is_supervisor)
 VALUES
     (13169, 38485, 1),
     (13275, 3019, 1),
@@ -3292,3 +3302,104 @@ INSERT INTO
     logged_student (student_id)
 VALUES
     (320213);
+
+-- ------------------------------------------------------------
+-- ↓ thesis_application table ↓
+-- ------------------------------------------------------------
+INSERT INTO
+    thesis_application (
+        id,
+        topic,
+        student_id,
+        thesis_proposal_id,
+        submission_date
+    )
+VALUES
+    (
+        1,
+        "Valutazione Critica delle Capacità di Generazione del Codice da Parte di LLM in Contesto di Istruzione",
+        320213,
+        13275,
+        "2024-11-20"
+    );
+-- ------------------------------------------------------------
+-- ↓ thesis_application_supervisor_cosupervisor table ↓
+-- ------------------------------------------------------------
+INSERT INTO
+    thesis_application_supervisor_cosupervisor (
+        thesis_application_id,
+        teacher_id,
+        is_supervisor
+    )
+VALUES
+    (
+        1,
+        3019,
+        1
+    ),
+    (
+        1,
+        38485,
+        0
+    );
+
+-- ------------------------------------------------------------
+-- ↓ thesis_application_status_history table ↓
+-- ------------------------------------------------------------
+INSERT INTO
+    thesis_application_status_history (
+        thesis_application_id,
+        old_status,
+        new_status,
+        change_date,
+        note
+    )
+VALUES
+    (
+        1,
+        NULL,
+        'pending',
+        "2024-11-20T10:00:00",
+        "note"
+    );
+
+-- ------------------------------------------------------------
+-- ↓ thesis table ↓
+-- ------------------------------------------------------------
+INSERT INTO
+    thesis (
+        id,
+        topic,
+        student_id,
+        company_id,    
+        thesis_start_date
+    )
+VALUES
+    (
+        1,
+        "Valutazione Critica delle Capacità di Generazione del Codice da Parte di LLM in Contesto di Istruzione",
+        314796,
+        NULL,
+        "2025-02-01"
+    );
+
+-- ------------------------------------------------------------
+-- ↓ thesis_supervisor_cosupervisor table ↓
+-- ------------------------------------------------------------
+INSERT INTO
+    thesis_supervisor_cosupervisor (
+        thesis_id,
+        teacher_id,
+        is_supervisor
+    )
+VALUES
+    (
+        1,
+        3019,
+        1
+    ),
+    (
+        1,
+        38485,
+        0
+    );

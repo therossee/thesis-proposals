@@ -1,15 +1,9 @@
-const { Company, CompanyOffice } = require('../models');
+const { Company } = require('../models');
 const companySchema = require('../schemas/Company');
 
 const getCompanies = async (req, res) => {
   try {
     const companies = await Company.findAll({
-      include: [
-        {
-          model: CompanyOffice,
-          as: 'registered_office',
-        },
-      ],
       order: [['corporate_name', 'ASC']],
     });
     res.json(

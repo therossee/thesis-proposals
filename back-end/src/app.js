@@ -6,7 +6,7 @@ const studentsRouter = require('./routers/students');
 const thesisApplicationsRouter = require('./routers/thesis-applications');
 const thesisRouter = require('./routers/thesis');
 const companiesRouter = require('./routers/companies');
-const testRouter = require('./routers/test');
+const testRouter = require('./routers/test-router');
 
 require('dotenv').config();
 

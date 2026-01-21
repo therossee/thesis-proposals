@@ -25,7 +25,7 @@ describe('GET /thesis-applications/eligibility', () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       studentId: expect.any(String),
-      isEligible: expect.any(Boolean),
+      eligible: expect.any(Boolean),
     });
   });
 });

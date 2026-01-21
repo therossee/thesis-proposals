@@ -2,14 +2,14 @@ const { z } = require('zod');
 
 // Importiamo gli schemi originali (che si aspettano snake_case)
 const teacherOverviewSchema = require('./TeacherOverview');
-const companyOverviewSchema = require('./CompanyOverview');
+const companySchema = require('./Company');
 const thesisProposalMinimalSchema = require('./ThesisProposalMinimal');
 
 const thesisApplicationRequestSchema = z.object({
   topic: z.string(),
   supervisor: teacherOverviewSchema,
   co_supervisors: z.array(teacherOverviewSchema).default([]).nullable(),
-  company: companyOverviewSchema.nullable().optional(),
+  company: companySchema.nullable().optional(),
   thesis_proposal: thesisProposalMinimalSchema.nullable().optional(),
 });
 
