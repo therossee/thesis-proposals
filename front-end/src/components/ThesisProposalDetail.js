@@ -1,21 +1,18 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Button, Card, Col, Modal, Row, Toast } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import Linkify from 'react-linkify';
-import { useNavigate } from 'react-router-dom';
 
 import moment from 'moment';
 import 'moment/locale/it';
 import PropTypes from 'prop-types';
 
 import API from '../API';
-import { ThemeContext } from '../App';
 import '../styles/custom-modal.css';
 import '../styles/custom-toast.css';
 import '../styles/text.css';
 import '../styles/utilities.css';
-import { getSystemTheme } from '../utils/utils';
 import CustomBadge from './CustomBadge';
 import CustomBlock from './CustomBlock';
 
@@ -204,7 +201,6 @@ function ThesisProposalDetail(props) {
                   </div>
                 )}
                 <div className="d-flex gap-2">
-                  <ModifyProposalButton proposalId={id} isEligible={isEligible} />
                   <ApplicationButton setShowModal={setShowModal} isEligible={isEligible} />
                 </div>
               </div>
@@ -218,33 +214,13 @@ function ThesisProposalDetail(props) {
 }
 
 function ApplicationButton(props) {
-  const { theme } = useContext(ThemeContext);
-  const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
   const { t } = useTranslation();
   const isEligible = props.isEligible;
   const setShowModal = props.setShowModal;
   return (
-    <Button className={`btn-${appliedTheme} mb-3`} size="md" onClick={() => setShowModal(true)} disabled={!isEligible}>
+    <Button className="modal-confirm mb-3" size="md" onClick={() => setShowModal(true)} disabled={!isEligible}>
       <i className="fa-solid fa-paper-plane"></i>
       {t('carriera.proposta_di_tesi.candidatura')}
-    </Button>
-  );
-}
-
-function ModifyProposalButton({ proposalId, isEligible }) {
-  const { theme } = useContext(ThemeContext);
-  const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  return (
-    <Button
-      className={`btn-${appliedTheme} mb-3`}
-      size="md"
-      disabled={!isEligible}
-      onClick={() => navigate(`/carriera/richiesta_tesi/${proposalId}`)}
-    >
-      <i className="fa-solid fa-pen-to-square"></i>
-      {t('carriera.proposta_di_tesi.modifica_proposta')}
     </Button>
   );
 }
@@ -307,11 +283,6 @@ ProposalModal.propTypes = {
   show: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
   sendApplication: PropTypes.func.isRequired,
-};
-
-ModifyProposalButton.propTypes = {
-  proposalId: PropTypes.number.isRequired,
-  isEligible: PropTypes.bool.isRequired,
 };
 
 export default ThesisProposalDetail;

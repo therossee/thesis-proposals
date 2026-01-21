@@ -192,12 +192,7 @@ const createStudentThesis = async (req, res) => {
   }
 };
 
-const updateStudentThesis = async (req, res) => {
-  // Implementation for updating a thesis
-};
-
 module.exports = {
   getLoggedStudentThesis,
   createStudentThesis,
-  updateStudentThesis,
 };

@@ -15,7 +15,7 @@ import CustomBlock from './CustomBlock';
 import LoadingModal from './LoadingModal';
 import SupervisorSelect from './SupervisorSelect';
 
-export default function ThesisApplicationForm({ proposalId }) {
+export default function ThesisApplicationForm() {
   const { setBodyDataLoading } = useContext(BodyDataLoadingContext);
   const [teachers, setTeachers] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -62,61 +62,11 @@ export default function ThesisApplicationForm({ proposalId }) {
           console.error('Error fetching companies:', error);
           return [];
         }),
-    ]).then(([teachers, companies]) => {
-      if (proposalId !== null && proposalId !== undefined) {
-        API.getThesisProposalById(proposalId)
-          .then(proposal => {
-            console.log(proposal);
-            setTopic(proposal.topic || '');
-
-            if (proposal.supervisor) {
-              const supervisor = teachers.find(t => t.id === proposal.supervisor.id);
-              if (supervisor) {
-                setSelectedSupervisor({
-                  value: supervisor.id,
-                  label: `${supervisor.lastName} ${supervisor.firstName}`,
-                });
-              }
-            }
-            if (proposal.internalCoSupervisors && proposal.internalCoSupervisors.length > 0) {
-              const coSupOptions = proposal.internalCoSupervisors
-                .map(coSup => {
-                  const teacher = teachers.find(t => t.id === coSup.id);
-                  if (teacher) {
-                    return {
-                      value: teacher.id,
-                      label: `${teacher.lastName} ${teacher.firstName}`,
-                    };
-                  }
-                  return null;
-                })
-                .filter(option => option !== null);
-              setSelectedCoSupervisors(coSupOptions);
-            }
-
-            if (proposal.company) {
-              const company = companies.find(c => c.id === proposal.company.id);
-              if (company) {
-                setSelectedCompany({
-                  value: company.id,
-                  label: company.corporateName,
-                });
-              }
-            }
-          })
-          .catch(error => {
-            console.error('Error fetching thesis proposal by ID:', error);
-          })
-          .finally(() => {
-            setBodyDataLoading(false);
-            setIsLoading(false);
-          });
-      } else {
-        setBodyDataLoading(false);
-        setIsLoading(false);
-      }
+    ]).then(() => {
+      setIsLoading(false);
+      setBodyDataLoading(false);
     });
-  }, [setBodyDataLoading, proposalId]);
+  }, [setBodyDataLoading]);
 
   const handleSubmit = () => {
     const newErrors = {
@@ -146,7 +96,6 @@ export default function ThesisApplicationForm({ proposalId }) {
         })
         .catch(error => {
           console.error('Error submitting thesis application:', error);
-          // Handle submission error (e.g., show an error message)
           setSuccess(false);
           setShowToast(true);
         });
