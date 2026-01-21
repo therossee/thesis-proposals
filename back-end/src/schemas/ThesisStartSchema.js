@@ -7,7 +7,7 @@ const thesisStartSchema = z.object({
   supervisor: teacherOverviewSchema,
   co_supervisors: z.array(teacherOverviewSchema).default([]).nullable(),
   company: companySchema.nullable(),
-  thesis_application_date: z.string().datetime(),
+  thesis_start_date: z.string().datetime(),
 });
 
 module.exports = thesisStartSchema;

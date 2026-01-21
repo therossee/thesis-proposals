@@ -11,6 +11,38 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
+      title: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      title_eng: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      language: {
+        type: DataTypes.ENUM('it', 'en'),
+        allowNull: true,
+      },
+      abstract: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      abstract_eng: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      thesis_file: {
+        type: DataTypes.BLOB,
+        allowNull: true,
+      },
+      thesis_resume: {
+        type: DataTypes.BLOB,
+        allowNull: true,
+      },
+      license_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       company_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -19,9 +51,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(6),
         allowNull: false,
       },
-      thesis_application_date: {
+      thesis_start_date: {
         type: DataTypes.DATE,
         allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
       thesis_conclusion_request_date: {
         type: DataTypes.DATE,

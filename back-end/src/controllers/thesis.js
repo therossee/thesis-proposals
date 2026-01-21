@@ -1,14 +1,7 @@
 const { QueryTypes } = require('sequelize');
 const { sequelize, Thesis, ThesisSupervisorCoSupervisor, Teacher, Student } = require('../models');
-const snakecaseKeys = require('snakecase-keys').default;
 const thesisSchema = require('../schemas/Thesis');
-
-const snakeCaseMiddleware = obj => {
-  if (obj && typeof obj === 'object') {
-    return snakecaseKeys(obj, { deep: true });
-  }
-  return obj;
-};
+const toSnakeCase = require('../utils/snakeCase');
 
 // ==========================================
 // CONTROLLERS
@@ -76,7 +69,7 @@ const getLoggedStudentThesis = async (req, res) => {
       supervisor: supervisorData,
       co_supervisors: coSupervisorsData,
       company: companyData ? companyData.toJSON() : null,
-      thesis_application_date: thesisData.thesis_application_date.toISOString(),
+      thesis_start_date: thesisData.thesis_start_date.toISOString(),
       thesis_conclusion_request_date: thesisData.thesis_conclusion_request_date
         ? thesisData.thesis_conclusion_request_date.toISOString()
         : null,
@@ -107,7 +100,7 @@ const createStudentThesis = async (req, res) => {
       { type: QueryTypes.SELECT },
     );
 
-    const thesis_data = snakeCaseMiddleware(req.body);
+    const thesis_data = toSnakeCase(req.body);
     console.log('Creating thesis with data: ' + JSON.stringify(thesis_data, null, 2));
 
     const t = await sequelize.transaction();
@@ -117,7 +110,7 @@ const createStudentThesis = async (req, res) => {
         student_id: loggedStudent[0].id,
         company_id: thesis_data.company ? thesis_data.company.id : null,
         topic: thesis_data.topic,
-        thesis_application_date: thesis_data.thesis_application_date,
+        thesis_start_date: thesis_data.thesis_start_date,
       },
       { transaction: t },
     );
@@ -178,7 +171,7 @@ const createStudentThesis = async (req, res) => {
       supervisor: supervisorData,
       co_supervisors: coSupervisorsData,
       company: thesis_data.company ? thesis_data.company.toJSON() : null,
-      thesis_application_date: completeThesis.thesis_application_date.toISOString(),
+      thesis_start_date: completeThesis.thesis_start_date.toISOString(),
       thesis_conclusion_request_date: completeThesis.thesis_conclusion_request_date,
       thesis_conclusion_confirmation_date: completeThesis.thesis_conclusion_confirmation_date,
     };

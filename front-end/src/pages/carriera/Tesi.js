@@ -18,7 +18,7 @@ export default function Tesi() {
 
   const startThesis = (setShowToast, setSuccess) => {
     API.startThesisFromApplication({
-      thesisApplicationDate: thesisApplication.submissionDate,
+      thesisStartDate: thesisApplication.submissionDate,
       company: thesisApplication.company,
       topic: thesisApplication.topic,
       supervisor: thesisApplication.supervisor,

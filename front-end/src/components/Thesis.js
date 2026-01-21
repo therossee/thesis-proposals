@@ -37,7 +37,7 @@ export default function Thesis(props) {
                 {thesis.topic.length > 600 ? thesis.topic.substring(0, 597) + '...' : thesis.topic}
               </CustomBlock>
               <CustomBlock icon="calendar" title="carriera.tesi.submission_date" ignoreMoreLines={true}>
-                {thesis.thesisApplicationDate ? moment(thesis.thesisApplicationDate).format('DD/MM/YYYY - HH:mm') : '-'}
+                {thesis.thesisStartDate ? moment(thesis.thesisStartDate).format('DD/MM/YYYY - HH:mm') : '-'}
               </CustomBlock>
               {thesis.conclusionConfirmationDate && (
                 <CustomBlock
@@ -165,7 +165,7 @@ Thesis.propTypes = {
   thesis: PropTypes.shape({
     id: PropTypes.number.isRequired,
     topic: PropTypes.string.isRequired,
-    thesisApplicationDate: PropTypes.string.isRequired,
+    thesisStartDate: PropTypes.string.isRequired,
     conclusionConfirmationDate: PropTypes.string,
     conclusionRequestDate: PropTypes.string,
     supervisor: PropTypes.object.isRequired,

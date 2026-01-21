@@ -38,7 +38,6 @@ DROP TABLE IF EXISTS thesis;
 DROP TABLE IF EXISTS thesis_application_status_history;
 DROP TABLE IF EXISTS thesis_application_supervisor_cosupervisor;
 DROP TABLE IF EXISTS thesis_application;
-DROP TABLE IF EXISTS company_office;
 DROP TABLE IF EXISTS company;
 
 
@@ -71,18 +70,6 @@ CREATE TABLE IF NOT EXISTS degree_programme (
 CREATE TABLE IF NOT EXISTS company (
     id INT AUTO_INCREMENT PRIMARY KEY,
     corporate_name VARCHAR(100) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS company_office (
-    id INT AUTO_INCREMENT NOT NULL,
-    company_id INT NOT NULL,
-    street VARCHAR(255) NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    postal_code VARCHAR(20),
-    state_or_province VARCHAR(100),
-    country VARCHAR(100) NOT NULL,
-    PRIMARY KEY (id, company_id),
-    FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE RESTRICT -- RESTRICT policy in order to pay attention to the deletion of a company  
 );
 
 -- Table for storing students' data 
@@ -231,14 +218,30 @@ CREATE TABLE IF NOT EXISTS thesis_application_status_history(
     FOREIGN KEY (thesis_application_id) REFERENCES thesis_application(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS license(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL
+);
+
+
 CREATE TABLE IF NOT EXISTS thesis(
     id INT AUTO_INCREMENT PRIMARY KEY,
     topic TEXT NOT NULL,
+    title VARCHAR(255),
+    title_eng VARCHAR(255),
+    language ENUM('it', 'en'),
     company_id INT,
     student_id VARCHAR(6) NOT NULL,
-    thesis_application_date DATETIME NOT NULL,
+    abstract TEXT,
+    abstract_eng TEXT,
+    thesis_file BLOB,
+    thesis_resume BLOB,
+    license_id INT,
+    thesis_start_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     thesis_conclusion_request_date DATETIME,
-    thesis_conclusion_confirmation_date DATETIME
+    thesis_conclusion_confirmation_date DATETIME,
+    FOREIGN KEY (license_id) REFERENCES license(id) ON DELETE RESTRICT -- RESTRICT policy because why should you delete a license?
 );
 
 
@@ -252,42 +255,12 @@ CREATE TABLE IF NOT EXISTS thesis_supervisor_cosupervisor(
 );
 
 
-CREATE TABLE IF NOT EXISTS license(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS thesis_conclusion(
+CREATE TABLE IF NOT EXISTS thesis_keyword(
     id INT AUTO_INCREMENT PRIMARY KEY,
     thesis_id INT NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    title_eng VARCHAR(255) NOT NULL,
-    language ENUM('it', 'en') NOT NULL,
-    abstract TEXT NOT NULL,
-    abstract_eng TEXT NOT NULL,
-    thesis_file BLOB NOT NULL,
-    thesis_resume BLOB,
-    license_id INT NOT NULL,
-    FOREIGN KEY (thesis_id) REFERENCES thesis(id) ON DELETE CASCADE,
-    FOREIGN KEY (license_id) REFERENCES license(id) ON DELETE RESTRICT -- RESTRICT policy because why should you delete a license?
-);
-
-CREATE TABLE IF NOT EXISTS thesis_conclusion_keyword(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    thesis_conclusion_id INT NOT NULL,
     keyword_id INT NOT NULL,
     FOREIGN KEY (keyword_id) REFERENCES keyword(id) ON DELETE CASCADE,
-    FOREIGN KEY (thesis_conclusion_id) REFERENCES thesis_conclusion(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS thesis_conclusion_supervisor_cosupervisor(
-    thesis_conclusion_id INT NOT NULL,
-    teacher_id INT NOT NULL,
-    is_supervisor BOOLEAN NOT NULL, -- if true then supervisor, else cosupervisor
-    PRIMARY KEY (thesis_conclusion_id, teacher_id),
-    FOREIGN KEY (thesis_conclusion_id) REFERENCES thesis_conclusion(id) ON DELETE CASCADE,
-    FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE RESTRICT -- RESTRICT policy because why should you delete a teacher?
+    FOREIGN KEY (thesis_id) REFERENCES thesis(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS embargo_motivation(
@@ -297,12 +270,12 @@ CREATE TABLE IF NOT EXISTS embargo_motivation(
 
 CREATE TABLE IF NOT EXISTS embargo(
     motivation_id INT NOT NULL,
-    thesis_conclusion_id INT NOT NULL,
+    thesis_id INT NOT NULL,
     other_motivation TEXT,
     month_duration ENUM('12', '18', '36', 'after_explicit_consent') NOT NULL,
-    PRIMARY KEY (motivation_id, thesis_conclusion_id),
+    PRIMARY KEY (motivation_id, thesis_id),
     FOREIGN KEY (motivation_id) REFERENCES embargo_motivation(id) ON DELETE CASCADE,
-    FOREIGN KEY (thesis_conclusion_id) REFERENCES thesis_conclusion(id) ON DELETE CASCADE
+    FOREIGN KEY (thesis_id) REFERENCES thesis(id) ON DELETE CASCADE
 );
 
 

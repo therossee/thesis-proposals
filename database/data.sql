@@ -6163,18 +6163,4 @@ VALUES
     ("Accenture S.p.A."),
     ("Istituto Italiano di Tecnologia");
 
-INSERT INTO
-    company_office (company_id, street, city, postal_code, country)
-VALUES
-    (1, "Via Livorno, 60", "Torino", "10144", "Italy"),
-    (2, "Corso G. Agnelli, 200", "Torino", "10135", "Italy"),
-    (3, "Strada delle Cacce, 73", "Torino", "10135", "Italy"),
-    (4, "Via Pier Carlo Boggio, 50", "Torino", "10138", "Italy"),
-    (5, "Via Saccomuro, 24", "Torino", "10135", "Italy"),
-    (6, "Corso Duca degli Abruzzi, 24", "Torino", "10129", "Italy"),
-    (7, "Viale Pirelli, 25", "Milano", "20126", "Italy"),
-    (8, "Piazzale Enrico Mattei, 1", "Roma", "00144", "Italy"),
-    (9, "Via Lorenteggio, 10", "Milano", "20147", "Italy"),
-    (10, "Piazza Gae Aulenti, 5", "Milano", "20154", "Italy"),
-    (11, "Via Morego, 30", "Genoa", "16163", "Italy");
 -- ------------------------------------------------------------

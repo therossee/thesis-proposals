@@ -10,21 +10,13 @@ const {
   ThesisApplicationSupervisorCoSupervisor,
   ThesisApplicationStatusHistory,
 } = require('../models');
-// eslint-disable-next-line no-unused-vars
-const snakeCaseKeys = require('snakecase-keys');
+
 const thesisApplicationRequestSchema = require('../schemas/ThesisApplicationRequest');
 const thesisApplicationResponseSchema = require('../schemas/ThesisApplicationResponse');
 const selectTeacherAttributes = require('../utils/selectTeacherAttributes');
 const thesisApplicationStatusHistorySchema = require('../schemas/ThesisApplicationStatusHistory');
 const thesisApplicationSchema = require('../schemas/ThesisApplication');
-const snakecaseKeys = require('snakecase-keys').default;
-
-const snakeCaseMiddleware = obj => {
-  if (obj && typeof obj === 'object') {
-    return snakecaseKeys(obj, { deep: true });
-  }
-  return obj;
-};
+const toSnakeCase = require('../utils/snakeCase');
 
 // ==========================================
 // CONTROLLERS
@@ -34,7 +26,7 @@ const createThesisApplication = async (req, res) => {
   const t = await sequelize.transaction();
 
   try {
-    const application_data = await snakeCaseMiddleware(req.body);
+    const application_data = toSnakeCase(req.body);
     console.log('Received application data: ' + JSON.stringify(application_data, null, 2));
 
     const applicationData = await thesisApplicationRequestSchema.parseAsync(application_data);
