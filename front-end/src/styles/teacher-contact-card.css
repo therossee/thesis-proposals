@@ -16,7 +16,7 @@
 .contact-item {
   display: flex;
   align-items: flex-start;
-  color: var(--text)
+  color: var(--text);
 }
 
 .contact-avatar-light {

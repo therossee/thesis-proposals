@@ -81,7 +81,6 @@
 .progress-step-circle.completed {
   border: 2px solid var(--primary-200);
   background-color: var(--background);
-
 }
 
 .progress-step-content {
@@ -95,8 +94,6 @@
   color: var(--text);
   transition: all 0.3s ease;
 }
-
-
 
 .progress-step-description {
   margin-bottom: 0;
