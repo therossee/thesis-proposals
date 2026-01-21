@@ -6,8 +6,8 @@ const studentSchema = require('./Student');
 const thesisApplicationStatusSchema = require('./ThesisApplicationStatus');
 const thesisProposalOverviewSchema = require('./ThesisProposalOverview');
 
-
-const thesisApplicationSchema = z.object({
+const thesisApplicationSchema = z
+  .object({
     id: z.number(),
     topic: z.string(),
     student: studentSchema,
@@ -17,8 +17,8 @@ const thesisApplicationSchema = z.object({
     thesis_proposal: thesisProposalOverviewSchema.nullable(),
     submission_date: z.string().datetime(),
     status: thesisApplicationStatusSchema,
-})
-.transform((application) => ({
+  })
+  .transform(application => ({
     id: application.id,
     topic: application.topic,
     student: application.student,
@@ -28,6 +28,6 @@ const thesisApplicationSchema = z.object({
     thesisProposal: application.thesis_proposal,
     submissionDate: application.submission_date,
     status: application.status,
-}));
+  }));
 
 module.exports = thesisApplicationSchema;

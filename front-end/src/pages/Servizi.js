@@ -1,13 +1,11 @@
 import React from 'react';
 
 import { Container, Row } from 'react-bootstrap';
-import { useTranslation } from 'react-i18next';
 
 import BaseCard from '../components/BaseCard';
 import CustomBreadcrumb from '../components/CustomBreadcrumb';
 
 export default function Servizi() {
-  const { t } = useTranslation();
   return (
     <>
       <CustomBreadcrumb />

@@ -125,16 +125,16 @@ async function createThesisApplication(applicationData) {
     return response.data;
   } catch (error) {
     console.error('Error creating thesis application:', error);
-    throw error; 
+    throw error;
   }
 }
 
 async function checkStudentEligibility(studentId) {
   try {
     const response = await axios.get(`${URL}/thesis-applications/eligibility`, {
-      params: { studentId }
+      params: { studentId },
     });
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error('Error checking student eligibility:', error);
   }
@@ -143,30 +143,28 @@ async function checkStudentEligibility(studentId) {
 async function getStatusHistoryApplication(applicationId) {
   try {
     const response = await axios.get(`${URL}/thesis-applications/status-history`, {
-      params: { applicationId }
+      params: { applicationId },
     });
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error('Error fetching status history of thesis application:', error);
   }
 }
 
-async function getLoggedStudentThesis(){
+async function getLoggedStudentThesis() {
   try {
     const response = await axios.get(`${URL}/thesis`);
     return response.data;
   } catch (error) {
     console.error('Error fetching student thesis:', error);
   }
-
 }
 
-async function getAllThesisApplications(){
+async function getAllThesisApplications() {
   try {
     const response = await axios.get(`${URL}/thesis-applications/all`);
     return response.data;
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Error fetching all thesis applications:', error);
   }
 }
@@ -180,7 +178,7 @@ async function updateThesisApplicationStatus(updateData) {
   }
 }
 
-async function cancelThesisApplication({id: applicationId, note}) {
+async function cancelThesisApplication({ id: applicationId, note }) {
   try {
     const response = await axios.post(`${URL}/thesis-applications/cancel`, {
       id: applicationId,
@@ -189,7 +187,7 @@ async function cancelThesisApplication({id: applicationId, note}) {
     return response.data;
   } catch (error) {
     console.error('Error cancelling thesis application:', error);
-    throw error; 
+    throw error;
   }
 }
 
@@ -202,7 +200,7 @@ async function startThesisFromApplication(applicationData) {
     return response.data;
   } catch (error) {
     console.error('Error starting thesis from application:', error);
-    throw error; 
+    throw error;
   }
 }
 
@@ -216,9 +214,6 @@ async function getCompanies() {
     console.error('Error fetching companies:', error);
   }
 }
-
-
-
 
 // ------------------------------------
 
@@ -288,7 +283,7 @@ const API = {
   updateThesisApplicationStatus,
   cancelThesisApplication,
   startThesisFromApplication,
-  getCompanies
+  getCompanies,
 };
 
 export default API;

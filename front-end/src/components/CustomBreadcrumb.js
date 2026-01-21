@@ -45,9 +45,9 @@ const breadcrumbConfig = {
     path: '/help',
   },
   tesi: {
-   icon: <i className="fa-solid fa-lightbulb-exclamation-on me-2" />,
-   label: 'carriera.tesi.title',
-   path: '/carriera/tesi',
+    icon: <i className="fa-solid fa-lightbulb-exclamation-on me-2" />,
+    label: 'carriera.tesi.title',
+    path: '/carriera/tesi',
   },
   richiesta_tesi: {
     icon: <i className="fa-solid fa-file-circle-plus me-2" />,

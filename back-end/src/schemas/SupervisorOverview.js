@@ -5,7 +5,7 @@ const supervisorOverviewSchema = z
     id: z.number(),
     type: z.enum(['internal', 'external']),
   })
-  .transform((supervisor) => ({
+  .transform(supervisor => ({
     id: supervisor.id,
     type: supervisor.type,
   }));

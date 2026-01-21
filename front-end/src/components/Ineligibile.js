@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 
 import { Button, Card } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import { FaRectangleXmark, FaArrowLeft } from 'react-icons/fa6';
+import { FaArrowLeft, FaRectangleXmark } from 'react-icons/fa6';
 
 import { ThemeContext } from '../App';
 import { getSystemTheme } from '../utils/utils';

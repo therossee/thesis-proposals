@@ -10,6 +10,7 @@ const {
   ThesisApplicationSupervisorCoSupervisor,
   ThesisApplicationStatusHistory,
 } = require('../models');
+// eslint-disable-next-line no-unused-vars
 const snakeCaseKeys = require('snakecase-keys');
 const thesisApplicationRequestSchema = require('../schemas/ThesisApplicationRequest');
 const thesisApplicationResponseSchema = require('../schemas/ThesisApplicationResponse');
@@ -18,32 +19,31 @@ const thesisApplicationStatusHistorySchema = require('../schemas/ThesisApplicati
 const thesisApplicationSchema = require('../schemas/ThesisApplication');
 const snakecaseKeys = require('snakecase-keys').default;
 
-const snakeCaseMiddleware = (obj) => {
-    if (obj && typeof obj === 'object') {
-        return snakecaseKeys(obj, { deep: true });
-    }
-    return obj;
+const snakeCaseMiddleware = obj => {
+  if (obj && typeof obj === 'object') {
+    return snakecaseKeys(obj, { deep: true });
+  }
+  return obj;
 };
-
 
 // ==========================================
 // CONTROLLERS
 // ==========================================
 
-
 const createThesisApplication = async (req, res) => {
   const t = await sequelize.transaction();
 
   try {
-
     const application_data = await snakeCaseMiddleware(req.body);
-    console.log("Received application data: " + JSON.stringify(application_data, null, 2));
+    console.log('Received application data: ' + JSON.stringify(application_data, null, 2));
 
     const applicationData = await thesisApplicationRequestSchema.parseAsync(application_data);
-    console.log("Parsed application data: " + JSON.stringify(applicationData, null, 2));
+    console.log('Parsed application data: ' + JSON.stringify(applicationData, null, 2));
 
     // Fetch Supervisor Data
-    const supervisor = await Teacher.findByPk(applicationData.supervisor.id, { attributes: selectTeacherAttributes(true) });
+    const supervisor = await Teacher.findByPk(applicationData.supervisor.id, {
+      attributes: selectTeacherAttributes(true),
+    });
     if (!supervisor) {
       throw new Error('Supervisor not found');
     }
@@ -69,15 +69,18 @@ const createThesisApplication = async (req, res) => {
       { type: QueryTypes.SELECT },
     );
 
-        // Create ThesisApplication
-    const newApplication = await ThesisApplication.create({
-      topic: applicationData.topic,
-      student_id: loggedStudent[0].id,
-      thesis_proposal_id: applicationData.thesisProposal ? applicationData.thesisProposal.id : null,
-      company_id: applicationData.company ? applicationData.company.id : null,
-      status: 'pending',
-      submission_date: new Date().toISOString()
-    }, { transaction: t });
+    // Create ThesisApplication
+    const newApplication = await ThesisApplication.create(
+      {
+        topic: applicationData.topic,
+        student_id: loggedStudent[0].id,
+        thesis_proposal_id: applicationData.thesisProposal ? applicationData.thesisProposal.id : null,
+        company_id: applicationData.company ? applicationData.company.id : null,
+        status: 'pending',
+        submission_date: new Date().toISOString(),
+      },
+      { transaction: t },
+    );
 
     // Fetch the complete proposal if it exists
     let proposalData = null;
@@ -92,24 +95,30 @@ const createThesisApplication = async (req, res) => {
     // Link Supervisor and Co-Supervisors
     const supervisors = [applicationData.supervisor, ...(applicationData.co_supervisors || [])];
     for (const supervisor of supervisors) {
-      await ThesisApplicationSupervisorCoSupervisor.create({
-        thesis_application_id: newApplication.id,
-        teacher_id: supervisor.id,
-        is_supervisor: supervisor.id === applicationData.supervisor.id,
-      }, { transaction: t });
+      await ThesisApplicationSupervisorCoSupervisor.create(
+        {
+          thesis_application_id: newApplication.id,
+          teacher_id: supervisor.id,
+          is_supervisor: supervisor.id === applicationData.supervisor.id,
+        },
+        { transaction: t },
+      );
     }
     // Link Status History - initial status
-    await ThesisApplicationStatusHistory.create({
-      thesis_application_id: newApplication.id,
-      old_status: null,
-      new_status: newApplication.status || 'pending',
-      change_date: newApplication.submission_date,
-    }, { transaction: t });
-        await t.commit();
+    await ThesisApplicationStatusHistory.create(
+      {
+        thesis_application_id: newApplication.id,
+        old_status: null,
+        new_status: newApplication.status || 'pending',
+        change_date: newApplication.submission_date,
+      },
+      { transaction: t },
+    );
+    await t.commit();
 
     console.log('=== NEW APPLICATION CREATED ===');
     console.log('newApplication:', JSON.stringify(newApplication, null, 2));
-    
+
     const responsePayload = {
       id: newApplication.id,
       topic: newApplication.topic,
@@ -121,12 +130,12 @@ const createThesisApplication = async (req, res) => {
       status: newApplication.status || 'pending',
     };
 
-    console.log('responsePayload before validation:', JSON.stringify(responsePayload, null, 2));  
+    console.log('responsePayload before validation:', JSON.stringify(responsePayload, null, 2));
 
     const validatedResponse = await thesisApplicationResponseSchema.parseAsync(responsePayload);
-    
+
     console.log('validatedResponse after schema parsing:', JSON.stringify(validatedResponse, null, 2));
-    
+
     return res.status(201).json(validatedResponse);
   } catch (error) {
     console.error(error);
@@ -153,7 +162,7 @@ const checkStudentEligibility = async (req, res) => {
     );
 
     const links = await ThesisApplication.findAll({
-      where: { student_id: loggedStudent[0].id }
+      where: { student_id: loggedStudent[0].id },
     });
 
     const applicationIds = links.map(l => l.id);
@@ -163,8 +172,8 @@ const checkStudentEligibility = async (req, res) => {
       const activeApplication = await ThesisApplication.findAll({
         where: {
           id: { [Op.in]: applicationIds },
-          status: { [Op.in]: ['pending', 'approved'] }
-        }
+          status: { [Op.in]: ['pending', 'approved'] },
+        },
       });
       if (activeApplication.length > 0) eligible = false;
     }
@@ -247,7 +256,6 @@ const getLastStudentApplication = async (req, res) => {
     const activeAppJson = thesisApplicationResponseSchema.parse(responsePayload);
 
     res.json(activeAppJson);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -269,67 +277,10 @@ const getStatusHistoryApplication = async (req, res) => {
     const historyResponse = statusHistory.map(record => {
       return thesisApplicationStatusHistorySchema.parse(record.toJSON());
     });
-    
+
     res.json(historyResponse);
-  }
-  catch (error) {
-    console.error('Error fetching status history of thesis application:', error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-const deleteLastThesisApplication = async (req, res) => {
-  const t = await sequelize.transaction();
-
-  try {
-    const loggedStudent = await sequelize.query(
-      `
-      SELECT 
-        s.*
-      FROM student s
-      INNER JOIN logged_student ls ON s.id = ls.student_id
-      LIMIT 1
-      `,
-      { type: QueryTypes.SELECT },
-    );
-
-    const links = await ThesisApplication.findAll({
-      where: { student_id: loggedStudent[0].id },
-      transaction: t
-    });
-
-    if (!links.length) {
-      await t.rollback();
-      return res.status(404).json({ error: 'No application found to delete' });
-    }
-
-    const applicationIds = links.map(l => l.id);
-
-    const lastApplication = await ThesisApplication.findOne({
-      where: { id: { [Op.in]: applicationIds } },
-      order: [['id', 'DESC']],
-      transaction: t
-    });
-
-    if (!lastApplication) {
-      await t.rollback();
-      return res.status(404).json({ error: 'No application found to delete' });
-    }
-
-    // Must delete link rows first or rely on CASCADE
-    // Since we have manual link tables, explicit delete is safer
-
-    await ThesisApplicationSupervisorCoSupervisor.destroy({
-      where: { thesis_application_id: lastApplication.id },
-      transaction: t
-    });
-
-    await lastApplication.destroy({ transaction: t });
-
-    await t.commit();
-    res.status(200).json({ message: 'Last thesis application deleted successfully' });
   } catch (error) {
-    await t.rollback();
+    console.error('Error fetching status history of thesis application:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -352,7 +303,7 @@ const getAllThesisApplications = async (req, res) => {
           proposalData = proposal.toJSON();
         }
       }
-      
+
       // Fetch supervisor and co-supervisors
       const supervisorLinks = await ThesisApplicationSupervisorCoSupervisor.findAll({
         where: { thesis_application_id: app.id },
@@ -366,13 +317,12 @@ const getAllThesisApplications = async (req, res) => {
         if (teacher) {
           if (link.is_supervisor) {
             supervisorData = teacher;
-          }
-          else {
+          } else {
             coSupervisorsData.push(teacher);
           }
         }
       }
-      
+
       const responsePayload = {
         id: app.id,
         topic: app.topic,
@@ -384,45 +334,43 @@ const getAllThesisApplications = async (req, res) => {
         submission_date: app.submission_date.toISOString(), // snake_case!
         status: app.status || 'pending',
       };
-      
+
       const appJson = thesisApplicationSchema.parse(responsePayload);
       applicationsResponse.push(appJson);
     }
 
     res.json(applicationsResponse);
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Error fetching all thesis applications:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
 const cancelThesisApplication = async (req, res) => {
-    try {
-        const { id, note } = req.body;
+  try {
+    const { id, note } = req.body;
 
-        const application = await ThesisApplication.findByPk(id);
-        if (!application) {
-            return res.status(404).json({ error: 'Thesis application not found' });
-        }
-
-        await ThesisApplicationStatusHistory.create({
-            thesis_application_id: id,
-            old_status: application.status,
-            new_status: 'canceled',
-            note: note || null,
-        });
-        application.status = 'canceled';
-        await application.save();
-        const updatedApplication = await ThesisApplication.findByPk(id);
-        
-        res.status(200).json(updatedApplication);
-    } catch (error) {
-        console.error('Error updating thesis application status:', error);
-        res.status(500).json({ error: 'Internal server error' });
+    const application = await ThesisApplication.findByPk(id);
+    if (!application) {
+      return res.status(404).json({ error: 'Thesis application not found' });
     }
-};
 
+    await ThesisApplicationStatusHistory.create({
+      thesis_application_id: id,
+      old_status: application.status,
+      new_status: 'canceled',
+      note: note || null,
+    });
+    application.status = 'canceled';
+    await application.save();
+    const updatedApplication = await ThesisApplication.findByPk(id);
+
+    res.status(200).json(updatedApplication);
+  } catch (error) {
+    console.error('Error updating thesis application status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 module.exports = {
   createThesisApplication,
@@ -430,6 +378,5 @@ module.exports = {
   getLastStudentApplication,
   getAllThesisApplications,
   getStatusHistoryApplication,
-  deleteLastThesisApplication,
   cancelThesisApplication,
 };

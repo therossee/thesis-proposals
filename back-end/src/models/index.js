@@ -12,10 +12,7 @@ const Type = require('./type')(sequelize, Sequelize.DataTypes);
 const ThesisProposalType = require('./thesis-proposal-type')(sequelize, Sequelize.DataTypes);
 const Teacher = require('./teacher')(sequelize, Sequelize.DataTypes);
 const Thesis = require('./thesis')(sequelize, Sequelize.DataTypes);
-const ThesisSupervisorCoSupervisor = require('./thesis-supervisor-cosupervisor')(
-  sequelize,
-  Sequelize.DataTypes,
-);
+const ThesisSupervisorCoSupervisor = require('./thesis-supervisor-cosupervisor')(sequelize, Sequelize.DataTypes);
 const ThesisProposalSupervisorCoSupervisor = require('./thesis-proposal-supervisor-cosupervisor')(
   sequelize,
   Sequelize.DataTypes,
@@ -23,7 +20,10 @@ const ThesisProposalSupervisorCoSupervisor = require('./thesis-proposal-supervis
 const LoggedStudent = require('./logged-student')(sequelize, Sequelize.DataTypes);
 const Student = require('./student')(sequelize, Sequelize.DataTypes);
 const ThesisApplication = require('./thesis-application')(sequelize, Sequelize.DataTypes);
-const ThesisApplicationSupervisorCoSupervisor = require('./thesis-application-supervisor-cosupervisor')(sequelize, Sequelize.DataTypes);
+const ThesisApplicationSupervisorCoSupervisor = require('./thesis-application-supervisor-cosupervisor')(
+  sequelize,
+  Sequelize.DataTypes,
+);
 const ThesisApplicationStatusHistory = require('./thesis-application-status-history')(sequelize, Sequelize.DataTypes);
 const Company = require('./company')(sequelize, Sequelize.DataTypes);
 const CompanyOffice = require('./company-office')(sequelize, Sequelize.DataTypes);
@@ -172,6 +172,5 @@ Company.hasOne(CompanyOffice, {
   foreignKey: 'company_id',
   as: 'registered_office',
 });
-
 
 module.exports = db;

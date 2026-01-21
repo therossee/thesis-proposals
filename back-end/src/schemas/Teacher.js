@@ -10,12 +10,8 @@ const teacherSchema = z
     profile_url: z.string().nullable(),
     profile_picture_url: z.string().nullable(),
     facility_short_name: z.string().nullable(),
-    'thesis-proposal-supervisor-cosupervisor': z
-      .object({ is_supervisor: z.boolean() })
-      .optional(),
-    'thesis-application-supervisor-cosupervisor': z
-      .object({ is_supervisor: z.boolean() })
-      .optional(),
+    'thesis-proposal-supervisor-cosupervisor': z.object({ is_supervisor: z.boolean() }).optional(),
+    'thesis-application-supervisor-cosupervisor': z.object({ is_supervisor: z.boolean() }).optional(),
   })
   .transform(teacher => {
     const isSupervisor =

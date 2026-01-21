@@ -10,12 +10,8 @@ const supervisorSchema = z
     email: z.string().nullable(),
     profile_url: z.string().nullable(),
     facility_short_name: z.string().nullable(),
-    'thesis-proposal-supervisor-cosupervisor': z
-      .object({ is_supervisor: z.boolean() })
-      .optional(),
-    'thesis-application-supervisor-cosupervisor': z
-      .object({ is_supervisor: z.boolean() })
-      .optional(),
+    'thesis-proposal-supervisor-cosupervisor': z.object({ is_supervisor: z.boolean() }).optional(),
+    'thesis-application-supervisor-cosupervisor': z.object({ is_supervisor: z.boolean() }).optional(),
   })
   .transform(supervisor => {
     const isSupervisor =

@@ -45,7 +45,14 @@ function PropostaDiTesi() {
     if (isLoading) {
       return <></>;
     } else if (thesisProposal) {
-      return <ThesisProposalDetail thesisProposal={thesisProposal} isEligible={isEligible} setIsEligible={setIsEligible} loggedStudentId={loggedStudent ? loggedStudent.id : null} />;
+      return (
+        <ThesisProposalDetail
+          thesisProposal={thesisProposal}
+          isEligible={isEligible}
+          setIsEligible={setIsEligible}
+          loggedStudentId={loggedStudent ? loggedStudent.id : null}
+        />
+      );
     } else {
       return <CustomBadge variant="error" content={t('carriera.proposta_di_tesi.errore_proposta_di_tesi')} />;
     }

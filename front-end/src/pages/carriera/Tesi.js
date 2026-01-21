@@ -3,12 +3,10 @@ import React, { useContext, useEffect, useState } from 'react';
 import API from '../../API';
 import { BodyDataLoadingContext, LoggedStudentContext } from '../../App';
 import CustomBreadcrumb from '../../components/CustomBreadcrumb';
+import LoadingModal from '../../components/LoadingModal';
 import Thesis from '../../components/Thesis';
 import ThesisApplication from '../../components/ThesisApplication';
 import ThesisNotFound from '../../components/ThesisNotFound';
-import LoadingModal from '../../components/LoadingModal';
-
-
 
 export default function Tesi() {
   const { setBodyDataLoading } = useContext(BodyDataLoadingContext);
@@ -18,70 +16,74 @@ export default function Tesi() {
   const { loggedStudent } = useContext(LoggedStudentContext);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-const startThesis = (setShowToast, setSuccess) => {
-  API.startThesisFromApplication({
-    thesisApplicationDate: thesisApplication.submissionDate,
-    company: thesisApplication.company,
-    topic: thesisApplication.topic,
-    supervisor: thesisApplication.supervisor,
-    coSupervisors: thesisApplication.coSupervisors,
-  })
-    .then(() => {
-      setSuccess(true);
-      setShowToast(true);
-      
-      setTimeout(() => {
-        setRefreshTrigger((prev) => prev + 1);
-      }, 5000);
+  const startThesis = (setShowToast, setSuccess) => {
+    API.startThesisFromApplication({
+      thesisApplicationDate: thesisApplication.submissionDate,
+      company: thesisApplication.company,
+      topic: thesisApplication.topic,
+      supervisor: thesisApplication.supervisor,
+      coSupervisors: thesisApplication.coSupervisors,
     })
-    .catch((error) => {
-      setSuccess(false);
-      setShowToast(true);
+      .then(() => {
+        setSuccess(true);
+        setShowToast(true);
+
+        setTimeout(() => {
+          setRefreshTrigger(prev => prev + 1);
+        }, 5000);
+      })
+      .catch(error => {
+        console.error('Error starting thesis from application:', error);
+        setSuccess(false);
+        setShowToast(true);
+      });
+  };
+
+  useEffect(() => {
+    setBodyDataLoading(true);
+    setIsLoading(true);
+
+    Promise.all([
+      API.getLoggedStudentThesis()
+        .then(data => {
+          setThesis(data);
+        })
+        .catch(error => {
+          console.error('Error fetching thesis:', error);
+          setThesis(null);
+        }),
+
+      API.getLastStudentApplication()
+        .then(appData => {
+          setThesisApplication(appData);
+        })
+        .catch(appError => {
+          console.error('Error fetching thesis application:', appError);
+          setThesisApplication(null);
+        }),
+    ]).finally(() => {
+      setIsLoading(false);
+      setBodyDataLoading(false);
     });
-};
+  }, [setBodyDataLoading, loggedStudent, refreshTrigger]);
 
-
-useEffect(() => {
-  setBodyDataLoading(true);
-  setIsLoading(true);
-
-  Promise.all([
-    API.getLoggedStudentThesis()
-      .then((data) => {
-        setThesis(data);
-      })
-      .catch((error) => {
-        console.error('Error fetching thesis:', error);
-        setThesis(null);
-      }),
-    
-    API.getLastStudentApplication()
-      .then((appData) => {
-        setThesisApplication(appData);
-      })
-      .catch((appError) => {
-        console.error('Error fetching thesis application:', appError);
-        setThesisApplication(null);
-      })
-  ])
-  .finally(() => {
-    setIsLoading(false);
-    setBodyDataLoading(false);
-  });
-
-}, [setBodyDataLoading, loggedStudent, refreshTrigger]);
-
-    const renderContent = () => {
-      if (isLoading) {
-        return <LoadingModal show={isLoading} onHide={() => setIsLoading(false)} />;
-      } else if (thesis) {
-        return <Thesis thesis={thesis}  />;
-      } else if (thesisApplication) {
-        return <ThesisApplication thesisApplication={thesisApplication} startThesis={startThesis} setRefreshTrigger={() => setRefreshTrigger((prev) => prev + 1)} />;
-      } else {
-        return <ThesisNotFound />;
-      }
-    };
+  const renderContent = () => {
+    if (isLoading) {
+      return <LoadingModal show={isLoading} onHide={() => setIsLoading(false)} />;
+    } else if (thesis) {
+      return <Thesis thesis={thesis} />;
+    } else if (thesisApplication) {
+      return (
+        <ThesisApplication
+          thesisApplication={thesisApplication}
+          startThesis={startThesis}
+          setRefreshTrigger={() => setRefreshTrigger(prev => prev + 1)}
+        />
+      );
+    } else {
+      return <ThesisNotFound />;
+    }
+  };
 
   return (
     <>

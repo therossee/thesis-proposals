@@ -150,7 +150,7 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
         {renderTranslatedContent(content)}
       </div>
     );
-  }
+  };
 
   const renderTruncatedBadge = () => {
     const contentArray = Array.isArray(content) ? content : [content];
@@ -396,9 +396,19 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
   if (
     !validVariants.includes(variant) ||
     (type && !validTypes.includes(type)) ||
-    (['teacher', 'keyword', 'external-company', 'type', 'sorting-ASC', 'sorting-DESC', 'status', 'success', 'warning', 'error', 'app_status'].includes(
-      variant,
-    ) &&
+    ([
+      'teacher',
+      'keyword',
+      'external-company',
+      'type',
+      'sorting-ASC',
+      'sorting-DESC',
+      'status',
+      'success',
+      'warning',
+      'error',
+      'app_status',
+    ].includes(variant) &&
       !content) ||
     (variant === 'type' && !isValidTypeContent(content))
   ) {
@@ -466,7 +476,6 @@ const getApplicationStatusBadgeType = content => {
       return 'error';
   }
 };
-
 
 CustomBadge.propTypes = {
   variant: PropTypes.string.isRequired,

@@ -5,8 +5,8 @@ const companySchema = require('./Company');
 const thesisApplicationStatusSchema = require('./ThesisApplicationStatus');
 const thesisProposalMinimalSchema = require('./ThesisProposalMinimal');
 
-
-const thesisApplicationResponseSchema = z.object({
+const thesisApplicationResponseSchema = z
+  .object({
     id: z.number(),
     topic: z.string(),
     supervisor: teacherSchema,
@@ -15,8 +15,8 @@ const thesisApplicationResponseSchema = z.object({
     company: companySchema.nullable(),
     submission_date: z.string().datetime(),
     status: thesisApplicationStatusSchema,
-})
-.transform((response) => ({
+  })
+  .transform(response => ({
     id: response.id,
     topic: response.topic,
     supervisor: response.supervisor,
@@ -25,6 +25,6 @@ const thesisApplicationResponseSchema = z.object({
     thesisProposal: response.thesis_proposal,
     submissionDate: response.submission_date,
     status: response.status,
-}));
+  }));
 
 module.exports = thesisApplicationResponseSchema;
