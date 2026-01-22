@@ -4,6 +4,8 @@ import { Button, Card, Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+import moment from 'moment';
+import 'moment/locale/it';
 import PropTypes from 'prop-types';
 
 import { ThemeContext } from '../App';
@@ -64,7 +66,11 @@ function ThesisItem(props) {
           )}
           <Card.Text className="thesis-description">{props.description}</Card.Text>
         </Card.Body>
-        <Card.Footer className="mx-2 px-2 d-flex justify-content-end border-0">
+        <Card.Footer className="mx-2 px-2 d-flex justify-content-between border-0">
+          <div className="title-container">
+            <i className="fa-regular fa-calendar-clock" />
+            {t('carriera.proposte_di_tesi.expires')}: <span>{moment(props.expirationDate).format('DD/MM/YYYY')}</span>
+          </div>
           <Link to={`${props.id}`} style={{ textDecoration: 'none' }}>
             <Button className={`btn-${appliedTheme}`} size="md">
               {t('carriera.proposte_di_tesi.show_more')}

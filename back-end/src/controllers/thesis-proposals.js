@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { Keyword, sequelize, Teacher, ThesisProposal, Type } = require('../models');
+const { Keyword, sequelize, Teacher, ThesisProposal, ThesisProposalDegree, Type } = require('../models');
 const { getStudentData } = require('./students');
 const { buildWhereConditions } = require('../utils/filters');
 const { getIncludes } = require('../utils/includes');
@@ -200,6 +200,13 @@ const getThesisProposalById = async (req, res) => {
     if (!thesisProposal) {
       return res.status(404).json({ error: 'Thesis proposal not found' });
     }
+
+    const containerIds = await ThesisProposalDegree.findAll({
+      where: { thesis_proposal_id: req.params.thesisProposalId },
+      attributes: ['container_id'],
+    });
+
+    console.log('Container IDs:', containerIds);
 
     const formattedThesisProposal = formatThesisProposals([thesisProposal], true)[0];
     res.json(formattedThesisProposal);
