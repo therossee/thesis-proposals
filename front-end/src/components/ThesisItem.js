@@ -24,19 +24,19 @@ function ThesisItem(props) {
     <Col xs={12} sm={12} md={12} lg={6} xl={6} className="mb-3">
       <Card className="mb-3 roundCard h-100 py-2">
         <Card.Header className="border-0">
-          <Row>
-            <Col xs={10} sm={10} md={11} lg={10} xl={10}>
+          <Row className="d-flex justify-content-between align-items-start">
+            <Col xs={8} sm={8} md={9} lg={8} xl={9}>
               <h3 className="thesis-topic">{props.topic}</h3>
             </Col>
-            <Col xs={2} sm={2} md={1} lg={2} xl={2} className="thesis-topic text-end">
-              <CustomBadge variant={props.isAbroad ? 'abroad' : 'italy'} />
+            <Col xs={4} sm={4} md={3} lg={4} xl={3} className="text-end">
+              <CustomBadge variant="status" content={props.expirationDate} />
             </Col>
           </Row>
         </Card.Header>
         <Card.Body className="pt-2">
           <div className="custom-badge-container mb-2">
-            <CustomBadge variant="status" content={props.expirationDate} />
             {props.isInternal ? <CustomBadge variant="internal" /> : <CustomBadge variant="external" />}
+            <CustomBadge variant={props.isAbroad ? 'abroad' : 'italy'} />
             {props.types.map(type => (
               <CustomBadge key={type.id} variant="type" content={type.type} />
             ))}

@@ -20,7 +20,7 @@ export default function Thesis(props) {
   return (
     <div className="proposals-container">
       <Row className="mb-3">
-        <Col md={8}>
+        <Col md={8} lg={8}>
           <Card className="mb-3 roundCard py-2">
             <Card.Header className="border-0">
               <Row className="d-flex align-items-center">
@@ -56,12 +56,12 @@ export default function Thesis(props) {
             </Card.Body>
           </Card>
           <Row className="mb-3">
-            <Col md={7}>
+            <Col md={7} lg={7}>
               {supervisors && (
                 <TeacherContactCard supervisor={thesis.supervisor} coSupervisors={thesis.coSupervisors} />
               )}
             </Col>
-            <Col md={5}>
+            <Col md={5} lg={5}>
               <Card className="mb-3 roundCard py-2">
                 <Card.Header className="border-0">
                   <h3 className="thesis-topic">
@@ -111,7 +111,7 @@ export default function Thesis(props) {
             </Col>
           </Row>
         </Col>
-        <Col md={4}>
+        <Col md={4} lg={4}>
           <Card className="mb-3 roundCard py-2">
             <Card.Header className="border-0">
               <h3 className="thesis-topic">

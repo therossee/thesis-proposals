@@ -146,7 +146,7 @@ export default function ThesisApplicationForm() {
           </div>
           <div className="proposals-container">
             <Row className="mb-3">
-              <Col md={8} className="mb-3">
+              <Col md={8} lg={8} className="mb-3">
                 <Card className="roundCard py-2">
                   <Card.Body>
                     <h3 className="thesis-topic mb-3">
@@ -248,7 +248,7 @@ export default function ThesisApplicationForm() {
                   </Card.Body>
                 </Card>
               </Col>
-              <Col md={4}>
+              <Col md={4} lg={4}>
                 <Card className="roundCard py-2 mb-3">
                   <Card.Body>
                     <h3 className="thesis-topic mb-3">

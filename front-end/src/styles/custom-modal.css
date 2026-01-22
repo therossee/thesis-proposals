@@ -70,7 +70,7 @@
 
 .modal-cancel {
   display: flex;
-  height: 2rem;
+  height: 2.5rem;
   align-items: center;
   justify-content: center;
   gap: 6px;
@@ -90,25 +90,6 @@
 .modal-cancel:hover {
   background: var(--text-200);
   color: var(--text-600);
-}
-
-.modal-confirm {
-  display: flex;
-  height: 2rem;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border-radius: 3px;
-  border: 0;
-  background: var(#2563eb);
-  padding: 6px 12px;
-  font-family: var(--font-family);
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 150%;
-  color: var(--text-50, #f9fafb);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
 .modal-confirm:hover {

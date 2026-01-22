@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import { Button, Card, Col, Modal, Row, Toast } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -9,10 +9,12 @@ import 'moment/locale/it';
 import PropTypes from 'prop-types';
 
 import API from '../API';
+import { ThemeContext } from '../App';
 import '../styles/custom-modal.css';
 import '../styles/custom-toast.css';
 import '../styles/text.css';
 import '../styles/utilities.css';
+import { getSystemTheme } from '../utils/utils';
 import CustomBadge from './CustomBadge';
 import CustomBlock from './CustomBlock';
 
@@ -47,7 +49,6 @@ function ThesisProposalDetail(props) {
   const [showToast, setShowToast] = useState(false);
   const [success, setSuccess] = useState(true);
   const { t } = useTranslation();
-
   const sendApplication = () => {
     if (sending) return;
     const applicationData = {
@@ -126,20 +127,20 @@ function ThesisProposalDetail(props) {
           <Card className="mb-3 roundCard py-2">
             {topic && (
               <Card.Header className="border-0">
-                <Row className="d-flex justify-content-between">
-                  <Col xs={10} sm={10} md={11} lg={11} xl={11}>
+                <Row className="d-flex justify-content-between align-items-start">
+                  <Col xs="auto" className="flex-grow-1">
                     <h3 className="thesis-topic">{topic}</h3>
                   </Col>
-                  <Col xs={2} sm={2} md={1} lg={1} xl={1} className="thesis-topic text-end">
-                    <CustomBadge variant={isAbroad ? 'abroad' : 'italy'} />
+                  <Col xs="auto" className="text-end">
+                    <CustomBadge variant="status" content={expirationDate} />
                   </Col>
                 </Row>
               </Card.Header>
             )}
             <Card.Body className="pt-2 pb-0">
               <div className="custom-badge-container mb-3">
-                <CustomBadge variant="status" content={expirationDate} />
                 <CustomBadge variant={isInternal ? 'internal' : 'external'} />
+                <CustomBadge variant={isAbroad ? 'abroad' : 'italy'} />
                 {types.map(item => (
                   <CustomBadge key={item.id} variant="type" content={item.type} />
                 ))}
@@ -217,8 +218,15 @@ function ApplicationButton(props) {
   const { t } = useTranslation();
   const isEligible = props.isEligible;
   const setShowModal = props.setShowModal;
+  const { theme } = useContext(ThemeContext);
+  const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
   return (
-    <Button className="modal-confirm mb-3" size="md" onClick={() => setShowModal(true)} disabled={!isEligible}>
+    <Button
+      className={`btn-primary-${appliedTheme} mb-3`}
+      size="md"
+      onClick={() => setShowModal(true)}
+      disabled={!isEligible}
+    >
       <i className="fa-solid fa-paper-plane"></i>
       {t('carriera.proposta_di_tesi.candidatura')}
     </Button>
@@ -227,6 +235,8 @@ function ApplicationButton(props) {
 
 function ProposalModal({ show, handleClose, sendApplication }) {
   const { t } = useTranslation();
+  const { theme } = useContext(ThemeContext);
+  const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
 
   return (
     <Modal show={show} onHide={handleClose} contentClassName="modal-content" backdropClassName="modal-overlay" centered>
@@ -242,7 +252,7 @@ function ProposalModal({ show, handleClose, sendApplication }) {
         <Button className="modal-cancel mb-3" size="md" onClick={handleClose}>
           {t('carriera.proposta_di_tesi.chiudi')}
         </Button>
-        <Button className="modal-confirm mb-3" size="md" onClick={() => sendApplication()}>
+        <Button className={`btn-primary-${appliedTheme} mb-3`} size="md" onClick={() => sendApplication()}>
           <i className="fa-solid fa-paper-plane"></i>
           {t('carriera.proposta_di_tesi.prosegui')}
         </Button>

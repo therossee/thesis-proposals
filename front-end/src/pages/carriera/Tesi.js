@@ -16,29 +16,6 @@ export default function Tesi() {
   const { loggedStudent } = useContext(LoggedStudentContext);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const startThesis = (setShowToast, setSuccess) => {
-    API.startThesisFromApplication({
-      thesisStartDate: thesisApplication.submissionDate,
-      company: thesisApplication.company,
-      topic: thesisApplication.topic,
-      supervisor: thesisApplication.supervisor,
-      coSupervisors: thesisApplication.coSupervisors,
-    })
-      .then(() => {
-        setSuccess(true);
-        setShowToast(true);
-
-        setTimeout(() => {
-          setRefreshTrigger(prev => prev + 1);
-        }, 5000);
-      })
-      .catch(error => {
-        console.error('Error starting thesis from application:', error);
-        setSuccess(false);
-        setShowToast(true);
-      });
-  };
-
   useEffect(() => {
     setBodyDataLoading(true);
     setIsLoading(true);
@@ -76,7 +53,6 @@ export default function Tesi() {
       return (
         <ThesisApplication
           thesisApplication={thesisApplication}
-          startThesis={startThesis}
           setRefreshTrigger={() => setRefreshTrigger(prev => prev + 1)}
         />
       );
