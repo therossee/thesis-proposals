@@ -3312,7 +3312,9 @@ INSERT INTO
         topic,
         student_id,
         thesis_proposal_id,
-        submission_date
+        company_id,
+        submission_date,
+        status
     )
 VALUES
     (
@@ -3320,7 +3322,27 @@ VALUES
         "Valutazione Critica delle Capacità di Generazione del Codice da Parte di LLM in Contesto di Istruzione",
         320213,
         13275,
-        "2024-11-20"
+        NULL,
+        "2024-11-20",
+        "pending"
+    ),
+    (
+        2,
+        "Sviluppo di un simulatore di Home Automation",
+        314796,
+        13363,
+        2,
+        "2024-10-15",
+        "approved"
+    ),
+    (
+        3,
+        "IA Generativa per la Creazione di OpenScenario e OpenDrive da Serie di Immagini del Traffico",
+        318952,
+        13470,
+        NULL,
+        "2024-12-01",
+        "rejected"
     );
 -- ------------------------------------------------------------
 -- ↓ thesis_application_supervisor_cosupervisor table ↓
@@ -3341,6 +3363,26 @@ VALUES
         1,
         38485,
         0
+    ),
+    (
+        2,
+        23270,
+        1
+    ),
+    (
+        2,
+        3019,
+        0
+    ),
+    (
+        3,
+        38485,
+        1
+    ),
+    (
+        3,
+        1921,
+        0
     );
 
 -- ------------------------------------------------------------
@@ -3351,16 +3393,38 @@ INSERT INTO
         thesis_application_id,
         old_status,
         new_status,
-        change_date,
-        note
+        change_date
     )
 VALUES
     (
         1,
         NULL,
         'pending',
-        "2024-11-20T10:00:00",
-        "note"
+        "2024-11-20T10:00:00"
+    ),
+    (
+        2,
+        NULL,
+        'pending',
+        "2024-10-15T09:30:00"
+    ),
+    (
+        2,
+        'pending',
+        'approved',
+        "2024-11-10T15:45:00"
+    ),
+    (
+        3,
+        NULL,
+        'pending',
+        "2024-12-01T08:15:00"
+    ),
+    (
+        3,
+        'pending',
+        'rejected',
+        "2024-12-10T14:00:00"
     );
 
 -- ------------------------------------------------------------
@@ -3380,7 +3444,7 @@ VALUES
         1,
         "Valutazione Critica delle Capacità di Generazione del Codice da Parte di LLM in Contesto di Istruzione",
         1,
-        314796,
+        320213,
         NULL,
         "2025-02-01"
     );

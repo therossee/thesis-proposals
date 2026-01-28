@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Card, Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -16,36 +16,17 @@ import Timeline from './Timeline';
 export default function Thesis(props) {
   const { thesis, thesisApplication, showModal, setShowModal, showRequestModal, setShowRequestModal } = props;
   const data = thesis ? thesis : thesisApplication;
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const supervisors = [data.supervisor, ...data.coSupervisors];
   const activeStep = thesis ? thesis.thesisStatus : thesisApplication.status;
-  const [applicationStatusHistory, setApplicationStatusHistory] = useState(
-    thesisApplication ? thesisApplication.statusHistory : [],
-  );
+  const applicationStatusHistory = thesisApplication
+    ? thesisApplication.statusHistory
+    : thesis.applicationStatusHistory;
   const modalTitle = thesis ? 'carriera.tesi.modal_cancel.title' : 'carriera.tesi.cancel_application';
   const modalBody = thesis ? 'carriera.tesi.modal_cancel.body' : 'carriera.tesi.cancel_application_content';
   const modalConfirmText = thesis ? 'carriera.tesi.modal_cancel.confirm_text' : 'carriera.tesi.confirm_cancel';
   const modalConfirmIcon = thesis ? 'fa-regular fa-trash-can' : 'fa-regular fa-xmark';
   const { t } = useTranslation();
-
-  useEffect(() => {
-    if (!thesis && !thesisApplication) return;
-    if (thesis) {
-      setIsLoading(false);
-    } else if (thesisApplication) {
-      API.getStatusHistoryApplication(thesisApplication.id)
-        .then(history => {
-          setApplicationStatusHistory(history);
-        })
-        .catch(error => {
-          console.error('Error fetching thesis application status history:', error);
-          setApplicationStatusHistory([]);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
-  }, [thesis, thesisApplication]);
 
   const handleCancelApplication = () => {
     setIsLoading(true);

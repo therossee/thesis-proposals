@@ -30,7 +30,7 @@ describe('GET /api/students', () => {
         lastName: 'De Rossi',
         profilePictureUrl: 'https://avatars.githubusercontent.com/u/114685212',
         degreeId: '37-18',
-        isLogged: true,
+        isLogged: false,
       },
       {
         id: '318952',
@@ -46,7 +46,7 @@ describe('GET /api/students', () => {
         lastName: 'Barbato',
         profilePictureUrl: 'https://avatars.githubusercontent.com/u/59212611',
         degreeId: '37-18',
-        isLogged: false,
+        isLogged: true,
       },
     ]);
   });

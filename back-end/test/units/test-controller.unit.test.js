@@ -72,35 +72,37 @@ describe('updateThesisApplicationStatus', () => {
   });
 
   describe('Success cases', () => {
-    test('should update status and create Thesis if new status is not approved', async () => {
+    test('should update status and create Thesis if new status is approved', async () => {
       const application = { id: 1, status: 'pending', student_id: 10, company_id: 20, topic: 'AI', save: jest.fn() };
       ThesisApplication.findByPk.mockResolvedValue(application);
-      req.body = { id: 1, new_status: 'in_review' };
+      req.body = { id: 1, new_status: 'approved' };
 
       ThesisApplicationSupervisorCoSupervisor.findAll.mockResolvedValue([
         { is_supervisor: true, teacher_id: 1 },
         { is_supervisor: false, teacher_id: 2 },
       ]);
 
-      Thesis.create.mockResolvedValue({ id: 100 });
+      const newThesis = { id: 100 };
+      Thesis.create.mockResolvedValue(newThesis);
 
       await updateThesisApplicationStatus(req, res);
 
       expect(ThesisApplicationStatusHistory.create).toHaveBeenCalledWith(
-        { thesis_application_id: 1, old_status: 'pending', new_status: 'in_review' },
+        { thesis_application_id: 1, old_status: 'pending', new_status: 'approved' },
         { transaction: t },
       );
+      expect(application.save).toHaveBeenCalledWith({ transaction: t });
       expect(Thesis.create).toHaveBeenCalled();
       expect(ThesisSupervisorCoSupervisor.create).toHaveBeenCalledTimes(2);
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ id: 100 });
+      expect(res.json).toHaveBeenCalledWith(newThesis);
       expect(t.commit).toHaveBeenCalled();
     });
 
-    test('should update status and return application if new status is approved', async () => {
+    test('should update status and return application if new status is not approved', async () => {
       const application = { id: 1, status: 'pending', save: jest.fn() };
       ThesisApplication.findByPk.mockResolvedValue(application);
-      req.body = { id: 1, new_status: 'approved' };
+      req.body = { id: 1, new_status: 'rejected' };
 
       await updateThesisApplicationStatus(req, res);
 
@@ -114,7 +116,7 @@ describe('updateThesisApplicationStatus', () => {
   describe('Unexpected errors', () => {
     test('should return 500 on database error', async () => {
       ThesisApplication.findByPk.mockRejectedValue(new Error('DB Error'));
-      req.body = { id: 1, new_status: 'in_review' };
+      req.body = { id: 1, new_status: 'rejected' };
 
       await updateThesisApplicationStatus(req, res);
 

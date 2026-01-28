@@ -35,7 +35,7 @@ const updateThesisApplicationStatus = async (req, res) => {
     );
     application.status = new_status;
     await application.save({ transaction: t });
-    if (new_status !== 'approved') {
+    if (new_status === 'approved') {
       const application_supervisors = await ThesisApplicationSupervisorCoSupervisor.findAll({
         where: { thesis_application_id: id },
       });

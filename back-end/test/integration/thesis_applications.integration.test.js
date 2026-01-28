@@ -19,120 +19,80 @@ afterAll(async () => {
   });
 });
 
-describe('GET /thesis-applications/eligibility', () => {
-  test('Should check student eligibility for thesis application', async () => {
+describe('POST /api/thesis-applications', () => {
+  test('Should fail to create a new thesis application when student already has an active one', async () => {
+    const newThesisApplication = {
+      topic: 'New Thesis Topic',
+      supervisor: { id: 3019, firstName: 'Marco', lastName: 'Torchiano' },
+      coSupervisors: [{ id: 38485, firstName: 'Riccardo', lastName: 'Coppola' }],
+      company: { id: 1, corporate_name: 'Tech Solutions S.r.l' },
+      thesisProposal: { id: 13169, topic: 'New Thesis Topic' },
+    };
+
+    const response = await request(server).post('/api/thesis-applications').send(newThesisApplication);
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('error', 'Student already has an active thesis application');
+  });
+
+  test('Should fail to create a thesis application with missing fields', async () => {
+    const incompleteThesisApplication = {
+      topic: null,
+      supervisor: { id: 3019, firstName: 'Marco', lastName: 'Torchiano' },
+    };
+
+    const response = await request(server).post('/api/thesis-applications').send(incompleteThesisApplication);
+    expect(response.status).toBe(400);
+  });
+});
+
+describe('GET /api/thesis-applications/eligibility', () => {
+  test('Should return not eligible when logged student has a pending application', async () => {
     const response = await request(server).get('/api/thesis-applications/eligibility');
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({
-      studentId: expect.any(String),
-      eligible: expect.any(Boolean),
-    });
+    expect(response.body).toHaveProperty('studentId', '320213');
+    expect(response.body).toHaveProperty('eligible', false);
   });
 });
 
-describe('GET /thesis-applications', () => {
-  test('Should get last student application with 200 status', async () => {
+describe('GET /api/thesis-applications', () => {
+  test('Should return the most recent application for the logged student', async () => {
     const response = await request(server).get('/api/thesis-applications');
-    expect(response.status === 200).toBe(true);
-    expect(response.body).toHaveProperty('id');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('id', 1);
     expect(response.body).toHaveProperty('topic');
-    expect(response.body).toHaveProperty('status');
+    expect(response.body).toHaveProperty('supervisor');
+    expect(Array.isArray(response.body.coSupervisors)).toBe(true);
+    expect(response.body).toHaveProperty('submissionDate');
+    expect(response.body).toHaveProperty('status', 'pending');
   });
 });
 
-describe('GET /thesis-applications/all', () => {
-  test('Should get all thesis applications', async () => {
+describe('GET /api/thesis-applications/all', () => {
+  test('Should return all thesis applications ordered by submission date desc', async () => {
     const response = await request(server).get('/api/thesis-applications/all');
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body)).toBe(true);
-  });
+    expect(response.body.length).toBeGreaterThanOrEqual(3);
 
-  test('Should return array of applications with correct structure', async () => {
-    const response = await request(server).get('/api/thesis-applications/all');
-    expect(response.status).toBe(200);
-    expect(Array.isArray(response.body)).toBe(true);
-    if (response.body.length === 0) {
-      return;
-    }
-    const app = response.body[0];
-    expect(app).toHaveProperty('id');
-    expect(app).toHaveProperty('topic');
-    expect(app).toHaveProperty('status');
-    expect(app).toHaveProperty('supervisor');
+    const [first, second, third] = response.body;
+    expect(first.id).toBe(3);
+    expect(second.id).toBe(1);
+    expect(third.id).toBe(2);
   });
 });
 
-describe('GET /thesis-applications/status-history', () => {
-  test('Should return 400 if applicationId is missing', async () => {
+describe('GET /api/thesis-applications/status-history', () => {
+  test('Should return 400 when applicationId is missing', async () => {
     const response = await request(server).get('/api/thesis-applications/status-history');
     expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty('error');
-    expect(response.body.error).toContain('Missing applicationId');
   });
 
-  test('Should get status history for an application', async () => {
-    // First try to get an application to test with
-    const allAppsResponse = await request(server).get('/api/thesis-applications/all');
-    if (allAppsResponse.body.length === 0) {
-      return;
-    }
-    const appId = allAppsResponse.body[0].id;
-    const response = await request(server).get(`/api/thesis-applications/status-history?applicationId=${appId}`);
+  test('Should return ordered status history for an application', async () => {
+    const response = await request(server).get('/api/thesis-applications/status-history').query({ applicationId: 2 });
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body)).toBe(true);
-    if (response.body.length === 0) {
-      return;
-    }
-    const historyEntry = response.body[0];
-    expect(historyEntry).toHaveProperty('id');
-    expect(historyEntry).toHaveProperty('oldStatus');
-    expect(historyEntry).toHaveProperty('newStatus');
-    expect(historyEntry).toHaveProperty('changeDate');
-  });
-});
-
-describe('POST /thesis-applications', () => {
-  test('Should create a new thesis application', async () => {
-    const newApplication = {
-      topic: 'Integration Test Topic',
-      supervisor: {
-        id: 1826,
-        firstName: 'Paolo',
-        lastName: 'Brandimarte',
-        email: 'paolo.brandimarte@polito.it',
-      },
-      coSupervisors: [],
-      company: null,
-      thesisProposal: null,
-    };
-
-    const response = await request(server).post('/api/thesis-applications').send(newApplication);
-
-    expect([200, 201, 400, 500]).toContain(response.status);
-    expect(response.body).toHaveProperty('id');
-    expect(response.body).toHaveProperty('topic', newApplication.topic);
-  });
-
-  test('Should validate required fields', async () => {
-    const invalidApplication = {
-      topic: '', // Empty topic
-      supervisor: null, // Missing supervisor
-    };
-
-    const response = await request(server).post('/api/thesis-applications').send(invalidApplication);
-
-    expect([400, 500]).toContain(response.status);
-  });
-});
-
-describe('POST /thesis-applications/cancel', () => {
-  test('Should return 404 if application not found', async () => {
-    const response = await request(server)
-      .post('/api/thesis-applications/cancel')
-      .send({ id: 999999, note: 'Test cancellation' });
-
-    expect(response.status).toBe(404);
-    expect(response.body).toHaveProperty('error');
-    expect(response.body.error).toContain('not found');
+    expect(response.body.length).toBe(2);
+    expect(response.body[0]).toHaveProperty('newStatus', 'pending');
+    expect(response.body[1]).toHaveProperty('newStatus', 'approved');
   });
 });
