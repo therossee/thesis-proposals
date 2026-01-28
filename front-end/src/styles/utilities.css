@@ -372,6 +372,11 @@ body {
   max-width: 70vw;
   min-width: 550px;
   margin: auto;
+  display: flex !important;
+}
+
+.is-invalid .select__control {
+  border-color: #dc3545 !important;
 }
 
 /*scrollbar si vede solo se sopra brakpoint lg*/

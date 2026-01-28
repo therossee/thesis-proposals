@@ -14,6 +14,7 @@ export default function CustomModal({
   handleConfirm,
   titleText,
   bodyText,
+  closeText,
   confirmText,
   confirmIcon,
 }) {
@@ -33,7 +34,7 @@ export default function CustomModal({
       <Modal.Body className="modal-body">{t(bodyText)}</Modal.Body>
       <Modal.Footer className="modal-footer">
         <Button className="modal-cancel mb-3" size="md" onClick={handleClose}>
-          {t('carriera.proposta_di_tesi.chiudi')}
+          {closeText || t('carriera.proposta_di_tesi.chiudi')}
         </Button>
         <Button className={`btn-primary-${appliedTheme} mb-3`} size="md" onClick={() => handleConfirm()}>
           <i className={confirmIcon}></i>
@@ -52,4 +53,5 @@ CustomModal.propTypes = {
   bodyText: PropTypes.string.isRequired,
   confirmText: PropTypes.string.isRequired,
   confirmIcon: PropTypes.string.isRequired,
+  closeText: PropTypes.string
 };

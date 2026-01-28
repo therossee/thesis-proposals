@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 
 import CustomBadge from './CustomBadge';
 
-export default function SupervisorSelect({ options, selected, setSelected, isMulti, placeholder }) {
+export default function SupervisorSelect({ options, selected, setSelected, isMulti, placeholder, error }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -29,7 +29,7 @@ export default function SupervisorSelect({ options, selected, setSelected, isMul
         }}
         onMenuOpen={() => setIsMenuOpen(true)}
         onMenuClose={() => setIsMenuOpen(false)}
-        className="multi-select"
+        className={`multi-select ${error ? 'is-invalid' : ''}`}
         classNamePrefix="select"
         styles={{
           option: (basicStyles, state) => ({
@@ -79,4 +79,5 @@ SupervisorSelect.propTypes = {
   setSelected: PropTypes.func.isRequired,
   isMulti: PropTypes.bool,
   placeholder: PropTypes.string,
+  error: PropTypes.bool,
 };

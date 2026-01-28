@@ -14,7 +14,7 @@ import ThesisRequestModal from './ThesisRequestModal';
 import Timeline from './Timeline';
 
 export default function Thesis(props) {
-  const { thesis, thesisApplication, showModal, setShowModal, showRequestModal, setShowRequestModal } = props;
+  const { thesis, thesisApplication, showModal, setShowModal, showRequestModal, setShowRequestModal, onToast } = props;
   const data = thesis ? thesis : thesisApplication;
   const [isLoading, setIsLoading] = useState(false);
   const supervisors = [data.supervisor, ...data.coSupervisors];
@@ -139,7 +139,7 @@ export default function Thesis(props) {
           confirmText={modalConfirmText}
           confirmIcon={modalConfirmIcon}
         />
-        <ThesisRequestModal show={showRequestModal} setShow={setShowRequestModal} />
+        <ThesisRequestModal show={showRequestModal} setShow={setShowRequestModal} onToast={onToast} />
       </div>
     </>
   );
@@ -242,4 +242,5 @@ Thesis.propTypes = {
   setShowModal: PropTypes.func.isRequired,
   showRequestModal: PropTypes.bool,
   setShowRequestModal: PropTypes.func,
+  onToast: PropTypes.func.isRequired,
 };

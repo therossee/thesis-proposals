@@ -18,6 +18,7 @@ import { getSystemTheme } from '../utils/utils';
 import CustomBadge from './CustomBadge';
 import CustomBlock from './CustomBlock';
 import LoadingModal from './LoadingModal';
+import CustomToast from './CustomToast';
 
 moment.locale('it');
 
@@ -104,42 +105,7 @@ function ThesisProposalDetail(props) {
   } else {
     return (
       <>
-        <div className="custom-toast-wrapper">
-          <Toast
-            onClose={() => setShowToast(false)}
-            show={showToast}
-            delay={5000}
-            autohide
-            className={`custom-toast ${success ? 'custom-toast--success' : 'custom-toast--error'}`}
-          >
-            <div className="d-flex align-items-start gap-2 w-100">
-              <span className="custom-toast__icon">
-                <i
-                  className={success ? 'fa-regular fa-circle-check' : 'fa-regular fa-circle-xmark'}
-                  aria-hidden="true"
-                />
-              </span>
-              <div className="custom-toast__content">
-                <strong className="custom-toast__title">
-                  {success ? t('carriera.proposta_di_tesi.successo') : t('carriera.proposta_di_tesi.errore')}
-                </strong>
-                <p className="custom-toast__message mb-0">
-                  {success
-                    ? t('carriera.proposta_di_tesi.successo_content')
-                    : t('carriera.proposta_di_tesi.errore_content')}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="custom-toast__close"
-                onClick={() => setShowToast(false)}
-                aria-label="Close"
-              >
-                <i className="fa-solid fa-xmark" />
-              </button>
-            </div>
-          </Toast>
-        </div>
+        <CustomToast success={success} onClose={() => setShowToast(false)} title={success ? t('carriera.richiesta_tesi.success') : t('carriera.richiesta_tesi.error')} message={success ? t('carriera.richiesta_tesi.success_content') : t('carriera.richiesta_tesi.error_content')} />
         <div className="proposals-container">
           <Card className="mb-3 roundCard py-2 py-2">
             {topic && (

@@ -227,7 +227,10 @@
             "not_eligible": "Non idoneo",
             "not_eligible_message": "Non sei idoneo per richiedere una tesi in questo momento. Verifica di aver soddisfatto tutti i requisiti necessari.",
             "go_back": "Torna indietro",
-            "too_long": "L'argomento della tesi supera il limite di caratteri consentito"
+            "too_long": "L'argomento della tesi supera il limite di caratteri consentito",
+            "confirm_title": "Conferma invio richiesta",
+            "confirm_body": "Sei sicuro di voler inviare la richiesta di tesi?",
+            "confirm": "Si, invia"
         }
     },
     "Accedi": "Accedi",

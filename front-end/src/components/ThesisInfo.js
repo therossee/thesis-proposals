@@ -40,7 +40,7 @@ export default function ThesisInfo({ showModal, setShowModal }) {
             </Card.Body>
           </Card>
         </Col>
-        <ThesisRequestModal show={showModal} setShow={setShowModal} />
+        <ThesisRequestModal show={showModal} setShow={setShowModal} onToast={onToast} />
       </Row>
     </>
   );
@@ -49,4 +49,5 @@ export default function ThesisInfo({ showModal, setShowModal }) {
 ThesisInfo.propTypes = {
   showModal: PropTypes.bool.isRequired,
   setShowModal: PropTypes.func.isRequired,
+  onToast: PropTypes.func.isRequired,
 };
