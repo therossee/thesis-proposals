@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 
 import CustomBadge from './CustomBadge';
 
-export default function SupervisorSelect({ options, selected, setSelected, isMulti, placeholder, error }) {
+export default function SupervisorSelect({ options, selected = [], setSelected, isMulti, placeholder, error }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (

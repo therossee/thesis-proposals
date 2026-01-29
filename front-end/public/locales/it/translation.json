@@ -205,7 +205,9 @@
                 "line_3": "Rispetta le scadenze indicate in questa sezione e carica i documenti richiesti nei tempi previsti.",
                 "line_4": "Verifica che tutti i passaggi siano completati prima di procedere allo step successivo.",
                 "line_5": "In caso di problemi tecnici, contatta il supporto tramite l’apposita sezione."
-            }
+            },
+            "show_more": "Mostra di più",
+            "show_less": "Mostra di meno"
         },
         "richiesta_tesi": {
             "title": "Richiesta Tesi",

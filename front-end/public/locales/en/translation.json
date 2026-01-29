@@ -208,7 +208,9 @@
                 "line_4": "Ensure that all steps are completed before proceeding to the next step.",
                 "line_5": "In case of technical problems, contact support through the appropriate section."
             },
-            "application_form": "Thesis Request"
+            "application_form": "Thesis Request",
+            "show_more": "Show more",
+            "show_less": "Show less"
         },
         "richiesta_tesi": {
             "title": "Thesis Request",

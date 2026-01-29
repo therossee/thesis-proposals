@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 
-import { Card, Col, Row } from 'react-bootstrap';
+import { Button, Card, Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 import PropTypes from 'prop-types';
@@ -27,6 +27,7 @@ export default function Thesis(props) {
   } = props;
   const data = thesis ? thesis : thesisApplication;
   const [isLoading, setIsLoading] = useState(false);
+  const [showFullTopic, setShowFullTopic] = useState(false);
   const { showToast } = useContext(ToastContext);
   const supervisors = [data.supervisor, ...data.coSupervisors];
   const activeStep = thesis ? thesis.thesisStatus : thesisApplication.status;
@@ -65,9 +66,10 @@ export default function Thesis(props) {
   };
 
   useEffect(() => {
-    setIsLoading(true);
-    if(thesis) 
+    if (thesis) {
+      setIsLoading(false);
       return;
+    }
     API.getStatusHistoryApplication(data.id)
       .then(history => {
         setAppStatusHistory(history);
@@ -91,7 +93,7 @@ export default function Thesis(props) {
             <Timeline activeStep={activeStep} statusHistory={appStatusHistory} />
           </Col>
           <Col md={8} lg={8}>
-            <Card className="mb-3 roundCard py-2 ">
+            <Card className="mb-3 roundCard py-2 pb-2">
               <Card.Header className="border-0">
                 <h3 className="thesis-topic">
                   <i className="fa-solid fa-book-open fa-sm pe-2" />
@@ -100,8 +102,28 @@ export default function Thesis(props) {
               </Card.Header>
               <Card.Body className="pt-2 pb-0">
                 <p className="info-detail">
-                  {data.topic.length > 600 ? data.topic.substring(0, 597) + '...' : data.topic}
+                  {data.topic.length > 600 && !showFullTopic
+                    ? (
+                      <>
+                        {data.topic.substring(0, 597) + '... '}
+                      </>
+                    )
+                    : (
+                      <>
+                        {data.topic}
+                      </>
+                    )
+                  }
                 </p>
+                <Button
+                variant="contact-link"
+                onClick={() => setShowFullTopic(!showFullTopic)}
+                aria-expanded={showFullTopic}
+                className="p-0 h3 thesis-topic d-flex align-items-center gap-2 mb-3"
+              >
+                <i className={`fa-solid fa-chevron-${showFullTopic ? 'up' : 'down'} cosupervisor-button`} />
+                <span className="cosupervisor-button">{t(`carriera.tesi.${showFullTopic ? 'show_less' : 'show_more'}`)}</span>
+              </Button>
               </Card.Body>
             </Card>
             <Row className="mb-3">
