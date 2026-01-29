@@ -38,6 +38,11 @@ moment.locale('it');
  *    - "TEORICA" or "THEORETICAL"
  *    - "NUMERICA" or "NUMERICAL"
  * - "sorting-ASC" or "sorting-DESC": Renders a badge with an ascending or descending sorting icon (only reset badge available).
+ * - "app_status": Renders a badge with the application status icon. Requires a "content". Valid content values are:
+ *    - "PENDING"
+ *    - "REJECTED"
+ *    - "APPROVED"
+ *    - "cancelled"
  * @param {object|array<object>!string|array<string>} content - If available, populate the content of the badge. It could be a single object (with 'content' and 'id' attributes) or an array of objects, a single string or an array of strings.
  * If you provide an array, the component will automatically render a tag for every item.
  * @param {type} - Optional. It is used to specify if the badge is a 'reset' badge. If it is, the badge will be rendered as a button with a 'delete' icon at the end and will reset the filter when clicked.
@@ -53,6 +58,7 @@ const validVariants = [
   'keyword',
   'internal',
   'external',
+  'external-company',
   'italy',
   'abroad',
   'type',
@@ -62,8 +68,9 @@ const validVariants = [
   'warning',
   'success',
   'error',
+  'app_status',
 ];
-const validTypes = ['reset', 'truncated'];
+const validTypes = ['reset', 'truncated', 'single_select'];
 const validTypeContent = [
   'analisi dati',
   'data analysis',
@@ -136,6 +143,35 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
     );
   };
 
+  const renderApplicationStatusBadge = () => {
+    return (
+      <div className={`custom-badge badge ${getApplicationStatusBadgeType(content)}_${appliedTheme} pe-2`}>
+        <div className="custom-badge-icon">{renderIcon(content)}</div>
+        {renderTranslatedContent(content)}
+      </div>
+    );
+  };
+
+  const renderStatusBadge = () => {
+    return (
+      <OverlayTrigger
+        key={`${variant}`}
+        delay={{ show: 250, hide: 400 }}
+        overlay={
+          <Tooltip id={`tooltip-${variant}`}>
+            {t('carriera.proposte_di_tesi.expires')}: {moment(content).format('DD/MM/YYYY')}
+          </Tooltip>
+        }
+        placement="bottom"
+      >
+        <div className={`custom-badge badge ${variant}_${appliedTheme} pe-2`}>
+          <div className="custom-badge-icon">{renderIcon()}</div>
+          {renderTranslatedContent()}
+        </div>
+      </OverlayTrigger>
+    );
+  };
+
   const renderTruncatedBadge = () => {
     const contentArray = Array.isArray(content) ? content : [content];
     const truncatedContentArray = contentArray.slice(2);
@@ -178,34 +214,17 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
     );
   };
 
-  const renderPositionBadge = () => {
+  const renderSingleSelectBadge = () => {
+    const contentText = content?.content || null;
+    const selectedVariant = variant === 'external-company' ? 'external' : variant;
     return (
-      <OverlayTrigger
-        key={`${variant}`}
-        delay={{ show: 250, hide: 400 }}
-        overlay={
-          <Tooltip id={`tooltip-${variant}`}>
-            {variant === 'abroad'
-              ? t('carriera.proposte_di_tesi.abroad_thesis')
-              : t('carriera.proposte_di_tesi.italy_thesis')}
-          </Tooltip>
-        }
-        placement="bottom"
+      <Button
+        key="custom-badge-button"
+        className={`custom-badge badge ${selectedVariant}_${appliedTheme} reset clickable`}
       >
-        {variant === 'abroad' ? (
-          <i
-            className="fa-sharp-duotone fa-solid fa-earth-americas fa-xl"
-            style={{
-              '--fa-primary-color': 'var(--green-500)',
-              '--fa-secondary-color': 'var(--lightBlue-600)',
-              '--fa-secondary-opacity': '1',
-              height: '12px',
-            }}
-          />
-        ) : (
-          <span className="fi fi-it" style={{ borderRadius: '3px' }} />
-        )}
-      </OverlayTrigger>
+        <div className="custom-badge-icon">{renderIcon(contentText)}</div>
+        {contentText ? <span className="custom-badge-text">{contentText}</span> : renderTranslatedContent()}
+      </Button>
     );
   };
 
@@ -218,9 +237,9 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
       case 'internal':
         return <i className="fa-regular fa-building-columns fa-lg" />;
       case 'external':
+      case 'external-company':
         return <i className="fa-regular fa-building-circle-arrow-right fa-lg" />;
       case 'italy':
-        return <span className="fi fi-it" style={{ borderRadius: '3px' }} />;
       case 'abroad':
         return (
           <i
@@ -295,6 +314,19 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
         return <i className="fa-solid fa-arrow-up-short-wide fa-lg" />;
       case 'sorting-DESC':
         return <i className="fa-solid fa-arrow-down-short-wide fa-lg" />;
+      case 'app_status':
+        switch (content.toLowerCase()) {
+          case 'pending':
+            return <i className="fa-regular fa-clock fa-lg" />;
+          case 'rejected':
+            return <i className="fa-regular fa-circle-xmark fa-lg" />;
+          case 'approved':
+            return <i className="fa-regular fa-circle-check fa-lg" />;
+          case 'cancelled':
+            return <i className="fa-regular fa-circle-minus fa-lg" />;
+          default:
+            return <i className="fa-regular fa-circle-xmark fa-lg" />;
+        }
       default:
         return <i className="fa-regular fa-circle-xmark fa-lg" />;
     }
@@ -316,6 +348,19 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
         return t('carriera.proposta_di_tesi.in_scadenza');
       case 'error':
         return t('carriera.proposta_di_tesi.scaduta');
+      case 'app_status':
+        switch (content.toLowerCase()) {
+          case 'pending':
+            return t('carriera.tesi.thesis_progress.pending');
+          case 'approved':
+            return t('carriera.tesi.thesis_progress.approved');
+          case 'rejected':
+            return t('carriera.tesi.thesis_progress.rejected');
+          case 'cancelled':
+            return t('carriera.tesi.thesis_progress.cancelled');
+          default:
+            return t('carriera.proposta_di_tesi.badge_errato');
+        }
       default:
         return t('carriera.proposta_di_tesi.badge_errato');
     }
@@ -339,9 +384,19 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
   if (
     !validVariants.includes(variant) ||
     (type && !validTypes.includes(type)) ||
-    (['teacher', 'keyword', 'type', 'sorting-ASC', 'sorting-DESC', 'status', 'success', 'warning', 'error'].includes(
-      variant,
-    ) &&
+    ([
+      'teacher',
+      'keyword',
+      'external-company',
+      'type',
+      'sorting-ASC',
+      'sorting-DESC',
+      'status',
+      'success',
+      'warning',
+      'error',
+      'app_status',
+    ].includes(variant) &&
       !content) ||
     (variant === 'type' && !isValidTypeContent(content))
   ) {
@@ -361,20 +416,23 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
     switch (type) {
       case 'reset':
         return <div className="custom-badge-container">{renderResetBadge()}</div>;
+      case 'single_select':
+        return <div className="custom-badge-container">{renderSingleSelectBadge()}</div>;
       case 'truncated':
         return <div className="custom-badge-container">{renderTruncatedBadge()}</div>;
       default:
         switch (variant) {
-          case 'italy':
-          case 'abroad':
-            return renderPositionBadge();
           case 'internal':
           case 'external':
+          case 'italy':
+          case 'abroad':
             return <div className="custom-badge-container">{renderStaticBadge()}</div>;
           case 'status': {
             variant = getStatusBadgeType(content);
-            return <div className="custom-badge-container">{renderStaticBadge()}</div>;
+            return <div className="custom-badge-container">{renderStatusBadge()}</div>;
           }
+          case 'app_status':
+            return <div className="custom-badge-container">{renderApplicationStatusBadge()}</div>;
           default:
             return <div className="custom-badge-container">{renderSimpleBadge()}</div>;
         }
@@ -391,6 +449,19 @@ const getStatusBadgeType = content => {
   if (remainingTime > 14) return 'success';
   if (remainingTime <= 14 && remainingTime > 0) return 'warning';
   return 'error';
+};
+
+const getApplicationStatusBadgeType = content => {
+  switch (content.toLowerCase()) {
+    case 'pending':
+      return 'warning';
+    case 'rejected':
+      return 'error';
+    case 'approved':
+      return 'success';
+    case 'cancelled':
+      return 'error';
+  }
 };
 
 CustomBadge.propTypes = {

@@ -108,6 +108,123 @@ async function getThesisProposalById(id, lang) {
   }
 }
 
+async function getProposalAvailability(thesisProposalId) {
+  try {
+    const response = await axios.get(`${URL}/thesis-proposals/${thesisProposalId}/availability`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching thesis proposal availability:', error);
+  }
+}
+
+/****** Thesis Application APIs ******/
+
+async function getLastStudentApplication() {
+  try {
+    const response = await axios.get(`${URL}/thesis-applications`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching last student thesis application:', error);
+  }
+}
+
+async function createThesisApplication(applicationData) {
+  try {
+    const response = await axios.post(`${URL}/thesis-applications`, applicationData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating thesis application:', error);
+    throw error;
+  }
+}
+
+async function checkStudentEligibility(studentId) {
+  try {
+    const response = await axios.get(`${URL}/thesis-applications/eligibility`, {
+      params: { studentId },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error checking student eligibility:', error);
+  }
+}
+
+async function getStatusHistoryApplication(applicationId) {
+  try {
+    const response = await axios.get(`${URL}/thesis-applications/status-history`, {
+      params: { applicationId },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching status history of thesis application:', error);
+  }
+}
+
+async function getLoggedStudentThesis() {
+  try {
+    const response = await axios.get(`${URL}/thesis`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching student thesis:', error);
+  }
+}
+
+async function getAllThesisApplications() {
+  try {
+    const response = await axios.get(`${URL}/thesis-applications/all`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching all thesis applications:', error);
+  }
+}
+
+async function updateThesisApplicationStatus(updateData) {
+  try {
+    const response = await axios.put(`${URL}/test/thesis-application`, updateData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating thesis application status:', error);
+  }
+}
+
+async function cancelThesisApplication({ applicationId }) {
+  try {
+    const response = await axios.post(`${URL}/thesis-applications/cancel`, {
+      id: applicationId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error cancelling thesis application:', error);
+    throw error;
+  }
+}
+
+// ------------------------------------
+// Thesis Start from Application API
+async function startThesisFromApplication(applicationData) {
+  try {
+    console.log('Starting thesis with data:', applicationData);
+    const response = await axios.post(`${URL}/thesis`, applicationData);
+    return response.data;
+  } catch (error) {
+    console.error('Error starting thesis from application:', error);
+    throw error;
+  }
+}
+
+// ------------------------------------
+// Companies API
+async function getCompanies() {
+  try {
+    const response = await axios.get(`${URL}/companies`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching companies:', error);
+  }
+}
+
+// ------------------------------------
+
 const buildParams = (lang, page, limit, filters, search, sorting) => {
   const params = {
     lang,
@@ -165,6 +282,17 @@ const API = {
   getThesisProposalsKeywords,
   getThesisProposalsTeachers,
   getThesisProposalById,
+  getProposalAvailability,
+  createThesisApplication,
+  getLastStudentApplication,
+  checkStudentEligibility,
+  getLoggedStudentThesis,
+  getStatusHistoryApplication,
+  getAllThesisApplications,
+  updateThesisApplicationStatus,
+  cancelThesisApplication,
+  startThesisFromApplication,
+  getCompanies,
 };
 
 export default API;

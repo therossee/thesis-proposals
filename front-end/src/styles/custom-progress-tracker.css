@@ -1,0 +1,176 @@
+.progress-tracker-container {
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  background-color: var(--background);
+  border-radius: var(--border-radius);
+  position: relative;
+}
+
+/* Linea tratteggiata verticale */
+.progress-tracker-container::before {
+  content: '';
+  position: absolute;
+  left: 1.675rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-image: linear-gradient(to bottom, var(--gray-500) 50%, transparent 50%);
+  background-size: 2px 8px;
+  background-repeat: repeat-y;
+  z-index: 0;
+}
+
+.progress-step {
+  display: flex;
+  margin-bottom: 1rem;
+  color: var(--primary);
+  position: relative;
+  z-index: 1;
+}
+
+.progress-step.faded {
+  opacity: 0.4;
+}
+
+.progress-step-marker {
+  min-width: 24px;
+  margin-right: 1rem;
+}
+
+.progress-step-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.progress-step-circle.pending {
+  border: 2px solid var(--primary-400);
+  background-color: var(--primary-200);
+  color: var(--primary-700);
+}
+
+.progress-step-circle.approved {
+  border: 2px solid var(--green-700);
+  background-color: var(--green-200);
+  color: var(--green-700);
+}
+
+.progress-step-circle.rejected {
+  border: 2px solid var(--red-700);
+  background-color: var(--red-200);
+  color: var(--red-700);
+}
+
+.progress-step-circle.cancelled {
+  border: 2px solid var(--red-700);
+  background-color: var(--red-200);
+  color: var(--red-700);
+}
+
+.progress-step-circle.inactive {
+  border: 2px solid var(--gray-500);
+  background-color: var(--gray-100);
+  color: var(--gray-500);
+}
+
+.progress-step-circle.completed {
+  border: 2px solid var(--primary-200);
+  background-color: var(--background);
+}
+
+.progress-step-content {
+  flex-grow: 1;
+}
+
+.progress-step-title {
+  margin-bottom: 0.4rem;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text);
+  transition: all 0.3s ease;
+}
+
+.progress-step-description {
+  margin-bottom: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.progress-step-date {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.progress-step-note-toggle {
+  font-size: var(--font-size-xs);
+  color: var(--primary);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.2s ease;
+  font-weight: var(--font-weight-medium);
+}
+
+.progress-step-note-toggle:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.progress-step-note {
+  font-size: var(--font-size-xs);
+  color: var(--text);
+  padding: 0.75rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  line-height: 1.4;
+  width: auto;
+}
+
+.progress-step-note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  transition: opacity 0.2s ease;
+}
+
+.progress-step-note-header:hover {
+  opacity: 0.8;
+}
+
+.progress-step-note-header i.fa-chevron-up,
+.progress-step-note-header i.fa-chevron-down {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.progress-step-note p {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  line-height: 1.5;
+  border-top: 1px solid var(--border);
+}
+
+.progress-step-circle i {
+  color: inherit;
+  display: inline-flex;
+  line-height: 1;
+  position: absolute;
+}

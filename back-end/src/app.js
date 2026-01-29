@@ -3,6 +3,10 @@ const cors = require('cors');
 const express = require('express');
 const thesisProposalsRouter = require('./routers/thesis-proposals');
 const studentsRouter = require('./routers/students');
+const thesisApplicationsRouter = require('./routers/thesis-applications');
+const thesisRouter = require('./routers/thesis');
+const companiesRouter = require('./routers/companies');
+const testRouter = require('./routers/test-router');
 
 require('dotenv').config();
 
@@ -19,5 +23,9 @@ app.use('/api/thesis-proposals/teachers', thesisProposalsRouter);
 app.use('/api/thesis-proposals/{:thesisProposalId}', thesisProposalsRouter);
 app.use('/api/students', studentsRouter);
 app.use('/api/students/logged-student', studentsRouter);
+app.use('/api/thesis-applications', thesisApplicationsRouter);
+app.use('/api/thesis', thesisRouter);
+app.use('/api/companies', companiesRouter);
+app.use('/api/test', testRouter);
 
 module.exports = { app };
