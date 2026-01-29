@@ -197,7 +197,15 @@
                 "body": "Sei sicuro di voler cancellare la tua tesi? L'azione non può essere annullata.",
                 "confirm_text": "Si, cancella"
             },
-            "application_form": "Richiesta tesi"
+            "application_form": "Richiesta tesi",
+            "information": {
+                "title": "Informazioni sulla tesi",
+                "line_1": "Consulta regolarmente la timeline a sinistra per monitorare lo stato e le scadenze della tua tesi.",
+                "line_2": "Comunica tempestivamente con il tuo relatore per chiarire dubbi e ricevere feedback.",
+                "line_3": "Rispetta le scadenze indicate in questa sezione e carica i documenti richiesti nei tempi previsti.",
+                "line_4": "Verifica che tutti i passaggi siano completati prima di procedere allo step successivo.",
+                "line_5": "In caso di problemi tecnici, contatta il supporto tramite l’apposita sezione."
+            }
         },
         "richiesta_tesi": {
             "title": "Richiesta Tesi",

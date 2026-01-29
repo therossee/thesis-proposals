@@ -7,6 +7,7 @@ import API from './API';
 import FloatingButton from './components/FloatingButton';
 import LoadingModal from './components/LoadingModal';
 import PoliNavbar from './components/Navbar';
+import CustomToast from './components/CustomToast';
 import { Sidebar } from './components/Sidebar';
 import AreaPersonale from './pages/AreaPersonale';
 import Carriera from './pages/Carriera';
@@ -27,6 +28,7 @@ export const ThemeContext = createContext(null);
 export const DesktopToggleContext = createContext(null);
 export const LoggedStudentContext = createContext(null);
 export const BodyDataLoadingContext = createContext(null);
+export const ToastContext = createContext(null);
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'auto');
@@ -37,6 +39,12 @@ function App() {
   const [navbarDataLoading, setNavbarDataLoading] = useState(true);
   const [bodyDataLoading, setBodyDataLoading] = useState(false);
   const [refresh, setRefresh] = useState(false);
+  const [toastState, setToastState] = useState({
+    show: false,
+    success: true,
+    title: '',
+    message: '',
+  });
   const location = useLocation();
 
   const updateTheme = theme => {
@@ -86,6 +94,17 @@ function App() {
   const favoritesValue = useMemo(() => ({ favorites, setFavorites }), [favorites]);
   const themeValue = useMemo(() => ({ theme, setTheme }), [theme]);
   const bodyDataLoadingValue = useMemo(() => ({ bodyDataLoading, setBodyDataLoading }), [bodyDataLoading]);
+  const toastValue = useMemo(
+    () => ({
+      showToast: ({ success, title, message }) => {
+        setToastState({ show: true, success, title, message });
+      },
+      hideToast: () => {
+        setToastState(prev => ({ ...prev, show: false }));
+      },
+    }),
+    [],
+  );
 
   return (
     <ThemeContext.Provider value={themeValue}>
@@ -93,17 +112,25 @@ function App() {
         <DesktopToggleContext.Provider value={desktopToggleValue}>
           <FavoritesContext.Provider value={favoritesValue}>
             <BodyDataLoadingContext.Provider value={bodyDataLoadingValue}>
-              <LoadingModal show={navbarDataLoading || bodyDataLoading} onHide={() => setNavbarDataLoading(false)} />
-              <PoliNavbar
-                allStudents={allStudents}
-                setNavbarDataLoading={setNavbarDataLoading}
-                refresh={refresh}
-                setRefresh={setRefresh}
-              />
-              <Row className="p-0 m-0" style={{ width: '100vw', height: '100vh' }}>
-                <Sidebar />
-                <Col className={`custom-content reduced ${desktopToggle ? 'minimized' : ''}`}>
-                  <Routes>
+              <ToastContext.Provider value={toastValue}>
+                <LoadingModal show={navbarDataLoading || bodyDataLoading} onHide={() => setNavbarDataLoading(false)} />
+                <CustomToast
+                  show={toastState.show}
+                  success={toastState.success}
+                  title={toastState.title}
+                  message={toastState.message}
+                  onClose={toastValue.hideToast}
+                />
+                <PoliNavbar
+                  allStudents={allStudents}
+                  setNavbarDataLoading={setNavbarDataLoading}
+                  refresh={refresh}
+                  setRefresh={setRefresh}
+                />
+                <Row className="p-0 m-0" style={{ width: '100vw', height: '100vh' }}>
+                  <Sidebar />
+                  <Col className={`custom-content reduced ${desktopToggle ? 'minimized' : ''}`}>
+                    <Routes>
                     <Route path="/" element={<Homepage />} />
                     <Route path="/area_personale" element={<AreaPersonale />} />
                     <Route path="/home" element={<Homepage />} />
@@ -118,10 +145,11 @@ function App() {
                     <Route path="/carriera/tesi" element={<Tesi initialActiveTab="thesis" />} />
                     <Route path="/carriera/tesi/proposte_di_tesi" element={<Tesi initialActiveTab="proposals" />} />
                     <Route path="/carriera/tesi/proposta_di_tesi/:id" element={<PropostaDiTesi />} />
-                  </Routes>
-                  <FloatingButton />
-                </Col>
-              </Row>
+                    </Routes>
+                    <FloatingButton />
+                  </Col>
+                </Row>
+              </ToastContext.Provider>
             </BodyDataLoadingContext.Provider>
           </FavoritesContext.Provider>
         </DesktopToggleContext.Provider>

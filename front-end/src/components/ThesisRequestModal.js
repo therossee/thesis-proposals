@@ -15,7 +15,7 @@ import LoadingModal from './LoadingModal';
 import SupervisorSelect from './SupervisorSelect';
 
 export default function ThesisRequestModal(props) {
-  const { show, setShow, onToast } = props;
+  const { show, setShow, onSubmitResult } = props;
   const [showConfirm, setShowConfirm] = useState(false);
   const { t } = useTranslation();
   const { theme } = useContext(ThemeContext);
@@ -44,13 +44,13 @@ export default function ThesisRequestModal(props) {
       .then(() => {
         setShow(false);
         setShowConfirm(false);
-        onToast(true);
+        onSubmitResult(true);
       })
       .catch(error => {
         console.error('Error submitting thesis application:', error);
         setShow(false);
         setShowConfirm(false);
-        onToast(false);
+        onSubmitResult(false);
       });
   };
 
@@ -235,5 +235,5 @@ export default function ThesisRequestModal(props) {
 ThesisRequestModal.propTypes = {
   show: PropTypes.bool.isRequired,
   setShow: PropTypes.func.isRequired,
-  onToast: PropTypes.func.isRequired,
+  onSubmitResult: PropTypes.func.isRequired,
 };

@@ -1,10 +1,14 @@
+import React from 'react';
+import PropTypes from 'prop-types';
+import { Toast } from 'react-bootstrap';
 
-function CustomToast({ success, title, message, onClose }) {
+
+function CustomToast({ show, success, title, message, onClose }) {
     return (
         <div className="custom-toast-wrapper">
           <Toast
             onClose={onClose}
-            show={true}
+            show={show}
             delay={5000}
             autohide
             className={`custom-toast ${success ? 'custom-toast--success' : 'custom-toast--error'}`}
@@ -39,6 +43,7 @@ function CustomToast({ success, title, message, onClose }) {
 }
 
 CustomToast.propTypes = {
+    show: PropTypes.bool.isRequired,
     success: PropTypes.bool.isRequired,
     title: PropTypes.string.isRequired,
     message: PropTypes.string.isRequired,

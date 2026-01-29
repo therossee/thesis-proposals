@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 
 import { Button } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
 import API from '../../API';
-import { LoggedStudentContext, ThemeContext } from '../../App';
+import { LoggedStudentContext, ThemeContext, ToastContext } from '../../App';
 import CustomBreadcrumb from '../../components/CustomBreadcrumb';
 import CustomHeader from '../../components/CustomHeader';
 import LoadingModal from '../../components/LoadingModal';
@@ -16,12 +16,13 @@ import Thesis from '../../components/Thesis';
 import ThesisInfo from '../../components/ThesisInfo';
 import ThesisProposals from '../../components/ThesisProposals';
 import { getSystemTheme } from '../../utils/utils';
-import CustomToast from '../../components/CustomToast';
 
 export default function Tesi({ initialActiveTab }) {
   const [thesisApplication, setThesisApplication] = useState(null);
   const [thesis, setThesis] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const pendingToastRef = useRef(null);
   const { loggedStudent } = useContext(LoggedStudentContext);
   const [activeTab, setActiveTab] = useState(initialActiveTab);
   const { t } = useTranslation();
@@ -30,9 +31,8 @@ export default function Tesi({ initialActiveTab }) {
   const [isEligible, setIsEligible] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [toastSuccess, setToastSuccess] = useState(true);
   const { theme } = useContext(ThemeContext);
+  const { showToast } = useContext(ToastContext);
   const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
 
   useEffect(() => {
@@ -84,14 +84,47 @@ export default function Tesi({ initialActiveTab }) {
       })
       .finally(() => {
         setIsLoading(false);
+        if (pendingToastRef.current) {
+          showToast(pendingToastRef.current);
+          pendingToastRef.current = null;
+        }
       });
-  }, [loggedStudent, isEligible]);
+  }, [loggedStudent, refreshKey]);
 
-  const onToast = (success) => {
-    setToastSuccess(success);
-    setShowToast(true);
-    setIsEligible(false);
+  const handleRequestSubmitResult = success => {
+    if (success) {
+      pendingToastRef.current = {
+        success: true,
+        title: t('carriera.richiesta_tesi.success'),
+        message: t('carriera.richiesta_tesi.success_content'),
+      };
+      setRefreshKey(prev => prev + 1);
+    } else {
+      showToast({
+        success: false,
+        title: t('carriera.richiesta_tesi.error'),
+        message: t('carriera.richiesta_tesi.error_content'),
+      });
+    }
   };
+
+  const handleCancelApplicationResult = success => {
+    if (success) {
+      pendingToastRef.current = {
+        success: true,
+        title: t('carriera.tesi.success_application_cancelled'),
+        message: t('carriera.tesi.success_application_cancelled_content'),
+      };
+      setRefreshKey(prev => prev + 1);
+    } else {
+      showToast({
+        success: false,
+        title: t('carriera.tesi.error_application_cancelled'),
+        message: t('carriera.tesi.error_application_cancelled_content'),
+      });
+    }
+  };
+
 
   const renderContent = () => {
     if (isLoading) {
@@ -108,15 +141,18 @@ export default function Tesi({ initialActiveTab }) {
                 setShowModal={setShowModal}
                 showRequestModal={showRequestModal}
                 setShowRequestModal={setShowRequestModal}
-                onToast={onToast}
+                onRequestSubmitResult={handleRequestSubmitResult}
+                onCancelApplicationResult={handleCancelApplicationResult}
               />
             );
           } else {
-            return <ThesisInfo
-              showModal={showRequestModal}
-              setShowModal={setShowRequestModal}
-              onToast={onToast}
-            />;
+            return (
+              <ThesisInfo
+                showModal={showRequestModal}
+                setShowModal={setShowRequestModal}
+                onRequestSubmitResult={handleRequestSubmitResult}
+              />
+            );
           }
         case 'proposals':
           return <ThesisProposals showRequestModal={showRequestModal} setShowRequestModal={setShowRequestModal} />;
@@ -128,10 +164,6 @@ export default function Tesi({ initialActiveTab }) {
 
   return (
     <>
-      {showToast && (
-        <CustomToast success={toastSuccess} onClose={() => setShowToast(false)} title={toastSuccess ? t('carriera.richiesta_tesi.success') : t('carriera.richiesta_tesi.error')} message={toastSuccess ? t('carriera.richiesta_tesi.success_content') : t('carriera.richiesta_tesi.error_content')} />
-      )}
-      {}
       <CustomBreadcrumb activeTab={tabs.filter(tab => tab.key === activeTab)[0].label} />
       <div className="proposal-container justify-content-between d-flex" style={{ paddingRight: '12px' }}>
         <CustomHeader title={t('carriera.tesi.title')} action={() => navigate('/carriera')} />

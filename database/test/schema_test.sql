@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS thesis_application (
     company_id INT,
     topic TEXT NOT NULL,
     submission_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status ENUM('pending', 'approved', 'rejected', 'canceled') NOT NULL DEFAULT 'pending',
+    status ENUM('pending', 'approved', 'rejected', 'cancelled') NOT NULL DEFAULT 'pending',
     FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE RESTRICT, -- RESTRICT policy because why should you delete a student?
     FOREIGN KEY (thesis_proposal_id) REFERENCES thesis_proposal(id) ON DELETE SET NULL,
     FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE RESTRICT -- RESTRICT
@@ -199,8 +199,8 @@ CREATE TABLE IF NOT EXISTS thesis_application_supervisor_cosupervisor(
 CREATE TABLE IF NOT EXISTS thesis_application_status_history(
     id INT AUTO_INCREMENT NOT NULL,
     thesis_application_id INT NOT NULL,
-    old_status ENUM('pending', 'approved', 'rejected', 'canceled'),
-    new_status ENUM('pending', 'approved', 'rejected', 'canceled') NOT NULL,
+    old_status ENUM('pending', 'approved', 'rejected', 'cancelled'),
+    new_status ENUM('pending', 'approved', 'rejected', 'cancelled') NOT NULL,
     change_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     FOREIGN KEY (thesis_application_id) REFERENCES thesis_application(id) ON DELETE CASCADE

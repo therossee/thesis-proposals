@@ -9,7 +9,7 @@ import CustomBlock from './CustomBlock';
 import ThesisRequestModal from './ThesisRequestModal';
 import Timeline from './Timeline';
 
-export default function ThesisInfo({ showModal, setShowModal }) {
+export default function ThesisInfo({ showModal, setShowModal, onRequestSubmitResult }) {
   return (
     <>
       <Row className="mb-3">
@@ -40,7 +40,7 @@ export default function ThesisInfo({ showModal, setShowModal }) {
             </Card.Body>
           </Card>
         </Col>
-        <ThesisRequestModal show={showModal} setShow={setShowModal} onToast={onToast} />
+        <ThesisRequestModal show={showModal} setShow={setShowModal} onSubmitResult={onRequestSubmitResult} />
       </Row>
     </>
   );
@@ -49,5 +49,5 @@ export default function ThesisInfo({ showModal, setShowModal }) {
 ThesisInfo.propTypes = {
   showModal: PropTypes.bool.isRequired,
   setShowModal: PropTypes.func.isRequired,
-  onToast: PropTypes.func.isRequired,
+  onRequestSubmitResult: PropTypes.func.isRequired,
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
 import { Card, Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 
 import API from '../API';
+import { ToastContext } from '../App';
 import '../styles/utilities.css';
 import CustomModal from './CustomModal';
 import LoadingModal from './LoadingModal';
@@ -14,9 +15,19 @@ import ThesisRequestModal from './ThesisRequestModal';
 import Timeline from './Timeline';
 
 export default function Thesis(props) {
-  const { thesis, thesisApplication, showModal, setShowModal, showRequestModal, setShowRequestModal, onToast } = props;
+  const {
+    thesis,
+    thesisApplication,
+    showModal,
+    setShowModal,
+    showRequestModal,
+    setShowRequestModal,
+    onRequestSubmitResult,
+    onCancelApplicationResult,
+  } = props;
   const data = thesis ? thesis : thesisApplication;
   const [isLoading, setIsLoading] = useState(false);
+  const { showToast } = useContext(ToastContext);
   const supervisors = [data.supervisor, ...data.coSupervisors];
   const activeStep = thesis ? thesis.thesisStatus : thesisApplication.status;
   const [appStatusHistory, setAppStatusHistory] = useState(thesis ? thesis.applicationStatusHistory : []);
@@ -30,11 +41,25 @@ export default function Thesis(props) {
     setIsLoading(true);
     API.cancelThesisApplication({ applicationId: data.id })
       .then(() => {
-        window.location.reload();
+        showToast({
+          success: true,
+          title: t('carriera.tesi.success_application_cancelled'),
+          message: t('carriera.tesi.success_application_cancelled_content'),
+        });
         setShowModal(false);
+        onCancelApplicationResult(true);
       })
       .catch(error => {
         console.error('Error cancelling thesis application:', error);
+        showToast({
+          success: false,
+          title: t('carriera.tesi.error_application_cancelled'),
+          message: t('carriera.tesi.error_application_cancelled_content'),
+        });
+        setShowModal(false);
+        onCancelApplicationResult(false);
+      })
+      .finally(() => {
         setIsLoading(false);
       });
   };
@@ -103,24 +128,22 @@ export default function Thesis(props) {
                     <Card className="mb-3 roundCard py-2 ">
                       <Card.Header className="border-0">
                         <h3 className="thesis-topic">
-                          <i className="fa-solid fa-info-circle" /> Informazioni sulla tesi
+                          <i className="fa-solid fa-info-circle" /> {t('carriera.tesi.information.title')}
                         </h3>
                       </Card.Header>
                       <Card.Body>
                         <ul>
                           <li>
-                            Consulta regolarmente la timeline a sinistra per monitorare lo stato e le scadenze della tua
-                            tesi.
+                            {t('carriera.tesi.information.line_1')}
                           </li>
-                          <li>Comunica tempestivamente con il tuo relatore per chiarire dubbi e ricevere feedback.</li>
+                          <li>{t('carriera.tesi.information.line_2')}</li>
                           <li>
-                            Rispetta le scadenze indicate in questa sezione e carica i documenti richiesti nei tempi
-                            previsti.
+                            {t('carriera.tesi.information.line_3')}
                           </li>
                           <li>
-                            Verifica che tutti i passaggi siano completati prima di procedere allo step successivo.
+                            {t('carriera.tesi.information.line_4')}
                           </li>
-                          <li>In caso di problemi tecnici, contatta il supporto tramite l’apposita sezione.</li>
+                          <li>{t('carriera.tesi.information.line_5')}</li>
                         </ul>
                       </Card.Body>
                     </Card>
@@ -139,7 +162,11 @@ export default function Thesis(props) {
           confirmText={modalConfirmText}
           confirmIcon={modalConfirmIcon}
         />
-        <ThesisRequestModal show={showRequestModal} setShow={setShowRequestModal} onToast={onToast} />
+        <ThesisRequestModal
+          show={showRequestModal}
+          setShow={setShowRequestModal}
+          onSubmitResult={onRequestSubmitResult}
+        />
       </div>
     </>
   );
@@ -242,5 +269,5 @@ Thesis.propTypes = {
   setShowModal: PropTypes.func.isRequired,
   showRequestModal: PropTypes.bool,
   setShowRequestModal: PropTypes.func,
-  onToast: PropTypes.func.isRequired,
+  onRequestSubmitResult: PropTypes.func.isRequired,
 };

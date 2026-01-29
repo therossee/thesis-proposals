@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 
-import { Button, Card, Col, Modal, Row, Toast } from 'react-bootstrap';
+import { Button, Card, Col, Modal, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import Linkify from 'react-linkify';
 
@@ -9,7 +9,7 @@ import 'moment/locale/it';
 import PropTypes from 'prop-types';
 
 import API from '../API';
-import { LoggedStudentContext, ThemeContext } from '../App';
+import { LoggedStudentContext, ThemeContext, ToastContext } from '../App';
 import '../styles/custom-modal.css';
 import '../styles/custom-toast.css';
 import '../styles/text.css';
@@ -18,7 +18,6 @@ import { getSystemTheme } from '../utils/utils';
 import CustomBadge from './CustomBadge';
 import CustomBlock from './CustomBlock';
 import LoadingModal from './LoadingModal';
-import CustomToast from './CustomToast';
 
 moment.locale('it');
 
@@ -45,11 +44,10 @@ function ThesisProposalDetail(props) {
   const supervisors = [supervisor, ...internalCoSupervisors];
   const [sending, setSending] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [showToast, setShowToast] = useState(false);
   const [isEligible, setIsEligible] = useState(false);
-  const [success, setSuccess] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const { loggedStudent } = useContext(LoggedStudentContext);
+  const { showToast } = useContext(ToastContext);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -82,14 +80,20 @@ function ThesisProposalDetail(props) {
     API.createThesisApplication(applicationData)
       .then(() => {
         setIsEligible(false);
-        setSuccess(true);
-        setShowToast(true);
+        showToast({
+          success: true,
+          title: t('carriera.richiesta_tesi.success'),
+          message: t('carriera.richiesta_tesi.success_content'),
+        });
       })
       .catch(error => {
         console.error('Error sending thesis application:', error);
         setIsEligible(true);
-        setSuccess(false);
-        setShowToast(true);
+        showToast({
+          success: false,
+          title: t('carriera.richiesta_tesi.error'),
+          message: t('carriera.richiesta_tesi.error_content'),
+        });
       })
       .finally(() => {
         setSending(false);
@@ -105,7 +109,6 @@ function ThesisProposalDetail(props) {
   } else {
     return (
       <>
-        <CustomToast success={success} onClose={() => setShowToast(false)} title={success ? t('carriera.richiesta_tesi.success') : t('carriera.richiesta_tesi.error')} message={success ? t('carriera.richiesta_tesi.success_content') : t('carriera.richiesta_tesi.error_content')} />
         <div className="proposals-container">
           <Card className="mb-3 roundCard py-2 py-2">
             {topic && (
