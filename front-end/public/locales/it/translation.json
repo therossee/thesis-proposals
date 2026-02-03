@@ -197,7 +197,7 @@
                 "body": "Sei sicuro di voler cancellare la tua tesi? L'azione non può essere annullata.",
                 "confirm_text": "Si, cancella"
             },
-            "application_form": "Richiesta tesi",
+            "application_form": "Nuova Richiesta Tesi",
             "information": {
                 "title": "Informazioni sulla tesi",
                 "line_1": "Consulta regolarmente la timeline a sinistra per monitorare lo stato e le scadenze della tua tesi.",
@@ -207,7 +207,13 @@
                 "line_5": "In caso di problemi tecnici, contatta il supporto tramite l’apposita sezione."
             },
             "show_more": "Mostra di più",
-            "show_less": "Mostra di meno"
+            "show_less": "Mostra di meno",
+            "show_deadlines": "Prossime scadenze",
+            "no_application": {
+                "title": "Nessuna candidatura inviata",
+                "content": "Al momento non sono disponibili informazioni sulla tua tesi, poiché non hai ancora inviato una candidatura. Esplora le <a href='/carriera/tesi/proposte_di_tesi'>proposte disponibili</a> o invia una richiesta di tesi personalizzata."
+            }
+
         },
         "richiesta_tesi": {
             "title": "Richiesta Tesi",
@@ -240,7 +246,15 @@
             "too_long": "L'argomento della tesi supera il limite di caratteri consentito",
             "confirm_title": "Conferma invio richiesta",
             "confirm_body": "Sei sicuro di voler inviare la richiesta di tesi?",
-            "confirm": "Si, invia"
+            "confirm": "Si, invia",
+            "next_steps_cancelled": {
+                "title": "Prossimi passi",
+                "content": "Hai annullato la tua candidatura. Ora puoi candidarti per <a href='/carriera/tesi/proposte_di_tesi'>altre proposte di tesi</a> o inviare una nuova richiesta di tesi personalizzata."
+            },
+            "next_steps_rejected": {
+                "title": "Prossimi passi",
+                "content": "La tua candidatura per la tesi è stata respinta dal relatore. Per ulteriori informazioni, contatta direttamente il relatore. Puoi anche candidarti per <a href='/carriera/tesi/proposte_di_tesi'>altre proposte di tesi</a> o inviare una nuova richiesta di tesi personalizzata."
+            }
         },
         "conclusione_tesi": {
             "title": "Richiesta conclusione tesi",
@@ -268,18 +282,27 @@
             "abstract_translation_help": "Necessario se la lingua della tesi non è inglese.",
             "sdg_description_1": "L'Agenda 2030 per lo Sviluppo Sostenibile è un programma d'azione sottoscritto nel settembre 2015 dai governi dei 193 Paesi membri dell'ONU. Essa ingloba 17 Obiettivi strategici per lo Sviluppo Sostenibile - Sustainable Development Goals, SDGs - in un grande programma d'azione per un totale di 169 \"target\" o traguardi. Ciascun SDG rappresenta un obiettivo comune a livello planetario su questioni importanti per lo sviluppo come la lotta alla povertà, l'eliminazione della fame e il contrasto al cambiamento climatico per citarne solo alcuni (qui l'elenco completo degli SDG: <a href='https://unric.org/it/agenda-2030/' target='_blank' rel='noopener noreferrer'>Agenda 2030</a>). L'avvio ufficiale degli Obiettivi per lo Sviluppo Sostenibile ha coinciso con l'inizio del 2016 e rappresenta l'inizio di un percorso che i Paesi membri si sono impegnati a percorrere per raggiungere entro il 2030 i target individuati.",
             "sdg_description_2": "Il Politecnico di Torino intende dare evidenza degli studi e degli approfondimenti che gli studenti dell'Ateneo elaborano sui temi dell'Agenda 2030 dando la possibilita di attribuire uno o più SGD al proprio lavoro di Tesi Magistrale. A tale proposito si chiede di selezionare l'SDG maggiormente attinente (e un massimo di due secondari) da associare all'elaborato di tesi. Nel caso in cui il lavoro non presenti contenuti direttamente connessi ai target di alcun SDG, e possibile selezionare la voce \"NON APPLICABILE\".",
+            "sdg_not_applicable": "NON APPLICABILE",
             "primary_sdg": "SDG principale",
             "secondary_sdg_1": "SDG secondario 1",
             "secondary_sdg_2": "SDG secondario 2",
             "authorization": "Autorizzazione alla consultazione",
             "authorization_authorize": "Autorizzo (consultazione libera tramite Webthesis e Biblioteca)",
             "license_choice": "Scegli la licenza con cui verrà distribuita la tesi",
-            "authorization_deny": "Non autorizzo (richiede motivazione e periodo di embargo).",
+            "license_recommended": "Scelta consigliata",
+            "authorization_deny": "Non autorizzo (richiede motivazione e periodo di embargo)",
             "authorization_info": "Informazioni sull'embargo",
-            "motivations": "Motivazioni per l'embargo",
+            "motivations": "Motivazioni per l'embargo (seleziona uno o più motivi)",
             "period": "Periodo di embargo",
             "other_motivation_placeholder": "Specifica il motivo...",
-            "embargo_details": "Sarà comunque consultabile sul catalogo online delle Biblioteche la scheda catalografica relativa alla tesi con tutti i metadati del laureato (nome, cognome, titolo tesi e relatore/i). Al termine del periodo la tesi verrà distribuita con la licenza \"Non commerciale - Non opere derivate CC BY-NC-ND\": la licenza e la piu restrittiva delle nostre sei licenze principali, permettendo a terzi soltanto di scaricare le tue opere e condividerle ad altri fino a che ti diano il giusto credito, ma non possono cambiarle in nessun modo od utilizzarle commercialmente",
+            "embargo_details": "Sarà comunque consultabile sul catalogo online delle Biblioteche la scheda catalografica relativa alla tesi con tutti i metadati del laureato (nome, cognome, titolo tesi e relatore/i). \n Al termine del periodo la tesi verrà distribuita con la licenza \"Non commerciale - Non opere derivate CC BY-NC-ND\": la licenza e la piu restrittiva delle nostre sei licenze principali, permettendo a terzi soltanto di scaricare le tue opere e condividerle ad altri fino a che ti diano il giusto credito, ma non possono cambiarle in nessun modo od utilizzarle commercialmente",
+            "embargo_period": {
+                "title": "Periodo di embargo: ",
+                "12_months": "Dopo 12 mesi dal deposito",
+                "18_months": "Dopo 18 mesi dal deposito",
+                "36_months": "Dopo 3 anni dal deposito",
+                "after_explicit_consent": "Dopo consenso esplicito"
+            },
             "summary_for_committee_pdf": "Riassunto per la commissione (PDF)",
             "summary_for_committee_subtext": "Il riassunto va depositato solo se richiesto dal Corso di Studi. In questa fase il file puo anche non essere definitivo, in quanto è prevista la possibilita di aggiornare il file contestualmente al deposito del file definitivo della tesi (PDF/A).",
             "documents_to_upload": "Documenti da caricare",
@@ -316,7 +339,10 @@
                 "sub_description": "Il Politecnico di Torino intende dare evidenza degli studi e degli approfondimenti che gli studenti dell'Ateneo elaborano sui temi dell'Agenda 2030 dando la possibilità di attribuire uno o più SDG al proprio lavoro di Tesi Magistrale. A tale proposito si chiede di selezionare l'SDG maggiormente attinente (e un massimo di due secondari) da associare all'elaborato di tesi. Nel caso in cui il lavoro non presenti contenuti direttamente connessi ai target di alcun SDG, è possibile selezionare la voce 'NON APPLICABILE'.",
                 "primary_sdg": "SDG principale",
                 "secondary_sdg": "SDG secondario"
-            }
+            },
+            "select_keywords_placeholder": "Seleziona le keyword",
+            "sending": "Invio in corso...",
+            "request_conclusion": "Richiedi conclusione"
         }
     },
     "Accedi": "Accedi",

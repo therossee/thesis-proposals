@@ -1,16 +1,42 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
-import { Card } from 'react-bootstrap';
+import { Button, Card } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 import moment from 'moment';
 import PropTypes from 'prop-types';
 
+import { ThemeContext } from '../App';
 import '../styles/custom-progress-tracker.css';
+import { getSystemTheme } from '../utils/utils';
+import InfoTooltip from './InfoTooltip';
 
-export default function Timeline({ activeStep, statusHistory }) {
+export default function Timeline({ activeStep, statusHistory, deadlines }) {
   const { t } = useTranslation();
-  const [expandedNote, setExpandedNote] = React.useState(null);
+  const { theme } = useContext(ThemeContext);
+  const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
+
+  const validSteps = new Set([
+    'pending',
+    'approved',
+    'rejected',
+    'cancelled',
+    'ongoing',
+    'conclusion_request',
+    'almalaurea',
+    'final_exam',
+    'final_thesis',
+  ]);
+  console.log(deadlines);
+  const hasStatusHistory = Array.isArray(statusHistory) && statusHistory.length > 0;
+  const inferredStatus = hasStatusHistory ? statusHistory[statusHistory.length - 1].newStatus : null;
+  const normalizedActiveStep = validSteps.has(activeStep)
+    ? activeStep
+    : validSteps.has(inferredStatus)
+      ? inferredStatus
+      : null;
+  const hasNoData = !normalizedActiveStep && !hasStatusHistory;
+  const isDisabled = !normalizedActiveStep || !statusHistory;
 
   const getHistoryForStatus = targetStatus => {
     if (!statusHistory || statusHistory.length === 0) return null;
@@ -23,9 +49,8 @@ export default function Timeline({ activeStep, statusHistory }) {
     description: t('carriera.tesi.thesis_progress.pending_description'),
   };
 
-  // Step 2: Outcome della application (dipende da applicationStatus)
   const getSecondStep = () => {
-    switch (activeStep) {
+    switch (normalizedActiveStep) {
       case 'approved':
       case 'ongoing':
       case 'conclusion_request':
@@ -36,7 +61,7 @@ export default function Timeline({ activeStep, statusHistory }) {
           key: 'approved',
           label: t('carriera.tesi.thesis_progress.approved'),
           description: t('carriera.tesi.thesis_progress.approved_description'),
-          date: activeStep !== 'approved',
+          date: normalizedActiveStep !== 'approved',
         };
       case 'rejected':
         return {
@@ -94,17 +119,19 @@ export default function Timeline({ activeStep, statusHistory }) {
   const thesisSteps = getThesisSteps();
   const steps = [firstStep, secondStep, ...thesisSteps];
 
-
   const renderStep = (step, activeStep) => {
     const { key, label, description } = step;
 
-    // Trova l'indice dello step attivo e di quello corrente
     const stepKeys = steps.map(s => s.key);
-    const activeIndex = stepKeys.indexOf(activeStep);
+    const fallbackActiveStep = hasNoData ? 'pending' : activeStep;
+    const isPendingOnly = fallbackActiveStep === 'pending' && !hasNoData;
+    const effectiveActiveStep = isPendingOnly ? 'outcome' : fallbackActiveStep;
+    const activeIndex = stepKeys.indexOf(effectiveActiveStep);
     const thisIndex = stepKeys.indexOf(key);
 
-    const isActive = activeStep === key;
+    const isActive = effectiveActiveStep === key;
     const isCompleted = thisIndex < activeIndex;
+    const isFuture = thisIndex > activeIndex;
 
     let circleClass;
     let titleClass;
@@ -122,13 +149,16 @@ export default function Timeline({ activeStep, statusHistory }) {
     }
 
     if (isActive) {
-      // Usa la classe specifica per lo stato attivo
       if (['approved', 'rejected', 'cancelled'].includes(key)) {
         circleClass = key;
+      } else if (hasNoData && key === 'pending') {
+        circleClass = 'waiting';
+      } else if (key === 'outcome') {
+        circleClass = 'waiting';
       } else {
-        circleClass = 'pending'; // blu
+        circleClass = 'pending';
       }
-      titleClass = `active active-${key}`;
+      titleClass = 'active';
     } else if (isCompleted) {
       circleClass = 'approved';
       titleClass = 'completed';
@@ -138,7 +168,16 @@ export default function Timeline({ activeStep, statusHistory }) {
     }
 
     return (
-      <div key={key} className="progress-step">
+      <div
+        key={key}
+        className={[
+          'progress-step',
+          isDisabled && !(hasNoData && key === 'pending') ? 'disabled' : '',
+          isFuture ? 'faded' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
         <div className="progress-step-marker">
           <div className={`progress-step-circle ${circleClass}`}>
             {isActive && key === 'approved' && <i className="fa-solid fa-check align-vertical-center" />}
@@ -164,15 +203,26 @@ export default function Timeline({ activeStep, statusHistory }) {
   };
 
   return (
-    <Card className="mb-3 roundCard py-2 ">
+    <Card className={`mb-3 roundCard py-2${isDisabled ? ' timeline-disabled' : ''}`}>
       <Card.Header className="border-0">
-        <h3 className="thesis-topic">
-          <i className="fa-solid fa-timeline fa-sm pe-2" />
-          {t('carriera.tesi.timeline')}
-        </h3>
+        <div className="d-flex align-items-center">
+          <h3 className="thesis-topic">
+            <i className="fa-regular fa-books fa-sm pe-2" />
+            {t('carriera.tesi.timeline')}
+          </h3>
+          <InfoTooltip tooltipText={t('carriera.tesi.timeline_tooltip')} placement="top" id="timeline-tooltip" />
+          <Button
+            className={`btn btn-${appliedTheme} btn-header ms-auto`}
+            onClick={() => {
+              window.location.reload();
+            }}
+          >
+            <i className="fa-regular fa-calendar-clock fa-lg me-1" /> {t('carriera.tesi.show_deadlines')}
+          </Button>
+        </div>
       </Card.Header>
       <Card.Body>
-        <div className="progress-tracker-container">{steps.map(step => renderStep(step, activeStep))}</div>
+        <div className="progress-tracker-container">{steps.map(step => renderStep(step, normalizedActiveStep))}</div>
       </Card.Body>
     </Card>
   );
@@ -184,12 +234,13 @@ Timeline.propTypes = {
     'approved',
     'rejected',
     'cancelled',
+    'none',
     'ongoing',
     'conclusion_request',
     'almalaurea',
     'final_exam',
     'final_thesis',
-  ]).isRequired,
+  ]),
   statusHistory: PropTypes.arrayOf(
     PropTypes.shape({
       oldStatus: PropTypes.string,
@@ -199,4 +250,11 @@ Timeline.propTypes = {
     }),
   ),
   startDate: PropTypes.string,
+  deadlines: PropTypes.arrayOf(
+    PropTypes.shape({
+      deadline_type: PropTypes.string.isRequired,
+      graduation_session_id: PropTypes.number.isRequired,
+      deadline_date: PropTypes.string.isRequired,
+    }),
+  ),
 };

@@ -57,6 +57,8 @@ moment.locale('it');
 const validVariants = [
   'teacher',
   'keyword',
+  'sdg',
+  'recommended',
   'language',
   'internal',
   'external',
@@ -71,6 +73,7 @@ const validVariants = [
   'success',
   'error',
   'app_status',
+  'recommended',
 ];
 const validTypes = ['reset', 'truncated', 'single_select'];
 const validTypeContent = [
@@ -330,6 +333,8 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
           default:
             return <i className="fa-regular fa-circle-xmark fa-lg" />;
         }
+      case 'sdg':
+        return <i className="fa-regular fa-leaf fa-lg" />;
       case 'sorting-ASC':
         return <i className="fa-solid fa-arrow-up-short-wide fa-lg" />;
       case 'sorting-DESC':
@@ -417,6 +422,7 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
       'warning',
       'error',
       'app_status',
+      'recommended',
     ].includes(variant) &&
       !content) ||
     (variant === 'type' && !isValidTypeContent(content))

@@ -46,6 +46,7 @@ function ThesisProposalDetail(props) {
   const [showModal, setShowModal] = useState(false);
   const [isEligible, setIsEligible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAvailable, setIsAvailable] = useState(false);
   const { loggedStudent } = useContext(LoggedStudentContext);
   const { showToast } = useContext(ToastContext);
   const { t } = useTranslation();
@@ -57,7 +58,12 @@ function ThesisProposalDetail(props) {
       })
       .catch(error => {
         console.error('Error checking student eligibility:', error);
+      });
+    API.getProposalAvailability(id)
+      .then(response => {
+        setIsAvailable(response.available);
       })
+      .catch(error => console.error('Error fetching thesis proposal availability:', error))
       .finally(() => {
         setIsLoading(false);
       });
@@ -188,7 +194,7 @@ function ThesisProposalDetail(props) {
                   </div>
                 )}
                 <div className="d-flex gap-2">
-                  <ApplicationButton setShowModal={setShowModal} isEligible={isEligible && props.isAvailable} />
+                  <ApplicationButton setShowModal={setShowModal} isEligible={isEligible && isAvailable} />
                 </div>
               </div>
             </Card.Body>
@@ -266,7 +272,6 @@ ThesisProposalDetail.propTypes = {
     keywords: PropTypes.array,
     types: PropTypes.array,
   }).isRequired,
-  available: PropTypes.bool.isRequired,
 };
 
 ApplicationButton.propTypes = {

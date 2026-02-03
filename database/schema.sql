@@ -237,8 +237,12 @@ CREATE TABLE IF NOT EXISTS thesis(
     thesis_application_id INT NOT NULL,
     abstract TEXT,
     abstract_eng TEXT,
-    thesis_file BLOB,
+    thesis_file LONGBLOB,
+    thesis_file_path VARCHAR(1024),
     thesis_resume BLOB,
+    additional_zip LONGBLOB,
+    thesis_resume_path VARCHAR(1024),
+    additional_zip_path VARCHAR(1024),
     license_id INT,
     thesis_start_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     thesis_conclusion_request_date DATETIME,
@@ -300,18 +304,35 @@ CREATE TABLE IF NOT EXISTS sustainable_development_goal(
 CREATE TABLE IF NOT EXISTS thesis_sustainable_development_goal(
     thesis_id INT NOT NULL,
     goal_id INT NOT NULL,
-    level ENUM ('primary', 'secondary') NOT NULL,
+    sdg_level ENUM ('primary', 'secondary') NOT NULL,
     PRIMARY KEY (thesis_id, goal_id),
     FOREIGN KEY (thesis_id) REFERENCES thesis(id) ON DELETE CASCADE,
     FOREIGN KEY (goal_id) REFERENCES sustainable_development_goal(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS deadline(
+CREATE TABLE IF NOT EXISTS graduation_session(
     id INT AUTO_INCREMENT PRIMARY KEY,
-    type ENUM('conclusion_request', 'final_thesis_submission') NOT NULL,
-    graduation_session ENUM('March/April', 'July', 'September', 'December') NOT NULL,
-    deadline_date DATETIME NOT NULL
+    session_name VARCHAR(50) NOT NULL,
+    session_name_en VARCHAR(50) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS deadline(
+    id INT AUTO_INCREMENT,
+    deadline_type ENUM(
+        'thesis_request', 
+        'exams', 
+        'internship_report', 
+        'conclusion_request', 
+        'final_exam_registration',
+        'ielts'
+    ) NOT NULL,
+    graduation_session_id INT NOT NULL,
+    deadline_date DATETIME NOT NULL,
+    PRIMARY KEY (id, deadline_type, graduation_session_id),
+    FOREIGN KEY (graduation_session_id) REFERENCES graduation_session(id) ON DELETE RESTRICT
+);
+
+
 
 
 

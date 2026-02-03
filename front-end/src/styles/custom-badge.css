@@ -91,6 +91,66 @@
   cursor: pointer;
 }
 
+.recommended_light,
+.recommended_light:focus {
+  color: var(--green-700);
+  background-color: var(--green-100);
+  border: 0;
+}
+
+.recommended_light.clickable:hover,
+.recommended_light.clickable.active {
+  color: var(--green-800) !important;
+  background-color: var(--green-200) !important;
+  border: 0 !important;
+  cursor: pointer;
+}
+
+.recommended_dark,
+.recommended_dark:focus {
+  color: var(--green-100);
+  background-color: var(--green-700);
+  border: 0;
+}
+
+.recommended_dark.clickable:hover,
+.recommended_dark.clickable.active {
+  color: var(--green-100) !important;
+  background-color: var(--green-600) !important;
+  border: 0 !important;
+  cursor: pointer;
+}
+
+.sdg_light,
+.sdg_light:focus {
+  color: var(--blue-700);
+  background-color: var(--blue-100);
+  border-color: var(--blue-500);
+}
+
+.sdg_light.clickable:hover,
+.sdg_light.clickable.active {
+  color: var(--blue-700) !important;
+  background-color: var(--blue-200) !important;
+  border-color: var(--blue-500) !important;
+  cursor: pointer;
+}
+
+.sdg_dark,
+.sdg_dark:focus {
+  color: var(--blue-200);
+  background-color: var(--blue-700);
+  border-color: var(--blue-500);
+}
+
+.sdg_dark.clickable:hover,
+.sdg_dark.clickable.active {
+  color: var(--blue-100) !important;
+  background-color: var(--blue-600) !important;
+  border-color: var(--blue-500) !important;
+  cursor: pointer;
+}
+
 .language_light,
 .language_light:focus {
   color: var(--gray-700);

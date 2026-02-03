@@ -5,18 +5,18 @@ const teacherOverviewSchema = z
     id: z.number(),
     first_name: z.string(),
     last_name: z.string(),
-    email: z.string().nullable(),
+    email: z.string().optional(),
     'thesis-proposal-supervisor-cosupervisor': z
       .object({
         is_supervisor: z.boolean().optional(),
       })
       .optional(),
-      'thesis-application-supervisor-cosupervisor': z
+    'thesis-application-supervisor-cosupervisor': z
       .object({
         is_supervisor: z.boolean().optional(),
       })
       .optional(),
-      'thesis-supervisor-cosupervisor': z
+    'thesis-supervisor-cosupervisor': z
       .object({
         is_supervisor: z.boolean().optional(),
       })

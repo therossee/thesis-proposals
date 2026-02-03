@@ -375,6 +375,23 @@ body {
   display: flex !important;
 }
 
+.btn-light.btn-header {
+  font-size: var(--font-size-xs);
+  height: 1.5rem;
+  min-height: 1.5rem;
+  padding: 0 0.5rem;
+  line-height: 1;
+  gap: 0.25rem;
+}
+
+.btn-dark .btn-header {
+  font-size: var(--font-size-xs);
+  height: 1.5rem;
+  min-height: 1.5rem;
+  padding: 0 0.5rem;
+  line-height: 1;
+  gap: 0.25rem;
+}
 
 /*scrollbar si vede solo se sopra brakpoint lg*/
 @media (max-width: 991px) {

@@ -102,16 +102,20 @@
 }
 
 .modal-conclusion-content .cr-highlight {
-  background: #eaf3f7;
+  background: #d9edf7;
   border: 0;
   border-radius: 6px;
 }
 
 .modal-conclusion-content.cr-clean .cr-highlight {
-  background: #eaf3f7;
+  background: #d9edf7;
   border: 0;
   border-radius: 6px;
-  padding-bottom: 1rem;
+}
+
+.modal-conclusion-content .cr-highlight-title-row .cr-section-title {
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .modal-conclusion-content.cr-clean .form-label {

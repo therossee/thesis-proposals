@@ -1,32 +1,32 @@
 module.exports = (sequelize, DataTypes) => {
-    const ThesisSustainableDevelopmentGoal = sequelize.define(
-        'thesis_sustainable_development_goal',
-        {
-            thesis_id: {
-                type: DataTypes.INTEGER,
-                primaryKey: true,
-                references: {
-                    model: 'thesis',
-                    key: 'id',
-                },
-            },
-            goal_id: {
-                type: DataTypes.INTEGER,
-                primaryKey: true,
-                references: {
-                    model: 'sustainable_development_goal',
-                    key: 'id',
-                },
-            },
-            level: {
-                type: DataTypes.ENUM('primary', 'secondary'),
-                allowNull: false,
-            },
+  const ThesisSustainableDevelopmentGoal = sequelize.define(
+    'thesis_sustainable_development_goal',
+    {
+      thesis_id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        references: {
+          model: 'thesis',
+          key: 'id',
         },
-        {
-            tableName: 'thesis_sustainable_development_goal',
-            timestamps: false,
+      },
+      goal_id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        references: {
+          model: 'sustainable_development_goal',
+          key: 'id',
         },
-    );
-    return ThesisSustainableDevelopmentGoal;
-}
+      },
+      sdg_level: {
+        type: DataTypes.ENUM('primary', 'secondary'),
+        allowNull: false,
+      },
+    },
+    {
+      tableName: 'thesis_sustainable_development_goal',
+      timestamps: false,
+    },
+  );
+  return ThesisSustainableDevelopmentGoal;
+};

@@ -13,10 +13,9 @@ import CustomHeader from '../../components/CustomHeader';
 import LoadingModal from '../../components/LoadingModal';
 import PillButtonGroup from '../../components/PillButtonGroup';
 import Thesis from '../../components/Thesis';
-import ThesisInfo from '../../components/ThesisInfo';
 import ThesisProposals from '../../components/ThesisProposals';
-import { getSystemTheme } from '../../utils/utils';
 import '../../styles/tesi.css';
+import { getSystemTheme } from '../../utils/utils';
 
 export default function Tesi({ initialActiveTab }) {
   const [thesisApplication, setThesisApplication] = useState(null);
@@ -29,7 +28,6 @@ export default function Tesi({ initialActiveTab }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isEligible, setIsEligible] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showConclusionRequest, setShowConclusionRequest] = useState(false);
@@ -75,11 +73,10 @@ export default function Tesi({ initialActiveTab }) {
   useEffect(() => {
     setIsLoading(true);
     if (!loggedStudent) return;
-    Promise.all([API.getLoggedStudentThesis(), API.getLastStudentApplication(), API.checkStudentEligibility()])
-      .then(([fetchedThesis, fetchedThesisApplication, eligibility]) => {
+    Promise.all([API.getLoggedStudentThesis(), API.getLastStudentApplication()])
+      .then(([fetchedThesis, fetchedThesisApplication]) => {
         setThesis(fetchedThesis);
         setThesisApplication(fetchedThesisApplication);
-        setIsEligible(eligibility.eligible);
       })
       .catch(error => {
         console.error('Error fetching thesis or thesis application data:', error);
@@ -127,37 +124,26 @@ export default function Tesi({ initialActiveTab }) {
     }
   };
 
-
   const renderContent = () => {
     if (isLoading) {
       return <LoadingModal show={isLoading} onHide={() => setIsLoading(false)} />;
     } else {
       switch (activeTab) {
         case 'thesis':
-          if (thesis || thesisApplication) {
-            return (
-              <Thesis
-                thesis={thesis}
-                thesisApplication={thesis ? null : thesisApplication}
-                showModal={showModal}
-                setShowModal={setShowModal}
-                showRequestModal={showRequestModal}
-                setShowRequestModal={setShowRequestModal}
-                onRequestSubmitResult={handleRequestSubmitResult}
-                showConclusionRequest={showConclusionRequest}
-                setShowConclusionRequest={setShowConclusionRequest}
-                onCancelApplicationResult={handleCancelApplicationResult}
-              />
-            );
-          } else {
-            return (
-              <ThesisInfo
-                showModal={showRequestModal}
-                setShowModal={setShowRequestModal}
-                onRequestSubmitResult={handleRequestSubmitResult}
-              />
-            );
-          }
+          return (
+            <Thesis
+              thesis={thesis}
+              thesisApplication={thesis ? null : thesisApplication}
+              showModal={showModal}
+              setShowModal={setShowModal}
+              showRequestModal={showRequestModal}
+              setShowRequestModal={setShowRequestModal}
+              onRequestSubmitResult={handleRequestSubmitResult}
+              showConclusionRequest={showConclusionRequest}
+              setShowConclusionRequest={setShowConclusionRequest}
+              onCancelApplicationResult={handleCancelApplicationResult}
+            />
+          );
         case 'proposals':
           return <ThesisProposals showRequestModal={showRequestModal} setShowRequestModal={setShowRequestModal} />;
         default:
@@ -223,27 +209,9 @@ export default function Tesi({ initialActiveTab }) {
             <i className="fa-regular fa-trash-can me-1" /> {t('carriera.tesi.cancel_application')}
           </Button>
         )}
-        {isEligible && (
-          <Button
-            className={`btn-primary-${appliedTheme} tesi-header-action-btn`}
-            onClick={() => {
-              setShowRequestModal(true);
-            }}
-            style={{
-              height: '30px',
-              display: 'flex',
-              borderRadius: '6px',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0 10px',
-            }}
-          >
-            <i className="fa-regular fa-file-lines" /> {t('carriera.tesi.application_form')}
-          </Button>
-        )}
       </div>
       <div className="mb-3">
-        <PillButtonGroup options={tabs} active={activeTab}/>
+        <PillButtonGroup options={tabs} active={activeTab} />
       </div>
       {renderContent()}
     </>

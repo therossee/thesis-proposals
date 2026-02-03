@@ -27,6 +27,24 @@
   max-width: 100% !important;
 }
 
+.select-sdg .select__control {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.select-sdg .select__value-container {
+  flex-wrap: wrap;
+}
+
+.select-sdg .custom-badge {
+  max-width: 100%;
+}
+
+.select-sdg .custom-badge-text {
+  white-space: normal;
+}
+
 @media (max-width: 576px) {
   .select-cosupervisors .select__control {
     min-width: 0 !important;

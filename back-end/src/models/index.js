@@ -28,8 +28,16 @@ const ThesisApplicationStatusHistory = require('./thesis-application-status-hist
 const Company = require('./company')(sequelize, Sequelize.DataTypes);
 const License = require('./license')(sequelize, Sequelize.DataTypes);
 const SustainableDevelopmentGoal = require('./sustainable-development-goal')(sequelize, Sequelize.DataTypes);
-const ThesisSustainableDevelopmentGoal = require('./thesis-sustainable-development-goal')(sequelize, Sequelize.DataTypes);
+const ThesisSustainableDevelopmentGoal = require('./thesis-sustainable-development-goal')(
+  sequelize,
+  Sequelize.DataTypes,
+);
 const EmbargoMotivation = require('./embargo-motivation')(sequelize, Sequelize.DataTypes);
+const ThesisEmbargo = require('./thesis-embargo')(sequelize, Sequelize.DataTypes);
+const ThesisEmbargoMotivation = require('./thesis-embargo-motivation')(sequelize, Sequelize.DataTypes);
+const ThesisKeyword = require('./thesis-keyword')(sequelize, Sequelize.DataTypes);
+const Deadline = require('./deadline')(sequelize, Sequelize.DataTypes);
+const GraduationSession = require('./graduation-session')(sequelize, Sequelize.DataTypes);
 
 const db = {};
 
@@ -57,7 +65,12 @@ db.Company = Company;
 db.License = License;
 db.SustainableDevelopmentGoal = SustainableDevelopmentGoal;
 db.ThesisSustainableDevelopmentGoal = ThesisSustainableDevelopmentGoal;
-db.EmbargoMotivation = EmbargoMotivation;   
+db.EmbargoMotivation = EmbargoMotivation;
+db.ThesisEmbargo = ThesisEmbargo;
+db.ThesisEmbargoMotivation = ThesisEmbargoMotivation;
+db.ThesisKeyword = ThesisKeyword;
+db.Deadline = Deadline;
+db.GraduationSession = GraduationSession;
 // Define relationships
 
 // DegreeProgramme and Collegio (one-to-many)
@@ -193,6 +206,22 @@ Thesis.hasMany(ThesisSustainableDevelopmentGoal, {
 
 ThesisSustainableDevelopmentGoal.belongsTo(Thesis, {
   foreignKey: 'thesis_id',
+});
+
+Thesis.hasMany(ThesisKeyword, {
+  foreignKey: 'thesis_id',
+});
+
+ThesisKeyword.belongsTo(Thesis, {
+  foreignKey: 'thesis_id',
+});
+
+Deadline.belongsTo(GraduationSession, {
+  foreignKey: 'graduation_session_id',
+});
+
+GraduationSession.hasMany(Deadline, {
+  foreignKey: 'graduation_session_id',
 });
 
 module.exports = db;

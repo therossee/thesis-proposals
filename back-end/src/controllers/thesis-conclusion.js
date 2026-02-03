@@ -1,63 +1,240 @@
 const { Op } = require('sequelize');
+const fs = require('fs/promises');
+const path = require('path');
 const {
-    Thesis,
-    Keyword,
-    Teacher,
-    Student,
-    Embargo,
-    License,
-    sequelize,
-    LoggedStudent,
-    SustainableDevelopmentGoal,
-    ThesisSupervisorCoSupervisor
+  Thesis,
+  ThesisKeyword,
+  ThesisSupervisorCoSupervisor,
+  ThesisSustainableDevelopmentGoal,
+  Keyword,
+  Teacher,
+  Student,
+  EmbargoMotivation,
+  License,
+  LoggedStudent,
+  SustainableDevelopmentGoal,
+  GraduationSession,
+  Deadline,
 } = require('../models');
 
 const selectLicenseAttributes = require('../utils/selectLicenseAttributes');
-const embargoMotivation = require('../models/embargo-motivation');
-const { get } = require('lodash');
+const selectMotivationAttributes = require('../utils/selectMotivationAttributes');
+const { convertToPdfA } = require('../utils/pdfconverter');
+
+const parseJsonField = (value, fallback) => {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch (err) {
+      console.warn('Failed to parse JSON field, error:', err);
+      return fallback;
+    }
+  }
+  return value;
+};
+
+const ensureDir = async dirPath => {
+  await fs.mkdir(dirPath, { recursive: true });
+};
+
+const safeFilename = (prefix, originalname) => {
+  const ext = path.extname(originalname || '');
+  return `${prefix}_${Date.now()}${ext}`;
+};
+
+const moveFile = async (fromPath, toPath) => {
+  try {
+    await fs.rename(fromPath, toPath);
+  } catch (err) {
+    if (err.code !== 'EXDEV') throw err;
+    await fs.copyFile(fromPath, toPath);
+    await fs.unlink(fromPath);
+  }
+};
 
 const sendThesisConclusionRequest = async (req, res) => {
+  const coSupervisors = parseJsonField(req.body.coSupervisors, null);
+  const sdgs = parseJsonField(req.body.sdgs, null);
+  const keywords = parseJsonField(req.body.keywords, null);
+  const licenseId = req.body.licenseId ? Number(req.body.licenseId) : null;
+  const embargo = parseJsonField(req.body.embargo, null);
+  const thesisResume = req.files?.thesisResume?.[0] || null;
+  const thesisFile = req.files?.thesisFile?.[0] || null;
+  const additionalZip = req.files?.additionalZip?.[0] || null;
   try {
     const logged = await LoggedStudent.findOne();
     if (!logged) {
-        return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
-    const loggedStudent = await Student.findByPk(logged.studentId);
+    const loggedStudent = await Student.findByPk(logged.student_id);
     if (!loggedStudent) {
-        return res.status(404).json({ error: 'Student not found' });
+      return res.status(404).json({ error: 'Student not found' });
     }
     const thesis = await Thesis.findOne({
-        where: { student_id: loggedStudent.id },
+      where: { student_id: loggedStudent.id },
     });
     if (!thesis) {
-        return res.status(404).json({ error: 'Thesis not found' });
+      return res.status(404).json({ error: 'Thesis not found' });
     }
-    if (thesis.status !== 'ongoing' && thesis.status !== 'conclusion_rejected') {
-        return res.status(400).json({ error: 'Thesis is not in a state that allows conclusion request' });
+    if (thesis.thesis_status !== 'ongoing') {
+      return res.status(400).json({ error: 'Thesis is not in an ongoing state' });
     }
-    
-    // Here you would handle the uploaded files and other data from req.body
-    // For simplicity, we will just update the thesis status
-    thesis.status = 'conclusion_requested';
-    if (req.body.coSupervisors) {
-        const co_supervisors = await Teacher.findAll({
-            where: {
-                id: {
-                    [Op.in]: req.body.coSupervisors.map(coSup => coSup.id),
-                },
-            },
+
+    if (!thesisResume || !thesisFile) {
+      return res.status(400).json({ error: 'Missing files (thesisResume, thesisFile)' });
+    }
+
+    const uploadBaseDir = path.join(
+      __dirname,
+      '..',
+      '..',
+      'uploads',
+      'thesis_conclusion_request',
+      String(loggedStudent.id),
+    );
+    await ensureDir(uploadBaseDir);
+
+    const thesisPdfName = safeFilename('thesis_', loggedStudent.id || 'document.pdf');
+    const thesisPdfPath = path.join(uploadBaseDir, thesisPdfName);
+    const thesisBuffer = await fs.readFile(thesisFile.path);
+    const convertedPdfA = await convertToPdfA({
+      buffer: thesisBuffer,
+      filename: thesisFile.originalname || 'document.pdf',
+    });
+    await fs.writeFile(thesisPdfPath, convertedPdfA);
+    await fs.unlink(thesisFile.path);
+
+    if (coSupervisors) {
+      const currentCoSupervisors = await ThesisSupervisorCoSupervisor.findAll({
+        where: {
+          thesis_id: thesis.id,
+          is_supervisor: false,
+        },
+      });
+      const currentIds = currentCoSupervisors.map(cs => cs.teacher_id).sort();
+      const newIds = coSupervisors
+        .map(coSup => (typeof coSup === 'object' ? coSup.id : coSup))
+        .filter(id => id !== null && id !== undefined)
+        .sort();
+
+      const arraysAreEqual = currentIds.length === newIds.length && currentIds.every((id, idx) => id === newIds[idx]);
+
+      if (!arraysAreEqual) {
+        await ThesisSupervisorCoSupervisor.destroy({
+          where: {
+            thesis_id: thesis.id,
+            is_supervisor: false,
+          },
         });
-        if (co_supervisors.length !== req.body.coSupervisors.length) {
-            return res.status(400).json({ error: 'One or more co-supervisors not found' });
+        const co_supervisors = await Teacher.findAll({
+          where: {
+            id: {
+              [Op.in]: newIds,
+            },
+          },
+        });
+        if (co_supervisors.length !== newIds.length) {
+          return res.status(400).json({ error: 'One or more co-supervisors not found' });
         }
         for (const coSup of co_supervisors) {
-            await ThesisSupervisorCoSupervisor.create({
-                thesis_id: thesis.id,
-                teacher_id: coSup.id,
-                is_supervisor: false,
-            });
+          await ThesisSupervisorCoSupervisor.create({
+            thesis_id: thesis.id,
+            teacher_id: coSup.id,
+            is_supervisor: false,
+          });
         }
+      }
     }
+
+    if (sdgs) {
+      // check if the sustainable development goals provided are defined in the database
+      const normalizedSdgs = sdgs.map(goal => ({
+        id: typeof goal === 'object' ? goal.id : goal,
+        level: typeof goal === 'object' ? goal.level : null,
+      }));
+      const goalIds = normalizedSdgs.map(goal => goal.id).filter(id => id !== null && id !== undefined);
+      const currentGoals = await SustainableDevelopmentGoal.findAll({
+        where: {
+          id: {
+            [Op.in]: goalIds,
+          },
+        },
+      });
+      if (currentGoals.length !== goalIds.length) {
+        return res.status(400).json({ error: 'One or more sustainable development goals not found' });
+      }
+      for (const goal of normalizedSdgs) {
+        await ThesisSustainableDevelopmentGoal.create({
+          thesis_id: thesis.id,
+          goal_id: goal.id,
+          level: goal.level,
+        });
+      }
+    }
+
+    if (keywords) {
+      const keywordIds = keywords
+        .map(k => (typeof k === 'object' ? k.id : k))
+        .filter(id => id !== -1 && id !== undefined && id !== null);
+      const keywordNames = keywords.filter(k => typeof k === 'string' && k.trim().length > 0).map(k => k.trim());
+      const currentKeywords = keywordIds.length
+        ? await Keyword.findAll({
+            where: {
+              id: {
+                [Op.in]: keywordIds,
+              },
+            },
+          })
+        : [];
+      for (const keyword of currentKeywords) {
+        await ThesisKeyword.create({
+          thesis_id: thesis.id,
+          keyword_id: keyword.id,
+        });
+      }
+      for (const newKeyword of keywordNames) {
+        const nk = await Keyword.create({ keyword: newKeyword, keyword_en: newKeyword });
+        await ThesisKeyword.create({
+          thesis_id: thesis.id,
+          keyword_id: nk.id,
+        });
+      }
+    }
+
+    if (thesisResume) {
+      const resumeName = safeFilename('resume_', loggedStudent.id || 'resume.pdf');
+      const resumePath = path.join(uploadBaseDir, resumeName);
+      await moveFile(thesisResume.path, resumePath);
+      thesis.thesis_resume = null;
+      thesis.thesis_resume_path = path.relative(path.join(__dirname, '..', '..'), resumePath);
+    } else {
+      thesis.thesis_resume = null;
+      thesis.thesis_resume_path = null;
+    }
+    thesis.license_id = licenseId;
+    if (embargo) {
+      thesis.embargo_motivation_id = embargo.id || null;
+      thesis.embargo_duration_months = embargo.duration_months || null;
+    } else {
+      thesis.embargo_motivation_id = null;
+      thesis.embargo_duration_months = null;
+    }
+    thesis.thesis_file = null;
+    thesis.thesis_file_path = path.relative(path.join(__dirname, '..', '..'), thesisPdfPath);
+
+    if (additionalZip) {
+      const zipName = safeFilename('additional_', loggedStudent.id || 'supplementary.zip');
+      const zipPath = path.join(uploadBaseDir, zipName);
+      await moveFile(additionalZip.path, zipPath);
+      thesis.additional_zip = null;
+      thesis.additional_zip_path = path.relative(path.join(__dirname, '..', '..'), zipPath);
+    } else {
+      thesis.additional_zip = null;
+      thesis.additional_zip_path = null;
+    }
+    thesis.thesis_conclusion_request_date = new Date();
+    thesis.thesis_status = 'conclusion_requested';
     await thesis.save();
 
     res.json({ message: 'Thesis conclusion request submitted successfully' });
@@ -67,41 +244,94 @@ const sendThesisConclusionRequest = async (req, res) => {
 };
 
 const getSustainableDevelopmentGoals = async (req, res) => {
-    try {
-        const goals = await SustainableDevelopmentGoal.findAll();
-        res.status(200).json(goals);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+  try {
+    const goals = await SustainableDevelopmentGoal.findAll();
+    res.status(200).json(goals);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
 const getAvailableLicenses = async (req, res) => {
-    try {
-        const licenses = await License.findAll({
-            attributes: selectLicenseAttributes(req.query.lang || 'it'),
-        });
-        res.status(200).json(licenses);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+  try {
+    const licenses = await License.findAll({
+      attributes: selectLicenseAttributes(req.query.lang || 'it'),
+    });
+    res.status(200).json(licenses);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
 const getEmbargoMotivations = async (req, res) => {
-    try {
-        // Assuming deadlines are stored in a Deadlines model
-        const motivations = await embargoMotivation.findAll({
-            attributes: selectMotivationAttributes(req.query.lang || 'it'),
-        });
-        res.status(200).json(motivations);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+  try {
+    // Assuming deadlines are stored in a Deadlines model
+    const motivations = await EmbargoMotivation.findAll({
+      attributes: selectMotivationAttributes(req.query.lang || 'it'),
+    });
+    res.status(200).json(motivations);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
- 
+
+// Restituisce tutte le deadline della sessione di laurea più vicina in base al flag
+
+const getSessionDeadlines = async (req, res) => {
+  const type = req.query.type;
+  const now = new Date();
+  let deadlineType;
+  if (type === 'no_application') deadlineType = 'thesis_request';
+  else if (type === 'application') deadlineType = 'conclusion_request';
+  else if (type === 'thesis') deadlineType = 'conclusion_request';
+  else return res.status(400).json({ error: 'Invalid flag' });
+
+  const query = {
+    where: {
+      deadline_type: deadlineType,
+      deadline_date: { [Op.gte]: now },
+    },
+    order: [['deadline_date', 'ASC']],
+    include: [
+      {
+        model: GraduationSession,
+        as: 'graduation_session',
+      },
+    ],
+  };
+
+  const refDeadline = await Deadline.findOne(query);
+  if (!refDeadline) {
+    return res.status(404).json({ error: 'No upcoming deadline found for this flag' });
+  }
+
+  const sessionId =
+    refDeadline.graduation_session_id || (refDeadline.graduation_session && refDeadline.graduation_session.id);
+  if (!sessionId) {
+    return res.status(500).json({ error: 'Graduation session not found for deadline' });
+  }
+  const sessionDeadlines = await Deadline.findAll({
+    where: {
+      graduation_session_id: sessionId,
+    },
+    include: [
+      {
+        model: GraduationSession,
+        as: 'graduation_session',
+      },
+    ],
+    order: [['deadline_date', 'ASC']],
+  });
+  return res.status(200).json({
+    graduationSession: refDeadline.graduation_session,
+    deadlines: sessionDeadlines,
+  });
+};
 
 module.exports = {
-    sendThesisConclusionRequest,
-    getSustainableDevelopmentGoals,
-    getAvailableLicenses,
-    getEmbargoMotivations,
+  sendThesisConclusionRequest,
+  getSustainableDevelopmentGoals,
+  getAvailableLicenses,
+  getEmbargoMotivations,
+  getSessionDeadlines,
 };

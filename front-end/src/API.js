@@ -203,7 +203,6 @@ async function cancelThesisApplication({ applicationId }) {
 // Thesis Start from Application API
 async function startThesisFromApplication(applicationData) {
   try {
-    console.log('Starting thesis with data:', applicationData);
     const response = await axios.post(`${URL}/thesis`, applicationData);
     return response.data;
   } catch (error) {
@@ -237,7 +236,7 @@ const getSustainableDevelopmentGoals = async () => {
   }
 };
 
-const getAvailableLicenses = async (lang) => {
+const getAvailableLicenses = async lang => {
   console.log(lang);
   try {
     const response = await axios.get(`${URL}/thesis-conclusion/licenses`, {
@@ -249,7 +248,7 @@ const getAvailableLicenses = async (lang) => {
   }
 };
 
-const getEmbargoMotivations = async (lang) => {
+const getEmbargoMotivations = async lang => {
   try {
     const response = await axios.get(`${URL}/thesis-conclusion/embargo-motivations`, {
       params: { lang },
@@ -257,6 +256,30 @@ const getEmbargoMotivations = async (lang) => {
     return response.data;
   } catch (error) {
     console.error('Error fetching embargo motivations:', error);
+  }
+};
+
+const sendThesisConclusionRequest = async conclusionData => {
+  try {
+    const isFormData = conclusionData instanceof FormData;
+    const response = await axios.post(
+      `${URL}/thesis-conclusion`,
+      conclusionData,
+      isFormData ? undefined : { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error sending thesis conclusion request:', error);
+    throw error;
+  }
+};
+
+const getSessionDeadlines = async type => {
+  try {
+    const response = await axios.get(`${URL}/thesis-conclusion/deadlines`, { params: { type } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching session deadlines:', error);
   }
 };
 
@@ -332,7 +355,9 @@ const API = {
   getCompanies,
   getSustainableDevelopmentGoals,
   getAvailableLicenses,
-  getEmbargoMotivations
+  getEmbargoMotivations,
+  sendThesisConclusionRequest,
+  getSessionDeadlines,
 };
 
 export default API;

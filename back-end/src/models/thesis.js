@@ -35,8 +35,24 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BLOB,
         allowNull: true,
       },
+      thesis_file_path: {
+        type: DataTypes.STRING(1024),
+        allowNull: true,
+      },
       thesis_resume: {
         type: DataTypes.BLOB,
+        allowNull: true,
+      },
+      thesis_resume_path: {
+        type: DataTypes.STRING(1024),
+        allowNull: true,
+      },
+      additional_zip: {
+        type: DataTypes.BLOB,
+        allowNull: true,
+      },
+      additional_zip_path: {
+        type: DataTypes.STRING(1024),
         allowNull: true,
       },
       license_id: {

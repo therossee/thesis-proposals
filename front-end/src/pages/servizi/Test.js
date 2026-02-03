@@ -51,7 +51,6 @@ export default function Test() {
 
   const handleConfirmStatusChange = async () => {
     try {
-      console.log(`Changing application ${selectedApplication.id} to status: ${selectedStatus}`);
       await API.updateThesisApplicationStatus({
         id: selectedApplication.id,
         old_status: selectedApplication.status,

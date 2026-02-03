@@ -29,7 +29,19 @@
 }
 
 .progress-step.faded {
-  opacity: 0.4;
+  opacity: 1;
+}
+
+.progress-step.faded .progress-step-title,
+.progress-step.faded .progress-step-description,
+.progress-step.faded .progress-step-date {
+  color: var(--text-muted);
+}
+
+.progress-step.faded .progress-step-circle {
+  border-color: var(--gray-300);
+  background-color: var(--gray-100);
+  color: var(--gray-400);
 }
 
 .progress-step-marker {
@@ -75,6 +87,12 @@
   border: 2px solid var(--gray-500);
   background-color: var(--gray-100);
   color: var(--gray-500);
+}
+
+.progress-step-circle.waiting {
+  border: 2px solid var(--gray-600);
+  background-color: var(--gray-200);
+  color: var(--gray-700);
 }
 
 .progress-step-circle.completed {

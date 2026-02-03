@@ -6205,7 +6205,8 @@ VALUES
     ("Life Below Water"),
     ("Life On Land"),
     ("Peace, Justice and Strong Institutions"),
-    ("Partnerships for the Goals");
+    ("Partnerships for the Goals"),
+    ("NOT APPLICABLE");
 
 
 INSERT INTO license (name, name_en, description, description_en)
@@ -6240,23 +6241,23 @@ VALUES
 ,
 (
     "Attribuzione - Non commerciale - Condividi allo stesso modo CC BY-NC-SA",
-    "Attribution-NonCommercial-ShareAlike CC BY-NC-SA",
+    "Attribution - NonCommercial-ShareAlike CC BY-NC-SA",
     "Questa licenza permette a terzi di modificare, redistribuire, ottimizzare ed utilizzare la tua opera come base non commerciale, fino a che ti diano il credito e licenzino le loro nuove creazioni mediante i medesimi termini.",
     "This license lets others remix, tweak, and build upon your work non-commercially, as long as they credit you and license their new creations under the identical terms."
 )
 ,
 (
     "Attribuzione - Non commerciale - Non opere derivate CC BY-NC-ND",
-    "Attribution-NonCommercial-NoDerivs CC BY-NC-ND",
-    "Questa licenza è la piu restrittiva delle nostre sei licenze principali, permettendo a terzi soltanto di scaricare le tue opere e condividerle ad altri fino a che ti diano il giusto credito, ma non possono cambiarle in nessun modo od utilizzarle commercialmente. Per maggiori informazioni consultare <a href='https://creativecommons.org/licenses/?lang=it' target='_blank'>questo link</a>.",
-    "This license is the most restrictive of the six main CC licenses, only allowing others to download your works and share them with others as long as they credit you, but they can't change them in any way or use them commercially. For more information visit <a href='https://creativecommons.org/licenses/?lang=it' target='_blank'>this link</a>."
+    "Attribution - NonCommercial-NoDerivs CC BY-NC-ND",
+    "Questa licenza è la piu restrittiva delle nostre sei licenze principali, permettendo a terzi soltanto di scaricare le tue opere e condividerle ad altri fino a che ti diano il giusto credito, ma non possono cambiarle in nessun modo od utilizzarle commercialmente. Per maggiori informazioni consultare <a href='https://creativecommons.org/licenses/?lang=it' target='_blank' rel='noopener noreferrer'>questo link</a>.",
+    "This license is the most restrictive of the six main CC licenses, only allowing others to download your works and share them with others as long as they credit you, but they can't change them in any way or use them commercially. For more information visit <a href='https://creativecommons.org/licenses/?lang=it' target='_blank' rel='noopener noreferrer'>this link</a>."
 );
 
 INSERT INTO embargo_motivation (motivation, motivation_en)
 VALUES
 (
     "Necessità di evitare la divulgazione di risultati potenzialmente brevettabili contenuti all’interno della tesi, al fine di preservare il requisito della novità necessario per la brevettazione",
-    "Need to avoid disclosure of potentially patentable results contained within the thesis in order to preserve the novelty requirements necessary for patenting",
+    "Need to avoid disclosure of potentially patentable results contained within the thesis in order to preserve the novelty requirements necessary for patenting"
 )
 ,
 (
@@ -6288,4 +6289,39 @@ VALUES
     "Altro",
     "Other"
 );
+
+INSERT INTO graduation_session (session_name, session_name_en)
+VALUES
+    ('Marzo/Aprile 2026', 'March/April 2026'),
+    ('Luglio 2026', 'July 2026'),
+    ('Settembre 2026', 'September 2026'),
+    ('Novembre/Dicembre 2026', 'November/December 2026');
+
+INSERT INTO deadline(deadline_type, graduation_session_id, deadline_date)
+VALUES
+    ('thesis_request', 1, '2025-10-27T23:59:59'),
+    ('thesis_request', 2, '2026-03-06T23:59:59'),
+    ('thesis_request', 3, '2026-05-08T23:59:59'),
+    ('thesis_request', 4, '2026-07-31T23:59:59'),
+    ('exams', 1, '2026-01-12T23:59:59'),
+    ('exams', 2, '2026-06-30T23:59:59'),
+    ('exams', 3, '2026-07-18T23:59:59'),
+    ('exams', 4, '2026-09-19T23:59:59'),
+    ('internship_report', 1, '2026-02-26T23:59:59'),
+    ('internship_report', 2, '2026-07-01T23:59:59'),
+    ('internship_report', 3, '2026-08-27T23:59:59'),
+    ('internship_report', 4, '2026-11-09T23:59:59'),
+    ('conclusion_request', 1, '2026-02-19T23:59:59'),
+    ('conclusion_request', 2, '2026-06-18T23:59:59'),
+    ('conclusion_request', 3, '2026-08-17T23:59:59'),
+    ('conclusion_request', 4, '2026-10-29T23:59:59'),
+    ('final_exam_registration', 1, '2026-02-21T23:59:59'),
+    ('final_exam_registration', 2, '2026-07-01T23:59:59'),
+    ('final_exam_registration', 3, '2026-08-27T23:59:59'),
+    ('final_exam_registration', 4, '2026-11-09T23:59:59'),
+    ('ielts', 1, '2026-02-07T23:59:59'),
+    ('ielts', 2, '2026-06-13T23:59:59'),
+    ('ielts', 3, '2026-07-18T23:59:59'),
+    ('ielts', 4, '2026-10-10T23:59:59');
+
 

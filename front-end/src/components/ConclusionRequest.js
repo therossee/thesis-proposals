@@ -1,17 +1,20 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Form, Modal, Row, Col, Alert } from 'react-bootstrap';
+
+import { Alert, Button, Col, Form, Modal, Row } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
+
+import PropTypes from 'prop-types';
 
 import API from '../API';
-import LoadingModal from './LoadingModal';
-import SegmentedControl from './SegmentedControl';
-import CustomSelect from './CustomSelect';
-import { useTranslation } from 'react-i18next';
 import { ThemeContext } from '../App';
 import '../styles/modal-conclusion.css';
 import { getSystemTheme } from '../utils/utils';
+import CustomBadge from './CustomBadge';
+import CustomSelect from './CustomSelect';
+import LoadingModal from './LoadingModal';
+import SegmentedControl from './SegmentedControl';
 
 export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
-
   const { t, i18n } = useTranslation();
   const { theme } = useContext(ThemeContext);
   const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
@@ -29,7 +32,9 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
   const [lang, setLang] = useState('it');
   const [licenses, setLicenses] = useState([]);
   const [sdgs, setSdgs] = useState([]);
+  const [keywordsList, setKeywordsList] = useState([]);
   const [thesis, setThesis] = useState(null);
+  const [embargoMotivationsList, setEmbargoMotivationsList] = useState([]);
 
   const [primarySdg, setPrimarySdg] = useState('');
   const [secondarySdg1, setSecondarySdg1] = useState('');
@@ -41,8 +46,8 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
   const [embargoMotivations, setEmbargoMotivations] = useState([]); // nessuna motivazione selezionata all'inizio
   const [otherEmbargoReason, setOtherEmbargoReason] = useState('');
 
-  const [resumePdf, setResumePdf] = useState(null);        // idSmPdfFile (riassunto)
-  const [pdfFile, setPdfFile] = useState(null);            // idPdfFile (tesi pdf/a)
+  const [resumePdf, setResumePdf] = useState(null); // idSmPdfFile (riassunto)
+  const [pdfFile, setPdfFile] = useState(null); // idPdfFile (tesi pdf/a)
   const [supplementaryZip, setSupplementaryZip] = useState(null); // idZipFile
 
   const [decl, setDecl] = useState({
@@ -54,7 +59,6 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
     decl6: false,
   });
 
-  // VARIE
   const [teachers, setTeachers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,14 +67,12 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
   const authorizationAuthorizeRef = useRef(null);
   const authorizationDenyRef = useRef(null);
 
-
-  const toOption = (teacher) => ({
+  const toOption = teacher => ({
     value: teacher.id,
     label: `${teacher.lastName} ${teacher.firstName}`,
     email: teacher.email,
     variant: 'teacher',
   });
-
 
   const languageOptions = [
     { value: 'it', label: t('carriera.conclusione_tesi.languages.it') },
@@ -110,24 +112,14 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
       default:
         return 'fi fi-it';
     }
-  }
+  };
 
   const selectedLanguage = languageOptions.find(option => option.value === lang) || languageOptions[0];
 
   const coSupervisorOptions = useMemo(() => {
     const supervisorId = supervisor ? supervisor.value : null;
-    return teachers
-      .filter(teacher => teacher.id !== supervisorId)
-      .map(toOption);
+    return teachers.filter(teacher => teacher.id !== supervisorId).map(toOption);
   }, [teachers, supervisor]);
-
-  const sdgOptions = useMemo(() => {
-    const arr = [];
-    arr.push({ value: '', label: 'Seleziona...' });
-    for (let i = 1; i <= 17; i++) arr.push({ value: String(i), label: `SDG ${i}` });
-    arr.push({ value: 'NON APPLICABILE', label: 'NON APPLICABILE' });
-    return arr;
-  }, []);
 
   useEffect(() => {
     if (!show) return;
@@ -135,8 +127,15 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
     setIsLoading(true);
     setError('');
 
-    Promise.all([API.getLoggedStudentThesis(), API.getThesisProposalsTeachers(), API.getAvailableLicenses(i18n.language), API.getSustainableDevelopmentGoals()])
-      .then(([thesisData, teachersData, licensesData, sdgsData]) => {
+    Promise.all([
+      API.getLoggedStudentThesis(),
+      API.getThesisProposalsTeachers(),
+      API.getAvailableLicenses(i18n.language),
+      API.getSustainableDevelopmentGoals(),
+      API.getEmbargoMotivations(i18n.language),
+      API.getThesisProposalsKeywords(i18n.language),
+    ])
+      .then(([thesisData, teachersData, licensesData, sdgsData, embargoMotivationsData, keywordsData]) => {
         if (teachersData) setTeachers(teachersData);
 
         if (thesisData) {
@@ -152,7 +151,12 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
         if (sdgsData) {
           setSdgs(sdgsData);
         }
-
+        if (embargoMotivationsData) {
+          setEmbargoMotivationsList(embargoMotivationsData);
+        }
+        if (keywordsData) {
+          setKeywordsList(keywordsData);
+        }
       })
       .catch(err => {
         console.error('Error loading conclusion request data:', err);
@@ -161,9 +165,18 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
       .finally(() => setIsLoading(false));
   }, [show]);
 
+  const sdgOptions = useMemo(() => {
+    const mapped = (sdgs || []).map(sdg => ({
+      value: sdg.id ?? sdg.value,
+      label: sdg.goal ? `${sdg.id} - ${sdg.goal}` : sdg.label || `SDG ${sdg.id ?? sdg.value}`,
+    }));
+
+    return [...mapped, { value: 'NON APPLICABILE', label: t('carriera.conclusione_tesi.sdg_not_applicable') }];
+  }, [sdgs, t]);
 
   const resetForm = () => {
     setError('');
+    setCoSupervisors(thesis.coSupervisors ? thesis.coSupervisors.map(toOption) : []);
     setTitleText('');
     setTitleEngText('');
     setAbstractText(thesis ? thesis.topic || '' : '');
@@ -192,8 +205,6 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
     if (isSubmitting) return;
     setShow(false);
     setError('');
-    // se vuoi che quando riapri sia "pulito", lascia; se vuoi persistente, commenta
-    // resetForm();
   };
 
   const toggleMotivation = (code, checked) => {
@@ -203,10 +214,15 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
     });
   };
 
-  const allDeclarationsChecked =
-    decl.decl1 && decl.decl2 && decl.decl3 && decl.decl4 && decl.decl5 && decl.decl6;
+  const allDeclarationsChecked = () => {
+    switch (authorization) {
+      case 'authorize':
+        return decl.decl1 && decl.decl3 && decl.decl4 && decl.decl5 && decl.decl6;
+      case 'deny':
+        return decl.decl1 && decl.decl2 && decl.decl3 && decl.decl4 && decl.decl5 && decl.decl6;
+    }
+  };
 
-  // Validazione "coerente col legacy"
   const needsEnglishTranslation = lang !== 'en';
 
   const baseValid =
@@ -214,25 +230,20 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
     String(titleText || '').trim().length > 0 &&
     String(abstractText || '').trim().length > 0 &&
     abstractText.length <= 3550 &&
-    (!needsEnglishTranslation || (String(titleEngText || '').trim().length > 0)) &&
-    (!needsEnglishTranslation || (String(abstractEngText || '').trim().length > 0)) &&
+    (!needsEnglishTranslation || String(titleEngText || '').trim().length > 0) &&
+    (!needsEnglishTranslation || String(abstractEngText || '').trim().length > 0) &&
     (!needsEnglishTranslation || abstractEngText.length <= 3550) &&
-    allDeclarationsChecked &&
+    allDeclarationsChecked() &&
     !!pdfFile; // almeno la tesi pdf/a deve esserci per inviare
 
   const denyValid =
     authorization !== 'deny'
       ? true
-      : (
-        embargoMotivations.length > 0 &&
+      : embargoMotivations.length > 0 &&
         String(embargoPeriod || '').trim().length > 0 &&
-        (!embargoMotivations.includes('0') || String(otherEmbargoReason || '').trim().length > 0)
-      );
+        (!embargoMotivations.includes('0') || String(otherEmbargoReason || '').trim().length > 0);
 
-  const authorizeValid =
-    authorization !== 'authorize'
-      ? true
-      : String(licenseChoice || '').trim().length > 0;
+  const authorizeValid = authorization !== 'authorize' ? true : String(licenseChoice || '').trim().length > 0;
 
   const canSubmit = baseValid && denyValid && authorizeValid;
 
@@ -245,43 +256,54 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
 
     setIsSubmitting(true);
     try {
-      await API.sendThesisConclusionRequest({
-        // testi
-        titleText,
-        titleEngText,
-        abstractText,
-        abstractEngText,
+      const formData = new FormData();
+      formData.append('title', titleText);
+      formData.append('titleEng', titleEngText);
+      formData.append('abstract', abstractText);
+      formData.append('abstractEng', abstractEngText);
+      formData.append('language', lang);
+      if (supervisor?.id) formData.append('supervisor', supervisor.id);
+      if (coSupervisors?.length) {
+        formData.append('coSupervisors', JSON.stringify(coSupervisors.map(cs => ({ id: cs.value ?? cs.id ?? cs }))));
+      }
+      if (keywords?.length) {
+        const keywordPayload = keywords.map(k => k?.id ?? k?.value ?? k);
+        formData.append('keywords', JSON.stringify(keywordPayload));
+      }
+      if (authorization === 'authorize') {
+        formData.append('licenseId', licenseChoice);
+      }
+      if (primarySdg || secondarySdg1 || secondarySdg2) {
+        formData.append(
+          'sdgs',
+          JSON.stringify([
+            ...(primarySdg ? [{ id: primarySdg, level: 'primary' }] : []),
+            ...(secondarySdg1 ? [{ id: secondarySdg1, level: 'secondary' }] : []),
+            ...(secondarySdg2 ? [{ id: secondarySdg2, level: 'secondary' }] : []),
+          ]),
+        );
+      }
+      if (authorization === 'deny') {
+        formData.append(
+          'embargo',
+          JSON.stringify({
+            duration: embargoPeriod,
+            motivations: embargoMotivations.map(m => ({
+              id: m,
+              other: m === 7 ? otherEmbargoReason : undefined,
+            })),
+          }),
+        );
+      }
+      if (resumePdf) formData.append('thesisResume', resumePdf);
+      if (pdfFile) formData.append('thesisFile', pdfFile);
+      if (supplementaryZip) formData.append('additionalZip', supplementaryZip);
 
-        // docenti/keywords/lingua
-        lang,
-        supervisor, // o supervisor.value a seconda della tua API
-        coSupervisors, // idem: magari vuoi solo array di id
-        keywords: keywords.map(item => item.value ?? item.label),
-
-        // sdg
-        primarySdg,
-        secondarySdgs: [secondarySdg1, secondarySdg2].filter(Boolean),
-
-        // autorizzazione/licenza/embargo
-        authorization,
-        licenseChoice, // HTML-style: BY, BY-SA, ...
-        embargoMotivations, // HTML-style: ["6","7",...,"0"]
-        embargoPeriod, // "12" | "18" | "36" | "0"
-        otherEmbargoReason,
-
-        // file
-        pdfFile,
-        resumePdf,
-        supplementaryZip,
-
-        // dichiarazioni (se ti serve inviarle)
-        declarations: { ...decl },
-      });
+      await API.sendThesisConclusionRequest(formData);
 
       if (onSubmitResult) onSubmitResult(true);
       handleClose();
-      // se vuoi ripulire dopo submit:
-      // resetForm();
+      resetForm();
     } catch (err) {
       console.error(err);
       setError('Invio fallito. Controlla i campi e riprova.');
@@ -289,6 +311,10 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const checkRecommendedLicense = license => {
+    return license.name ? license.name.includes('CC BY-NC-ND') : license.name_en.includes('CC BY-NC-ND');
   };
 
   if (isLoading) return <LoadingModal show={true} onHide={() => setIsLoading(false)} />;
@@ -322,13 +348,16 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
             <Form>
               <div className="cr-section">
                 <div className="cr-section-title">
-                  <span><i className="fa-regular fa-file-lines me-2"></i>{t('carriera.conclusione_tesi.details')}</span>
+                  <span>
+                    <i className="fa-regular fa-file-lines me-2"></i>
+                    {t('carriera.conclusione_tesi.details')}
+                  </span>
                 </div>
 
                 <Row className="mb-3 align-items-start">
                   <Col md={3}>
                     <Form.Group>
-                      <Form.Label>{t('carriera.conclusione_tesi.language')}</Form.Label>
+                      <Form.Label htmlFor="select-language">{t('carriera.conclusione_tesi.language')}</Form.Label>
                       <CustomSelect
                         mode="supervisor"
                         options={languageOptions}
@@ -338,13 +367,14 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                         isClearable={false}
                         badgeVariant="language"
                         className="select-language"
+                        id="select-language"
                       />
                     </Form.Group>
                   </Col>
 
                   <Col>
                     <Form.Group>
-                      <Form.Label>{t('carriera.conclusione_tesi.supervisor')}</Form.Label>
+                      <Form.Label htmlFor="select-supervisor">{t('carriera.conclusione_tesi.supervisor')}</Form.Label>
                       <CustomSelect
                         mode="supervisor"
                         options={supervisor ? [supervisor] : []}
@@ -353,13 +383,16 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                         isMulti={false}
                         isDisabled={true}
                         className="select-supervisor"
+                        id="select-supervisor"
                       />
                     </Form.Group>
                   </Col>
 
                   <Col md={6}>
                     <Form.Group>
-                      <Form.Label>{t('carriera.conclusione_tesi.co_supervisors')}</Form.Label>
+                      <Form.Label htmlFor="select-cosupervisors">
+                        {t('carriera.conclusione_tesi.co_supervisors')}
+                      </Form.Label>
                       <CustomSelect
                         mode="supervisor"
                         options={coSupervisorOptions}
@@ -368,10 +401,9 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                         isMulti={true}
                         className="select-cosupervisors"
                         placeholder={t('carriera.richiesta_tesi.select_co_supervisors_placeholder')}
+                        id="select-cosupervisors"
                       />
-                      <span className="text-muted cr-help">
-                        {t('carriera.conclusione_tesi.co_supervisors_help')}
-                      </span>
+                      <span className="text-muted cr-help">{t('carriera.conclusione_tesi.co_supervisors_help')}</span>
                     </Form.Group>
                   </Col>
                 </Row>
@@ -379,13 +411,16 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                 <Row className="mb-3">
                   <Col md={12}>
                     <Form.Group>
-                      <Form.Label><i className={flagSelector(lang)} /> {t('carriera.conclusione_tesi.title_original')}</Form.Label>
+                      <Form.Label htmlFor="title-original">
+                        <i className={flagSelector(lang)} /> {t('carriera.conclusione_tesi.title_original')}
+                      </Form.Label>
                       <Form.Control
                         as="textarea"
                         value={titleText}
                         maxLength={255}
                         onChange={e => setTitleText(e.target.value)}
                         disabled={isSubmitting}
+                        id="title-original"
                       />
                     </Form.Group>
                     <div className="text-end text-muted">{titleText.length} / 255</div>
@@ -396,7 +431,9 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                   <Row className="mb-3">
                     <Col md={12}>
                       <Form.Group>
-                        <Form.Label><i className="fi fi-gb" /> {t('carriera.conclusione_tesi.title_translation')}</Form.Label>
+                        <Form.Label htmlFor="title-translation">
+                          <i className="fi fi-gb" /> {t('carriera.conclusione_tesi.title_translation')}
+                        </Form.Label>
                         <div className="text-muted cr-help mb-2">
                           {t('carriera.conclusione_tesi.title_translation_help')}
                         </div>
@@ -407,6 +444,7 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                           onChange={e => setTitleEngText(e.target.value)}
                           maxLength={255}
                           disabled={isSubmitting}
+                          id="title-translation"
                         />
                         <div className="text-end text-muted">{titleEngText.length} / 255</div>
                       </Form.Group>
@@ -417,7 +455,9 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                 <Row className="mb-3">
                   <Col md={12}>
                     <Form.Group>
-                      <Form.Label><i className={flagSelector(lang)} /> {t('carriera.conclusione_tesi.abstract')}</Form.Label>
+                      <Form.Label htmlFor="abstract">
+                        <i className={flagSelector(lang)} /> {t('carriera.conclusione_tesi.abstract')}
+                      </Form.Label>
                       <Form.Control
                         as="textarea"
                         rows={6}
@@ -425,17 +465,19 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                         onChange={e => setAbstractText(e.target.value)}
                         maxLength={3550}
                         disabled={isSubmitting}
+                        id="abstract"
                       />
                       <div className="text-end text-muted">{abstractText.length} / 3550</div>
                     </Form.Group>
                   </Col>
                 </Row>
-
                 {needsEnglishTranslation && (
                   <Row className="mb-3">
                     <Col md={12}>
                       <Form.Group>
-                        <Form.Label><i className="fi fi-gb" /> {t('carriera.conclusione_tesi.abstract_translation')}</Form.Label>
+                        <Form.Label htmlFor="abstract-translation">
+                          <i className="fi fi-gb" /> {t('carriera.conclusione_tesi.abstract_translation')}
+                        </Form.Label>
                         <div className="text-muted cr-help">
                           {t('carriera.conclusione_tesi.abstract_translation_help')}
                         </div>
@@ -446,6 +488,7 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                           onChange={e => setAbstractEngText(e.target.value)}
                           maxLength={3550}
                           disabled={isSubmitting}
+                          id="abstract-translation"
                         />
                         <div className="text-end text-muted">{abstractEngText.length} / 3550</div>
                       </Form.Group>
@@ -456,13 +499,20 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                 <Row className="mb-3">
                   <Col md={12}>
                     <Form.Group>
-                      <Form.Label>Keywords</Form.Label>
+                      <Form.Label htmlFor="keywords">Keywords</Form.Label>
                       <CustomSelect
                         mode="keyword"
                         selected={keywords}
                         setSelected={setKeywords}
-                        placeholder="Aggiungi keyword"
+                        placeholder={t('carriera.conclusione_tesi.select_keywords_placeholder')}
+                        options={keywordsList.map(kw => ({
+                          value: kw.keyword,
+                          label: kw.keyword,
+                          variant: 'keyword',
+                        }))}
+                        isMulti={true}
                         isDisabled={isSubmitting}
+                        id="keywords"
                       />
                     </Form.Group>
                   </Col>
@@ -489,28 +539,36 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                 <Row className="mb-2 g-3">
                   <Col md={4}>
                     <Form.Group>
-                      <Form.Label>{t('carriera.conclusione_tesi.primary_sdg')}</Form.Label>
+                      <Form.Label htmlFor="primary-sdg">{t('carriera.conclusione_tesi.primary_sdg')}</Form.Label>
                       <CustomSelect
-                        mode="SDG"
-                        options={sdgOptions}
+                        mode="sdg"
+                        options={sdgOptions.map(option => ({
+                          ...option,
+                          isDisabled: option.value === primarySdg || option.value === secondarySdg2,
+                        }))}
                         selected={sdgOptions.find(option => option.value === primarySdg)}
-                        setSelected={selected => setPrimarySdg(selected.value)}
+                        setSelected={selected => setPrimarySdg(selected ? selected.value : '')}
                         isMulti={false}
-                        isClearable={false}
+                        isClearable={true}
                         className="select-sdg"
                       />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group>
-                      <Form.Label>{t('carriera.conclusione_tesi.secondary_sdg_1')}</Form.Label>
+                      <Form.Label htmlFor="secondary-sdg-1">
+                        {t('carriera.conclusione_tesi.secondary_sdg_1')}
+                      </Form.Label>
                       <CustomSelect
-                        mode="SDG"
-                        options={sdgOptions}
+                        mode="sdg"
+                        options={sdgOptions.map(option => ({
+                          ...option,
+                          isDisabled: option.value === primarySdg || option.value === secondarySdg2,
+                        }))}
                         selected={sdgOptions.find(option => option.value === secondarySdg1)}
-                        setSelected={selected => setSecondarySdg1(selected.value)}
+                        setSelected={selected => setSecondarySdg1(selected ? selected.value : '')}
                         isMulti={false}
-                        isClearable={false}
+                        isClearable={true}
                         className="select-sdg"
                       />
                     </Form.Group>
@@ -518,19 +576,19 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
 
                   <Col md={4}>
                     <Form.Group>
-                      <Form.Label>{t('carriera.conclusione_tesi.secondary_sdg_2')}</Form.Label>
+                      <Form.Label htmlFor="secondary-sdg-2">
+                        {t('carriera.conclusione_tesi.secondary_sdg_2')}
+                      </Form.Label>
                       <CustomSelect
-                        mode="SDG"
+                        mode="sdg"
                         options={sdgOptions.map(option => ({
                           ...option,
-                          isDisabled:
-                            option.value === primarySdg ||
-                            option.value === secondarySdg1,
+                          isDisabled: option.value === primarySdg || option.value === secondarySdg1,
                         }))}
                         selected={sdgOptions.find(option => option.value === secondarySdg2)}
-                        setSelected={selected => setSecondarySdg2(selected.value)}
+                        setSelected={selected => setSecondarySdg2(selected ? selected.value : '')}
                         isMulti={false}
-                        isClearable={false}
+                        isClearable={true}
                         className="select-sdg"
                       />
                     </Form.Group>
@@ -541,7 +599,11 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
               {/* AUTORIZZAZIONE */}
               <div className="cr-section">
                 <div className="cr-section-title">
-                  <i className="fa-regular fa-circle-check" />
+                  {authorization === 'authorize' ? (
+                    <i className="fa-regular fa-lock-open" />
+                  ) : (
+                    <i className="fa-regular fa-lock" />
+                  )}
                   <span>{t('carriera.conclusione_tesi.authorization')}</span>
                 </div>
 
@@ -550,137 +612,112 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                     <SegmentedControl
                       name="autorizzazione"
                       segments={[
-                        { label: t('carriera.conclusione_tesi.authorization_authorize'), value: 'authorize', ref: authorizationAuthorizeRef },
-                        { label: t('carriera.conclusione_tesi.authorization_deny'), value: 'deny', ref: authorizationDenyRef },
+                        {
+                          label: t('carriera.conclusione_tesi.authorization_authorize'),
+                          value: 'authorize',
+                          ref: authorizationAuthorizeRef,
+                        },
+                        {
+                          label: t('carriera.conclusione_tesi.authorization_deny'),
+                          value: 'deny',
+                          ref: authorizationDenyRef,
+                        },
                       ]}
-                      callback={(value) => setAuthorization(value)}
+                      callback={value => setAuthorization(value)}
                       defaultIndex={authorization === 'authorize' ? 0 : 1}
                       controlRef={authorizationControlRef}
                       style={{ width: '100%', maxWidth: '100%' }}
                       disabled={isSubmitting}
                     />
-                    <div className="text-muted cr-help mt-2">
-                      {authorization === 'authorize'
-                        ? t('carriera.conclusione_tesi.authorization_authorize')
-                        : t('carriera.conclusione_tesi.authorization_deny')}
-                    </div>
-                    <a target='_blank' href="https://didattica.polito.it/pdf/informazioni_secretazione.pdf" className="cr-link">{t('carriera.conclusione_tesi.authorization_info')}</a>
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://didattica.polito.it/pdf/informazioni_secretazione.pdf"
+                      className="cr-link"
+                    >
+                      {t('carriera.conclusione_tesi.authorization_info')}
+                    </a>
                   </Col>
                 </Row>
 
                 {authorization === 'deny' && (
-                  <Row className="mb-3 g-3">
-                    <Col md={7}>
-                      <Form.Label>{t('carriera.conclusione_tesi.motivations')}</Form.Label>
+                  <>
+                    <Row className="mb-3 g-3">
+                      <Col md={7}>
+                        <Form.Label htmlFor="motivations">{t('carriera.conclusione_tesi.motivations')}</Form.Label>
+                        {embargoMotivationsList.map(mot => (
+                          <>
+                            <Form.Check
+                              type="checkbox"
+                              key={mot.id}
+                              label={i18n.language === 'it' ? mot.motivation : mot.motivation_en}
+                              checked={embargoMotivations.includes(mot.id)}
+                              onChange={e => toggleMotivation(mot.id, e.target.checked)}
+                              disabled={isSubmitting}
+                              className="mb-2"
+                            />
+                            {mot.id === 7 && (
+                              <Form.Control
+                                type="text"
+                                placeholder={t('carriera.conclusione_tesi.other_motivation_placeholder')}
+                                value={otherEmbargoReason}
+                                onChange={e => setOtherEmbargoReason(e.target.value)}
+                                disabled={isSubmitting || !embargoMotivations.includes(7)}
+                              />
+                            )}
+                          </>
+                        ))}
+                      </Col>
 
-                      <Form.Check
-                        type="checkbox"
-                        label="Necessità di evitare la divulgazione di risultati potenzialmente brevettabili contenuti all’interno della tesi"
-                        checked={embargoMotivations.includes('6')}
-                        onChange={e => toggleMotivation('6', e.target.checked)}
-                        disabled={isSubmitting}
-                        className='cr-form-check-label.mb-2'
-                      />
-                      <Form.Check
-                        type="checkbox"
-                        label="Esistenza di accordi di riservatezza o impegni al rispetto della segretezza"
-                        checked={embargoMotivations.includes('7')}
-                        onChange={e => toggleMotivation('7', e.target.checked)}
-                        disabled={isSubmitting}
-                      />
-                      <Form.Check
-                        type="checkbox"
-                        label="Segretezza e/o proprietà dei risultati e informazioni di enti esterni o aziende private"
-                        checked={embargoMotivations.includes('8')}
-                        onChange={e => toggleMotivation('8', e.target.checked)}
-                        disabled={isSubmitting}
-                      />
-                      <Form.Check
-                        type="checkbox"
-                        label="Pubblicazione editoriale"
-                        checked={embargoMotivations.includes('9')}
-                        onChange={e => toggleMotivation('9', e.target.checked)}
-                        disabled={isSubmitting}
-                      />
-                      <Form.Check
-                        type="checkbox"
-                        label="Pubblica sicurezza"
-                        checked={embargoMotivations.includes('10')}
-                        onChange={e => toggleMotivation('10', e.target.checked)}
-                        disabled={isSubmitting}
-                      />
-                      <Form.Check
-                        type="checkbox"
-                        label="Privacy"
-                        checked={embargoMotivations.includes('11')}
-                        onChange={e => toggleMotivation('11', e.target.checked)}
-                        disabled={isSubmitting}
-                      />
+                      <Col md={5}>
+                        <Form.Label htmlFor="embargo-period">
+                          {t('carriera.conclusione_tesi.embargo_period.title')}
+                        </Form.Label>
 
-                      <Form.Group className="mt-2">
                         <Form.Check
-                          type="checkbox"
-                          label="Altro"
-                          checked={embargoMotivations.includes('0')}
-                          onChange={e => toggleMotivation('0', e.target.checked)}
+                          type="radio"
+                          name="embargo-period"
+                          label={t('carriera.conclusione_tesi.embargo_period.12_months')}
+                          checked={embargoPeriod === '12_months'}
+                          onChange={() => setEmbargoPeriod('12_months')}
                           disabled={isSubmitting}
                         />
-                        <Form.Control
-                          className="mt-2"
-                          type="text"
-                          value={otherEmbargoReason}
-                          onChange={e => setOtherEmbargoReason(e.target.value)}
-                          placeholder="Specifica il motivo"
-                          disabled={isSubmitting || !embargoMotivations.includes('0')}
+                        <Form.Check
+                          type="radio"
+                          name="embargo-period"
+                          label={t('carriera.conclusione_tesi.embargo_period.18_months')}
+                          checked={embargoPeriod === '18_months'}
+                          onChange={() => setEmbargoPeriod('18_months')}
+                          disabled={isSubmitting}
                         />
-                      </Form.Group>
-                    </Col>
-
-                    <Col md={5}>
-                      <div className="cr-subsection-title">Periodo di embargo</div>
-
-                      <Form.Check
-                        type="radio"
-                        name="embargo-period"
-                        label="Dopo 12 mesi dal deposito"
-                        checked={embargoPeriod === '12'}
-                        onChange={() => setEmbargoPeriod('12')}
-                        disabled={isSubmitting}
-                      />
-                      <Form.Check
-                        type="radio"
-                        name="embargo-period"
-                        label="Dopo 18 mesi dal deposito"
-                        checked={embargoPeriod === '18'}
-                        onChange={() => setEmbargoPeriod('18')}
-                        disabled={isSubmitting}
-                      />
-                      <Form.Check
-                        type="radio"
-                        name="embargo-period"
-                        label="Dopo 3 anni dal deposito"
-                        checked={embargoPeriod === '36'}
-                        onChange={() => setEmbargoPeriod('36')}
-                        disabled={isSubmitting}
-                      />
-                      <Form.Check
-                        type="radio"
-                        name="embargo-period"
-                        label="Dopo esplicito consenso"
-                        checked={embargoPeriod === '0'}
-                        onChange={() => setEmbargoPeriod('0')}
-                        disabled={isSubmitting}
-                      />
-                    </Col>
-                  </Row>
+                        <Form.Check
+                          type="radio"
+                          name="embargo-period"
+                          label={t('carriera.conclusione_tesi.embargo_period.36_months')}
+                          checked={embargoPeriod === '36_months'}
+                          onChange={() => setEmbargoPeriod('36_months')}
+                          disabled={isSubmitting}
+                        />
+                        <Form.Check
+                          type="radio"
+                          name="embargo-period"
+                          label={t('carriera.conclusione_tesi.embargo_period.after_explicit_consent')}
+                          checked={embargoPeriod === 'after_explicit_consent'}
+                          onChange={() => setEmbargoPeriod('after_explicit_consent')}
+                          disabled={isSubmitting}
+                        />
+                      </Col>
+                    </Row>
+                    <Row className="mb-2">
+                      <div className="text-muted cr-help">{t('carriera.conclusione_tesi.embargo_details')}</div>
+                    </Row>
+                  </>
                 )}
 
                 {authorization === 'authorize' && (
                   <Row className="mb-2">
                     <Col md={12}>
-                      <Form.Label>
-                       {t('carriera.conclusione_tesi.license_choice')}
-                      </Form.Label>
+                      <Form.Label htmlFor="license-choice">{t('carriera.conclusione_tesi.license_choice')}</Form.Label>
 
                       {licenses.map(license => (
                         <Form.Check
@@ -688,15 +725,36 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
                           name="license-choice"
                           key={license.id}
                           label={
-                            <div>
-                              <b>{i18n.language === 'it' ? license.name : license.name_en}</b>
-                              <div className="text-muted">{i18n.language === 'it' ? <p dangerouslySetInnerHTML={{ __html: license.description }}></p> : license.description_en}</div>
+                            <div className="d-flex flex-column align-items-start">
+                              <div className="d-flex align-items-center">
+                                <b>{i18n.language === 'it' ? license.name : license.name_en}</b>
+                                {checkRecommendedLicense(license) && (
+                                  <CustomBadge
+                                    variant="recommended"
+                                    content={
+                                      <>
+                                        <i className="fa-regular fa-thumbs-up" />{' '}
+                                        {t('carriera.conclusione_tesi.license_recommended')}
+                                      </>
+                                    }
+                                    style={{ marginLeft: '10px' }}
+                                  />
+                                )}
+                              </div>
+                              <div className="text-muted">
+                                {i18n.language === 'it' ? (
+                                  <p dangerouslySetInnerHTML={{ __html: license.description }}></p>
+                                ) : (
+                                  <p dangerouslySetInnerHTML={{ __html: license.description_en }}></p>
+                                )}
+                              </div>
                             </div>
                           }
                           checked={licenseChoice.id === license.id}
                           onChange={() => setLicenseChoice(license)}
                           disabled={isSubmitting}
                           className="mb-3"
+                          id={`license-choice-${license.id}`}
                         />
                       ))}
                     </Col>
@@ -713,10 +771,12 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
 
                 <Row className="mb-2">
                   <Col md={12}>
-                    <Form.Label>{t('carriera.conclusione_tesi.summary_for_committee_pdf')}</Form.Label>{' '}
+                    <Form.Label htmlFor="summary-for-committee-pdf">
+                      {t('carriera.conclusione_tesi.summary_for_committee_pdf')}
+                    </Form.Label>{' '}
                     <span className="text-muted">({t('carriera.conclusione_tesi.max_size_20_mb')})</span>
                     <div className="text-muted cr-help">
-                      {t('carriera.conclusione_tesi.summary_for_committee_help')}
+                      {t('carriera.conclusione_tesi.summary_for_committee_subtext')}
                     </div>
                     <Form.Group>
                       <Form.Control
@@ -731,7 +791,9 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
 
                 <Row className="mb-2">
                   <Col md={12}>
-                    <Form.Label>{t('carriera.conclusione_tesi.final_thesis_pdfa')}</Form.Label>{' '}
+                    <Form.Label htmlFor="final-thesis-pdfa">
+                      {t('carriera.conclusione_tesi.final_thesis_pdfa')}
+                    </Form.Label>{' '}
                     <span className="text-muted">({t('carriera.conclusione_tesi.max_size_200_mb')})</span>
                     <Form.Group>
                       <Form.Control
@@ -746,13 +808,17 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
 
                 <Row className="mb-2">
                   <Col md={12}>
-                    <Form.Label>{t('carriera.conclusione_tesi.supplementary_zip')}</Form.Label>{' '}
+                    <Form.Label htmlFor="supplementary-zip">
+                      {t('carriera.conclusione_tesi.supplementary_zip')}
+                    </Form.Label>{' '}
                     <span>({t('carriera.conclusione_tesi.max_size_200_mb')})</span>
                     <Form.Group>
                       <Form.Control
                         type="file"
                         accept="application/zip"
-                        onChange={e => setSupplementaryZip(e.target.files && e.target.files[0] ? e.target.files[0] : null)}
+                        onChange={e =>
+                          setSupplementaryZip(e.target.files && e.target.files[0] ? e.target.files[0] : null)
+                        }
                         disabled={isSubmitting}
                       />
                     </Form.Group>
@@ -761,62 +827,74 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
               </div>
 
               <Row className="mb-2">
-                <Col md={12} className="cr-section cr-highlight">
-                  <div className="cr-section-title">
-                    <i className="fa-regular fa-pen-to-square" />
-                    <span>{t('carriera.conclusione_tesi.declarations.student_declarations')}</span>
-                  </div>
+                <div className="cr-section-title">
+                  <i className="fa-regular fa-pen-to-square" />
+                  <span>{t('carriera.conclusione_tesi.declarations.student_declarations')}</span>
+                </div>
+                <Col md="auto">
+                  <div
+                    style={{ backgroundColor: appliedTheme === 'dark' ? '#2c2c2c' : '#d9edf7', borderRadius: '6px' }}
+                  >
+                    <div className="ms-2 me-2 pt-2 pb-2">
+                      <b>{t('carriera.conclusione_tesi.declarations.student_declarations_intro')}</b>
+                      <Form.Check
+                        type="checkbox"
+                        label={t('carriera.conclusione_tesi.declarations.declaration_1')}
+                        checked={decl.decl1}
+                        onChange={e => setDecl(prev => ({ ...prev, decl1: e.target.checked }))}
+                        disabled={isSubmitting}
+                        id="declaration-1"
+                      />
+                      {authorization === 'deny' && (
+                        <Form.Check
+                          type="checkbox"
+                          label={t('carriera.conclusione_tesi.declarations.declaration_2')}
+                          checked={decl.decl2}
+                          onChange={e => setDecl(prev => ({ ...prev, decl2: e.target.checked }))}
+                          disabled={isSubmitting}
+                          id="declaration-2"
+                        />
+                      )}
+                      <Form.Check
+                        type="checkbox"
+                        label={t('carriera.conclusione_tesi.declarations.declaration_3')}
+                        checked={decl.decl3}
+                        onChange={e => setDecl(prev => ({ ...prev, decl3: e.target.checked }))}
+                        disabled={isSubmitting}
+                        id="declaration-3"
+                      />
+                      <Form.Check
+                        type="checkbox"
+                        label={t('carriera.conclusione_tesi.declarations.declaration_4')}
+                        checked={decl.decl4}
+                        onChange={e => setDecl(prev => ({ ...prev, decl4: e.target.checked }))}
+                        disabled={isSubmitting}
+                        id="declaration-4"
+                      />
+                      <Form.Check
+                        type="checkbox"
+                        label={t('carriera.conclusione_tesi.declarations.declaration_5')}
+                        checked={decl.decl5}
+                        onChange={e => setDecl(prev => ({ ...prev, decl5: e.target.checked }))}
+                        disabled={isSubmitting}
+                        id="declaration-5"
+                      />
+                      <Form.Check
+                        type="checkbox"
+                        label={t('carriera.conclusione_tesi.declarations.declaration_6')}
+                        checked={decl.decl6}
+                        onChange={e => setDecl(prev => ({ ...prev, decl6: e.target.checked }))}
+                        disabled={isSubmitting}
+                        id="declaration-6"
+                      />
 
-                  <b>{t('carriera.conclusione_tesi.declarations.student_declarations_intro')}</b>
-
-                  <Form.Check
-                    type="checkbox"
-                    label={t('carriera.conclusione_tesi.declarations.declaration_1')}
-                    checked={decl.decl1}
-                    onChange={e => setDecl(prev => ({ ...prev, decl1: e.target.checked }))}
-                    disabled={isSubmitting}
-                  />
-                  <Form.Check
-                    type="checkbox"
-                    label={t('carriera.conclusione_tesi.declarations.declaration_2')}
-                    checked={decl.decl2}
-                    onChange={e => setDecl(prev => ({ ...prev, decl2: e.target.checked }))}
-                    disabled={isSubmitting}
-                  />
-                  <Form.Check
-                    type="checkbox"
-                    label={t('carriera.conclusione_tesi.declarations.declaration_3')}
-                    checked={decl.decl3}
-                    onChange={e => setDecl(prev => ({ ...prev, decl3: e.target.checked }))}
-                    disabled={isSubmitting}
-                  />
-                  <Form.Check
-                    type="checkbox"
-                    label={t('carriera.conclusione_tesi.declarations.declaration_4')}
-                    checked={decl.decl4}
-                    onChange={e => setDecl(prev => ({ ...prev, decl4: e.target.checked }))}
-                    disabled={isSubmitting}
-                  />
-                  <Form.Check
-                    type="checkbox"
-                    label={t('carriera.conclusione_tesi.declarations.declaration_5')}
-                    checked={decl.decl5}
-                    onChange={e => setDecl(prev => ({ ...prev, decl5: e.target.checked }))}
-                    disabled={isSubmitting}
-                  />
-                  <Form.Check
-                    type="checkbox"
-                    label={t('carriera.conclusione_tesi.declarations.declaration_6')}
-                    checked={decl.decl6}
-                    onChange={e => setDecl(prev => ({ ...prev, decl6: e.target.checked }))}
-                    disabled={isSubmitting}
-                  />
-
-                  {!allDeclarationsChecked && (
-                    <div className="text-muted mt-2">
-                      {t('carriera.conclusione_tesi.declarations.declarations_required')}
+                      {!allDeclarationsChecked && (
+                        <div className="text-muted mt-2">
+                          {t('carriera.conclusione_tesi.declarations.declarations_required')}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </Col>
               </Row>
             </Form>
@@ -825,23 +903,22 @@ export default function ConclusionRequest({ show, setShow, onSubmitResult }) {
       </Modal.Body>
 
       <Modal.Footer className="d-flex justify-content-end gap-2">
-        <Button
-          className={`btn-outlined-${appliedTheme} mb-3`}
-          size="md"
-          onClick={() => resetForm()}
-        >
+        <Button className={`btn-outlined-${appliedTheme} mb-3`} size="md" onClick={() => resetForm()}>
           <i className="fa-solid fa-rotate-left pe-2" />
           {t('carriera.richiesta_tesi.reset')}
         </Button>
 
-        <Button
-          className={`btn-primary-${appliedTheme}`}
-          onClick={handleUpload}
-          disabled={!canSubmit || isSubmitting}
-        >
-          {isSubmitting ? 'Invio...' : 'Richiedi conferma'}
+        <Button className={`btn-primary-${appliedTheme}`} onClick={handleUpload} disabled={!canSubmit || isSubmitting}>
+          <i className="fa-solid fa-paper-plane pe-2" />
+          {isSubmitting ? t('carriera.conclusione_tesi.sending') : t('carriera.conclusione_tesi.request_conclusion')}
         </Button>
       </Modal.Footer>
     </Modal>
   );
 }
+
+ConclusionRequest.propTypes = {
+  show: PropTypes.bool.isRequired,
+  setShow: PropTypes.func.isRequired,
+  onSubmitResult: PropTypes.func.isRequired,
+};
