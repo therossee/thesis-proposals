@@ -257,11 +257,10 @@ const sendThesisConclusionRequest = async (req, res) => {
           );
         }
         for (const newKeyword of keywordNames) {
-          const nk = await Keyword.create({ keyword: newKeyword, keyword_en: newKeyword }, { transaction });
           await ThesisKeyword.create(
             {
               thesis_id: thesis.id,
-              keyword_id: nk.id,
+              keyword_other: newKeyword,
             },
             { transaction },
           );

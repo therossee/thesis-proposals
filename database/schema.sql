@@ -268,7 +268,8 @@ CREATE TABLE IF NOT EXISTS thesis_supervisor_cosupervisor(
 CREATE TABLE IF NOT EXISTS thesis_keyword(
     id INT AUTO_INCREMENT PRIMARY KEY,
     thesis_id INT NOT NULL,
-    keyword_id INT NOT NULL,
+    keyword_id INT,
+    keyword_other VARCHAR(50),
     FOREIGN KEY (keyword_id) REFERENCES keyword(id) ON DELETE CASCADE,
     FOREIGN KEY (thesis_id) REFERENCES thesis(id) ON DELETE CASCADE
 );

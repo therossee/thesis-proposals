@@ -4,19 +4,23 @@ module.exports = (sequelize, DataTypes) => {
     {
       thesis_id: {
         type: DataTypes.INTEGER,
-        primaryKey: true,
         references: {
           model: 'thesis',
           key: 'id',
         },
+        allowNull: false,
       },
       keyword_id: {
         type: DataTypes.INTEGER,
-        primaryKey: true,
         references: {
           model: 'keyword',
           key: 'id',
         },
+        allowNull: true,
+      },
+      keyword_other: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
       },
     },
     {
