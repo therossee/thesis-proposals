@@ -315,7 +315,9 @@
             "summary_for_committee_pdf": "Riassunto per la commissione (PDF)",
             "summary_for_committee_subtext": "Il riassunto va depositato solo se richiesto dal Corso di Studi. In questa fase il file puo anche non essere definitivo, in quanto è prevista la possibilita di aggiornare il file contestualmente al deposito del file definitivo della tesi (PDF/A).",
             "documents_to_upload": "Documenti da caricare",
-            "final_thesis_pdfa": "Tesi finale (verrà automaticamente convertito in PDF/A)",
+            "pdfa_conversion_info": "Prima di caricare la tesi finale, assicurati di avere il documento in formato PDF e convertilo in PDF/A tramite il servizio dedicato. Dopo la conversione, torna su questa pagina e carica il file nel campo Tesi PDF/A.",
+            "pdfa_conversion_button": "Converti PDF in PDF/A",
+            "final_thesis_pdfa": "Tesi finale (PDF/A)",
             "supplementary_zip": "Materiale supplementare (ZIP)",
             "max_size_20_mb": "Max 20 MB",
             "max_size_200_mb": "Max 200 MB",
@@ -332,15 +334,7 @@
             },
             "languages": {
                 "it": "Italiano",
-                "zh": "Cinese",
-                "fr": "Francese",
-                "jp": "Giapponese",
-                "en": "Inglese",
-                "pt": "Portoghese",
-                "ru": "Russo",
-                "es": "Spagnolo",
-                "se": "Svedese",
-                "de": "Tedesco"
+                "en": "Inglese"
             },
             "sdg": {
                 "title": "Sustainable Development Goals - SDGs",
@@ -358,6 +352,8 @@
             "draft_load_failed": "Impossibile caricare la bozza salvata.",
             "show_more": "Mostra di più",
             "show_less": "Mostra meno",
+            "download_error": "Errore durante il download",
+            "download_error_content": "Non è stato possibile scaricare il file richiesto. Riprova più tardi.",
             "request_conclusion": "Richiedi conclusione",
             "title_thesis": "Titolo",
             "abstract_text": "Abstract: ",
@@ -395,7 +391,11 @@
             "success_title": "Richiesta inviata con successo!",
             "success_message": "La tua richiesta di conclusione tesi è stata inviata. Puoi tornare alla pagina tesi per verificarne lo stato.",
             "error_title": "Errore durante l'invio della richiesta.",
-            "error_message": "Si è verificato un errore durante l'invio della richiesta. Riprova più tardi."
+            "error_message": "Si è verificato un errore durante l'invio della richiesta. Riprova più tardi.",
+            "uploaded": "Documenti caricati",
+            "resume": "Riassunto",
+            "thesis_pdfa": "Tesi in formato PDF/A",
+            "additional": "Allegato aggiuntivo"
         }
     },
     "Accedi": "Accedi",

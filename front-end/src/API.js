@@ -318,6 +318,17 @@ const uploadFinalThesis = async thesisFile => {
   }
 };
 
+const getThesisFile = async (thesisId, fileType) => {
+  try {
+    return await axios.get(`${URL}/thesis/${thesisId}/${fileType}`, {
+      responseType: 'blob',
+    });
+  } catch (error) {
+    console.error('Error fetching thesis file:', error);
+    throw error;
+  }
+};
+
 // ------------------------------------
 
 const buildParams = (lang, page, limit, filters, search, sorting) => {
@@ -396,6 +407,7 @@ const API = {
   updateThesisConclusionStatus,
   getAllTheses,
   uploadFinalThesis,
+  getThesisFile,
 };
 
 export default API;

@@ -89,6 +89,9 @@ const getLoggedStudentThesis = async (req, res) => {
       thesis_conclusion_confirmation_date: thesisData.thesis_conclusion_confirmation_date
         ? thesisData.thesis_conclusion_confirmation_date.toISOString()
         : null,
+      thesis_file_path: thesisData.thesis_file_path,
+      thesis_resume_path: thesisData.thesis_resume_path,
+      additional_zip_path: thesisData.additional_zip_path,
     });
 
     const thesisResponse = thesisSchema.parse(responsePayload);
@@ -193,6 +196,37 @@ const createStudentThesis = async (req, res) => {
   }
 };
 
+const getThesisFile = async (req, res) => {
+  try {
+    const { id, fileType } = req.params;
+    const thesis = await Thesis.findByPk(id);
+
+    if (!thesis) {
+      return res.status(404).json({ error: 'Thesis not found' });
+    }
+
+    let filePath;
+    if (fileType === 'thesis') {
+      filePath = thesis.thesis_file_path;
+    } else if (fileType === 'resume') {
+      filePath = thesis.thesis_resume_path;
+    } else if (fileType === 'additional') {
+      filePath = thesis.additional_zip_path;
+    } else {
+      return res.status(400).json({ error: 'Invalid file type requested' });
+    }
+
+    if (!filePath) {
+      return res.status(404).json({ error: 'Requested file not found for this thesis' });
+    }
+
+    return res.status(200).download(filePath);
+  } catch (error) {
+    console.error('Error fetching thesis file:', error);
+    return res.status(500).json({ error: 'An error occurred while fetching the thesis file.' });
+  }
+};
+
 //debugging purpose
 const getAllTheses = async (req, res) => {
   try {
@@ -208,4 +242,5 @@ module.exports = {
   getLoggedStudentThesis,
   createStudentThesis,
   getAllTheses,
+  getThesisFile,
 };

@@ -313,9 +313,11 @@
             "embargo_details": "In any case an information sheet with your metadata (first and last name, thesis title and Supervisor/s) will be available for consultation in the Library online catalogue. \n At the end of this period, your thesis will be released with an \"Attribution-NonCommercial-NoDerivs CC BY-NC-ND\" license. This license is the most restrictive of the six main CC licenses, only allowing others to download your works and share them with others as long as they credit you, but they can't change them in any way or use them commercially.",
             "authorization_info": "Embargo information",
             "documents_to_upload": "Documents to upload",
+            "pdfa_conversion_info": "Before uploading the final thesis, make sure your document is in PDF format and convert it to PDF/A using the dedicated service. After conversion, come back to this page and upload the file in the Final thesis PDF/A field.",
+            "pdfa_conversion_button": "Convert PDF to PDF/A",
             "summary_for_committee_pdf": "Summary for committee (PDF)",
             "summary_for_committee_subtext": "You must deposit a summary of your thesis only if required by your degree programme. In this phase, you can upload a preliminary version of your abstract. You will have the chance to update your abstract when you deposit the final version of your thesis.",
-            "final_thesis_pdfa": "Final thesis (will be automatically converted to PDF/A)",
+            "final_thesis_pdfa": "Final thesis (PDF/A)",
             "supplementary_zip": "Supplementary material (ZIP)",
             "max_size_20_mb": "Max 20 MB",
             "max_size_200_mb": "Max 200 MB",
@@ -332,15 +334,7 @@
             "declarations_required": "You must accept all declarations to proceed.",
             "languages": {
                 "it": "Italian",
-                "zh": "Chinese",
-                "fr": "French",
-                "jp": "Japanese",
-                "en": "English",
-                "pt": "Portuguese",
-                "ru": "Russian",
-                "es": "Spanish",
-                "se": "Swedish",
-                "de": "German"
+                "en": "English"
             },
             "sdg": {
                 "title": "Sustainable Development Goals - SDGs",
@@ -358,6 +352,8 @@
             "draft_load_failed": "Unable to load the saved draft.",
             "show_more": "Show more",
             "show_less": "Show less",
+            "download_error": "Download error",
+            "download_error_content": "Unable to download the requested file. Please try again later.",
             "request_conclusion": "Request conclusion",
                         "upload_final_thesis": " Upload final thesis",
             "confirmation_modal": {
@@ -392,7 +388,11 @@
             "success_title": "Request submitted successfully!",
             "success_message": "Your thesis conclusion request has been submitted. You can return to the thesis page to check its status.",
             "error_title": "Error submitting the request.",
-            "error_message": "An error occurred while submitting the request. Please try again later."
+            "error_message": "An error occurred while submitting the request. Please try again later.",
+            "uploaded": "Uploaded documents",
+            "resume": "Riassunto",
+            "thesis_pdfa": "Tesi in formato PDF/A",
+            "additional": "Allegato aggiuntivo"
         }
     },
     "Accedi": "Login",

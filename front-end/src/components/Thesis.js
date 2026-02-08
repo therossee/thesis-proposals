@@ -52,9 +52,54 @@ export default function Thesis(props) {
   console.log(sessionDeadlines);
 
   const getFileName = path => {
-    if (!path) return '-';
+    if (!path) return '';
     const chunks = String(path).split('/');
-    return chunks[chunks.length - 1] || '-';
+    return chunks[chunks.length - 1] || '';
+  };
+
+  const downloadFile = async (fileType, filePath) => {
+    try {
+      const response = await API.getThesisFile(data.id, fileType);
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const contentDisposition = response.headers?.['content-disposition'] || '';
+      const serverFileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+      const fileName = serverFileNameMatch?.[1] || getFileName(filePath) || `${data.topic}_${fileType}`;
+
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(`Error downloading ${fileType}:`, error);
+      showToast({
+        success: false,
+        title: t('carriera.tesi.download_error'),
+        message: t('carriera.tesi.download_error_content'),
+      });
+    }
+  };
+
+  const renderDocumentLink = (icon, label, path, fileType) => {
+    if (!path) {
+      return (
+        <span className="link-container mb-0 d-inline-flex align-items-center text-muted">
+          <i className={`fa-regular fa-${icon} fa-fw me-1`} />
+          {label}: -
+        </span>
+      );
+    }
+
+    return (
+      <span className="link-container mb-0 d-inline-flex align-items-center">
+        <button type="button" onClick={() => downloadFile(fileType, path)} className="link-button">
+          <i className={`fa-regular fa-${icon} fa-fw me-1`} /> {label}
+        </button>
+      </span>
+    );
   };
 
   const checkIfConclusionRequest = () => {
@@ -266,16 +311,27 @@ export default function Thesis(props) {
                       )}
                     </CustomBlock>
 
-                    <div className="mt-3 mb-2 fw-semibold">{t('carriera.conclusione_tesi.documents_to_upload')}</div>
-                    <CustomBlock icon="file-pdf" title="Riassunto PDF" ignoreMoreLines>
-                      {getFileName(thesis.thesisResumePath)}
-                    </CustomBlock>
-                    <CustomBlock icon="file-circle-check" title="Tesi PDF/A" ignoreMoreLines>
-                      {getFileName(thesis.thesisFilePath)}
-                    </CustomBlock>
-                    <CustomBlock icon="file-zipper" title="Allegato .zip" ignoreMoreLines>
-                      {getFileName(thesis.additionalZipPath)}
-                    </CustomBlock>
+                    <div className="mt-3 mb-2 fw-semibold">{t('carriera.conclusione_tesi.uploaded')}</div>
+                    <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
+                      {renderDocumentLink(
+                        'file-pdf',
+                        t('carriera.conclusione_tesi.resume'),
+                        thesis.thesisResumePath,
+                        'resume',
+                      )}
+                      {renderDocumentLink(
+                        'file-circle-check',
+                        t('carriera.conclusione_tesi.thesis_pdfa'),
+                        thesis.thesisFilePath,
+                        'thesis',
+                      )}
+                      {renderDocumentLink(
+                        'file-zipper',
+                        t('carriera.conclusione_tesi.additional'),
+                        thesis.additionalZipPath,
+                        'additional',
+                      )}
+                    </div>
                   </Card.Body>
                 </Card>
               )}

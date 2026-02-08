@@ -173,7 +173,9 @@ export default function Timeline({
 
     if (isConclusionRequested) {
       effectiveActiveStep = 'conclusion_requested';
-    } else if (isConclusionApproved || isConclusionRejected) {
+    } else if (isConclusionApproved) {
+      effectiveActiveStep = 'almalaurea';
+    } else if (isConclusionRejected) {
       effectiveActiveStep = 'conclusion_outcome';
     }
     const activeIndex = isDone ? stepKeys.length : stepKeys.indexOf(effectiveActiveStep);
@@ -236,13 +238,10 @@ export default function Timeline({
     }
 
     if (isConclusionApproved) {
-      if (key === 'ongoing' || key === 'conclusion_requested') {
+      // outcome is confirmed and completed; next step (almalaurea) is the new pending active step
+      if (key === 'conclusion_outcome') {
         circleClass = 'approved';
         titleClass = 'completed';
-      }
-      if (key === 'conclusion_outcome') {
-        circleClass = 'waiting';
-        titleClass = 'active';
       }
     }
 

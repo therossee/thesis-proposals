@@ -176,14 +176,14 @@
 
 .conclusion-process-content .cr-help {
   display: block;
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   color: var(--text-700);
 }
 
 .conclusion-process-content .cr-link {
   display: inline-block;
   margin-top: 0.25rem;
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   color: var(--text-700);
 }
 
@@ -285,7 +285,7 @@
 }
 
 .cr-upload-meta {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   text-align: center;
 }
 

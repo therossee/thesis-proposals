@@ -31,24 +31,12 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      thesis_file: {
-        type: DataTypes.BLOB,
-        allowNull: true,
-      },
       thesis_file_path: {
         type: DataTypes.STRING(1024),
         allowNull: true,
       },
-      thesis_resume: {
-        type: DataTypes.BLOB,
-        allowNull: true,
-      },
       thesis_resume_path: {
         type: DataTypes.STRING(1024),
-        allowNull: true,
-      },
-      additional_zip: {
-        type: DataTypes.BLOB,
         allowNull: true,
       },
       additional_zip_path: {
@@ -77,9 +65,10 @@ module.exports = (sequelize, DataTypes) => {
           'conclusion_requested',
           'conclusion_approved',
           'conclusion_rejected',
-          'almalaurea',
+          'compiled_questionnaire',
           'final_exam',
           'final_thesis',
+          'done',
         ),
         allowNull: false,
         defaultValue: 'ongoing',

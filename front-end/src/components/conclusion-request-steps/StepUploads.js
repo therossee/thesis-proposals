@@ -101,6 +101,20 @@ export default function StepUploads() {
         <span>{t('carriera.conclusione_tesi.documents_to_upload')}</span>
       </div>
       <div>
+        <div className="cr-upload-body mb-3">
+          {t('carriera.conclusione_tesi.pdfa_conversion_info')}
+          <div className="mt-2">
+            <a
+              href="https://didattica.polito.it/pls/portal30/sviluppo.elaborato_finale.consegna_pdf_conv"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`btn btn-outlined-${appliedTheme} d-inline-flex align-items-center`}
+            >
+              <i className="fa-regular fa-arrow-up-right-from-square me-2" />
+              {t('carriera.conclusione_tesi.pdfa_conversion_button')}
+            </a>
+          </div>
+        </div>
         <Row className="mb-2 g-3">
           <Col md={4}>
             <UploadCard
