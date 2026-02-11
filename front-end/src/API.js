@@ -108,6 +108,229 @@ async function getThesisProposalById(id, lang) {
   }
 }
 
+async function getProposalAvailability(thesisProposalId) {
+  try {
+    const response = await axios.get(`${URL}/thesis-proposals/${thesisProposalId}/availability`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching thesis proposal availability:', error);
+  }
+}
+
+/****** Thesis Application APIs ******/
+
+async function getLastStudentApplication() {
+  try {
+    const response = await axios.get(`${URL}/thesis-applications`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching last student thesis application:', error);
+  }
+}
+
+async function createThesisApplication(applicationData) {
+  try {
+    const response = await axios.post(`${URL}/thesis-applications`, applicationData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating thesis application:', error);
+    throw error;
+  }
+}
+
+async function checkStudentEligibility(studentId) {
+  try {
+    const response = await axios.get(`${URL}/thesis-applications/eligibility`, {
+      params: { studentId },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error checking student eligibility:', error);
+  }
+}
+
+async function getStatusHistoryApplication(applicationId) {
+  try {
+    const response = await axios.get(`${URL}/thesis-applications/status-history`, {
+      params: { applicationId },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching status history of thesis application:', error);
+  }
+}
+
+async function getLoggedStudentThesis() {
+  try {
+    const response = await axios.get(`${URL}/thesis`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching student thesis:', error);
+  }
+}
+
+async function getAllThesisApplications() {
+  try {
+    const response = await axios.get(`${URL}/thesis-applications/all`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching all thesis applications:', error);
+  }
+}
+
+async function updateThesisApplicationStatus(updateData) {
+  try {
+    const response = await axios.put(`${URL}/test/thesis-application`, updateData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating thesis application status:', error);
+  }
+}
+
+async function cancelThesisApplication({ applicationId }) {
+  try {
+    const response = await axios.post(`${URL}/thesis-applications/cancel`, {
+      id: applicationId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error cancelling thesis application:', error);
+    throw error;
+  }
+}
+
+// ------------------------------------
+// Thesis Start from Application API
+async function startThesisFromApplication(applicationData) {
+  try {
+    const response = await axios.post(`${URL}/thesis`, applicationData);
+    return response.data;
+  } catch (error) {
+    console.error('Error starting thesis from application:', error);
+    throw error;
+  }
+}
+
+// ------------------------------------
+// Companies API
+async function getCompanies() {
+  try {
+    const response = await axios.get(`${URL}/companies`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching companies:', error);
+  }
+}
+
+// ------------------------------------
+
+// --------------------------------
+// Thesis Conclusions APIs
+
+const getSustainableDevelopmentGoals = async () => {
+  try {
+    const response = await axios.get(`${URL}/thesis-conclusion/sdgs`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching sustainable development goals:', error);
+  }
+};
+
+const getAvailableLicenses = async lang => {
+  console.log(lang);
+  try {
+    const response = await axios.get(`${URL}/thesis-conclusion/licenses`, {
+      params: { lang },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching available licenses:', error);
+  }
+};
+
+const getEmbargoMotivations = async lang => {
+  try {
+    const response = await axios.get(`${URL}/thesis-conclusion/embargo-motivations`, {
+      params: { lang },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching embargo motivations:', error);
+  }
+};
+
+const sendThesisConclusionRequest = async conclusionData => {
+  try {
+    const isFormData = conclusionData instanceof FormData;
+    const response = await axios.post(
+      `${URL}/thesis-conclusion`,
+      conclusionData,
+      isFormData ? undefined : { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error sending thesis conclusion request:', error);
+    throw error;
+  }
+};
+
+const getSessionDeadlines = async type => {
+  try {
+    const response = await axios.get(`${URL}/thesis-conclusion/deadlines`, { params: { type } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching session deadlines:', error);
+  }
+};
+
+const getAllTheses = async () => {
+  try {
+    const response = await axios.get(`${URL}/thesis/all`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching all theses:', error);
+  }
+};
+
+const updateThesisConclusionStatus = async updateData => {
+  try {
+    const response = await axios.put(`${URL}/test/thesis-conclusion`, updateData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating thesis conclusion status:', error);
+  }
+};
+
+const uploadFinalThesis = async thesisFile => {
+  try {
+    const formData = new FormData();
+    formData.append('thesisFile', thesisFile);
+
+    const response = await axios.post(`${URL}/thesis-conclusion/upload-final-thesis`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading final thesis:', error);
+    throw error;
+  }
+};
+
+const getThesisFile = async (thesisId, fileType) => {
+  try {
+    return await axios.get(`${URL}/thesis/${thesisId}/${fileType}`, {
+      responseType: 'blob',
+    });
+  } catch (error) {
+    console.error('Error fetching thesis file:', error);
+    throw error;
+  }
+};
+
+// ------------------------------------
+
 const buildParams = (lang, page, limit, filters, search, sorting) => {
   const params = {
     lang,
@@ -165,6 +388,26 @@ const API = {
   getThesisProposalsKeywords,
   getThesisProposalsTeachers,
   getThesisProposalById,
+  getProposalAvailability,
+  createThesisApplication,
+  getLastStudentApplication,
+  checkStudentEligibility,
+  getLoggedStudentThesis,
+  getStatusHistoryApplication,
+  getAllThesisApplications,
+  updateThesisApplicationStatus,
+  cancelThesisApplication,
+  startThesisFromApplication,
+  getCompanies,
+  getSustainableDevelopmentGoals,
+  getAvailableLicenses,
+  getEmbargoMotivations,
+  sendThesisConclusionRequest,
+  getSessionDeadlines,
+  updateThesisConclusionStatus,
+  getAllTheses,
+  uploadFinalThesis,
+  getThesisFile,
 };
 
 export default API;
