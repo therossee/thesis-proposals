@@ -1,8 +1,16 @@
 /// <reference types="cypress" />
 
+const visitWithLightTheme = url => {
+  cy.visit(url, {
+    onBeforeLoad: win => {
+      win.localStorage.setItem('theme', 'light');
+    },
+  });
+};
+
 describe('Thesis proposal details page', () => {
   beforeEach(() => {
-    cy.visit('http://localhost:3000');
+    visitWithLightTheme('http://localhost:3000');
     cy.viewport(1920, 1080);
   });
 
@@ -65,7 +73,7 @@ describe('Thesis proposal details page', () => {
   });
 
   it('should see thesis proposal details page (abroad)', () => {
-    cy.visit('http://localhost:3000/carriera/proposte_di_tesi/3593');
+    visitWithLightTheme('http://localhost:3000/carriera/proposte_di_tesi/3593');
 
     // Step 1: Check the page breadcrumb
     cy.get('.breadcrumb-item').should('have.length', 3);
@@ -81,7 +89,7 @@ describe('Thesis proposal details page', () => {
   });
 
   it('should see thesis proposal details page with attachment if present', () => {
-    cy.visit('http://localhost:3000/carriera/proposte_di_tesi/13923');
+    visitWithLightTheme('http://localhost:3000/carriera/proposte_di_tesi/13923');
 
     // Step 1: Check the page breadcrumb
     cy.get('.breadcrumb-item').should('have.length', 3);
@@ -97,7 +105,7 @@ describe('Thesis proposal details page', () => {
   });
 
   it('should see expired thesis proposal details page', () => {
-    cy.visit('http://localhost:3000/carriera/proposte_di_tesi/13356');
+    visitWithLightTheme('http://localhost:3000/carriera/proposte_di_tesi/13356');
 
     // Step 1: Check the page breadcrumb
     cy.get('.breadcrumb-item').should('have.length', 3);
@@ -119,7 +127,7 @@ describe('Thesis proposal details page - responsiveness', () => {
   beforeEach(() => {
     // Reduce the viewport to mobile sizes
     cy.viewport('iphone-x');
-    cy.visit('http://localhost:3000');
+    visitWithLightTheme('http://localhost:3000');
   });
 
   it('should see thesis proposal details page on mobile', () => {
