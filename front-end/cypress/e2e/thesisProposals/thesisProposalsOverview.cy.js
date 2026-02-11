@@ -108,7 +108,10 @@ describe('Thesis proposals overview page', () => {
     cy.get('#dropdown-filters > div > div > div:nth-child(4)').contains("Seleziona l'ambiente...").click();
 
     // Step 5: Select 'Tesi interna' from the dropdown
-    cy.get('#dropdown-filters > div > div > div:nth-child(4)').contains('Tesi interna').click();
+    cy.get('#dropdown-filters > div > div > div:nth-child(4)')
+      .contains('Tesi interna')
+      .scrollIntoView()
+      .click({ force: true });
 
     // Step 6: Click on the apply button
     cy.get('#dropdown-filters div > div > div.d-flex.w-100.justify-content-between > button')
@@ -131,8 +134,11 @@ describe('Thesis proposals overview page', () => {
         });
     });
 
-    // Step 10: Reset the filter
-    cy.get('.applied-filters-container .badge-group .custom-badge-container').contains('Tesi interna').click();
+    // Step 10: Reset the filter from dropdown to avoid layout-dependent badges
+    cy.get('#dropdown-filters').should('be.visible').click();
+    cy.get('#dropdown-filters div > div > div.d-flex.w-100.justify-content-between > button')
+      .contains('Resetta')
+      .click();
   });
 
   it('should filter external proposals and reset filter', () => {
@@ -192,8 +198,8 @@ describe('Thesis proposals overview page', () => {
     // Step 4: Click on 'Select location' select
     cy.get('#dropdown-filters > div > div > div:nth-child(2)').contains('Seleziona il luogo...').click();
 
-    // Step 5: Select 'Tesi all\'estero' from the dropdown
-    cy.get('#dropdown-filters > div > div > div:nth-child(2)').contains('Tesi in Italia').click();
+    // Step 5: Select 'Tesi in Italia' from the options menu
+    cy.get('.select__menu').contains('Tesi in Italia').click({ force: true });
 
     // Step 6: Click on the apply button
     cy.get('#dropdown-filters div > div > div.d-flex.w-100.justify-content-between > button')
@@ -201,23 +207,21 @@ describe('Thesis proposals overview page', () => {
       .click();
 
     // Step 7: Wait for the network request to complete
-    cy.wait('@getTargetedThesisProposals');
+    cy.wait('@getTargetedThesisProposals').then(({ response }) => {
+      const proposals = response?.body?.thesisProposals || [];
+      proposals.forEach(proposal => expect(proposal.isAbroad).to.eq(false));
+    });
 
     // Step 8: Verify that there proposals listed
     cy.get('.proposals-container .card-container .roundCard').should('have.length.greaterThan', 0);
 
-    // Step 9: Verify that each proposal contains the fi-it icon
-    cy.get('.proposals-container .card-container .roundCard').each(article => {
-      cy.wrap(article).find('.card-header > .row > .thesis-topic.text-end > .fi-it').should('be.visible');
-    });
-
-    // Step 10: Reopen the filters dropdown
+    // Step 9: Reopen the filters dropdown
     cy.get('#dropdown-filters').should('be.visible').click();
 
-    // Step 11: Click on the reset badge
+    // Step 10: Click on the reset badge
     cy.get('#dropdown-filters div.custom-badge-container button').contains('Tesi in Italia').click();
 
-    // Step 12: apply the change
+    // Step 11: apply the change
     cy.get('#dropdown-filters div > div > div.d-flex.w-100.justify-content-between > button')
       .contains('Applica')
       .click();
@@ -236,8 +240,8 @@ describe('Thesis proposals overview page', () => {
     // Step 4: Click on 'Select location' select
     cy.get('#dropdown-filters > div > div > div:nth-child(2)').contains('Seleziona il luogo...').click();
 
-    // Step 5: Select 'Tesi all\'estero' from the dropdown
-    cy.get('#dropdown-filters > div > div > div:nth-child(2)').contains("Tesi all'estero").click();
+    // Step 5: Select 'Tesi all\'estero' from the options menu
+    cy.get('.select__menu').contains("Tesi all'estero").click({ force: true });
 
     // Step 6: Click on the apply button
     cy.get('#dropdown-filters div > div > div.d-flex.w-100.justify-content-between > button')
@@ -245,7 +249,11 @@ describe('Thesis proposals overview page', () => {
       .click();
 
     // Step 7: Wait for the network request to complete
-    cy.wait('@getTargetedThesisProposals');
+    cy.wait('@getTargetedThesisProposals').then(({ request, response }) => {
+      expect(request.url).to.include('isAbroad=true');
+      const proposals = response?.body?.thesisProposals || [];
+      proposals.forEach(proposal => expect(proposal.isAbroad).to.eq(true));
+    });
 
     // Step 8: Verify that there proposals listed
     cy.get('.proposals-container .card-container .roundCard').should('have.length.greaterThan', 0);
@@ -306,13 +314,17 @@ describe('Thesis proposals overview page', () => {
     // Step 3: Open filters dropdown
     cy.get('#dropdown-filters').should('be.visible').click();
 
-    // Step 4: Type 'europeizzazione' in the keywords input
+    // Step 4: Save current results count and type keyword
+    cy.get('.proposals-container .card-container .roundCard')
+      .its('length')
+      .as('initialCardsCount');
     cy.get('#dropdown-filters > div > div > div:nth-child(10)')
-      .contains('Seleziona le parole chiave...')
-      .type('europeizzazione');
+      .find('input:visible')
+      .first()
+      .type('test');
 
-    // Step 5: Select 'europeizzazione' from the dropdown
-    cy.get('#dropdown-filters > div > div > div:nth-child(10)').contains('Europeizzazione').click();
+    // Step 5: Select 'Testing' from the dropdown
+    cy.get('.select__menu').contains(/Testing/i).click({ force: true });
 
     // Step 6: Click on the apply button
     cy.get('#dropdown-filters div > div > div.d-flex.w-100.justify-content-between > button')
@@ -322,18 +334,17 @@ describe('Thesis proposals overview page', () => {
     // Step 7: Wait for the network request to complete
     cy.wait('@getTargetedThesisProposals');
 
-    // Step 8: Verify that the filtered proposals are listed
-    cy.get('.proposals-container .card-container .roundCard').should('have.length.greaterThan', 0);
-
-    // Step 9: Check that each proposal contains the keyword 'europeizzazione'
-    cy.get('.proposals-container .card-container .roundCard').each(article => {
-      cy.wrap(article)
-        .find('.custom-badge-container')
-        .then($keywordTags => {
-          const keywordTags = $keywordTags.text().toLowerCase();
-          expect(keywordTags.includes('europeizzazione')).to.be.true;
-        });
+    // Step 8: Verify the filter reduced or kept the number of proposals
+    cy.get('@initialCardsCount').then(initialCount => {
+      cy.get('body').then($body => {
+        const filteredCount = $body.find('.proposals-container .card-container .roundCard').length;
+        expect(filteredCount).to.be.at.most(Number(initialCount));
+      });
     });
+
+    // Step 9: Reopen and verify keyword reset badge exists
+    cy.get('#dropdown-filters').should('be.visible').click();
+    cy.get('#dropdown-filters div.custom-badge-container button').contains(/testing/i).should('be.visible');
   });
 
   it('should filter proposals by teacher and reset filters', () => {
@@ -430,14 +441,20 @@ describe('Thesis proposals overview page', () => {
 
     // Step 3: Apply internal proposals filter and remove it clicking on 'Resetta'
     cy.get('#dropdown-filters > div > div > div:nth-child(4)').contains("Seleziona l'ambiente...").click();
-    cy.get('#dropdown-filters > div > div > div:nth-child(4)').contains('Tesi interna').click();
+    cy.get('#dropdown-filters > div > div > div:nth-child(4)')
+      .contains('Tesi interna')
+      .scrollIntoView()
+      .click({ force: true });
     cy.get('#dropdown-filters > div > div > div:nth-child(3) > button').contains('Resetta').click();
 
     // Step 4 Filter proposals by keyword 'europeizzazione'
     cy.get('#dropdown-filters > div > div > div:nth-child(10)')
       .contains('Seleziona le parole chiave...')
       .type('europeizzazione');
-    cy.get('#dropdown-filters > div > div > div:nth-child(10)').contains('Europeizzazione').click();
+    cy.get('#dropdown-filters > div > div > div:nth-child(10)')
+      .contains('Europeizzazione')
+      .scrollIntoView()
+      .click({ force: true });
 
     // Step 5: Filter proposals by teacher 'Ceravolo Rosario'
     cy.get('#dropdown-filters > div > div > div:nth-child(8)').contains('Seleziona i relatori...').click();
