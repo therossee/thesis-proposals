@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "therossee",
+        "projectKey": "therossee_thesis-proposals"
+    }
+}
