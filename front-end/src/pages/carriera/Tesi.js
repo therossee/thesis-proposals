@@ -39,8 +39,6 @@ export default function Tesi({ initialActiveTab }) {
     // Update active tab based on URL path
     if (location.pathname.includes('/proposte_di_tesi')) {
       setActiveTab('proposals');
-    } else if (location.pathname.includes('/richiesta_tesi')) {
-      setActiveTab('application_form');
     } else {
       setActiveTab('thesis');
     }
@@ -141,6 +139,46 @@ export default function Tesi({ initialActiveTab }) {
     }
   };
 
+  const openExternalInBlank = url => {
+    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+    if (newWindow) {
+      newWindow.opener = null;
+    }
+  };
+
+  const handleMockExternalTransition = async (url, nextStatus) => {
+    if (!thesis?.id) return;
+
+    openExternalInBlank(url);
+    setIsLoading(true);
+    try {
+      const updatedThesis = await API.updateThesisConclusionStatus({
+        thesisId: thesis.id,
+        conclusionStatus: nextStatus,
+      });
+
+      if (!updatedThesis) {
+        throw new Error('Failed to update thesis status');
+      }
+
+      pendingToastRef.current = {
+        success: true,
+        title: t('carriera.tesi.mock_status_update_success_title'),
+        message: t('carriera.tesi.mock_status_update_success_content'),
+      };
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Error updating thesis status after external redirect:', error);
+      showToast({
+        success: false,
+        title: t('carriera.tesi.mock_status_update_error_title'),
+        message: t('carriera.tesi.mock_status_update_error_content'),
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const renderContent = () => {
     if (isLoading) {
       return <LoadingModal show={isLoading} onHide={() => setIsLoading(false)} />;
@@ -177,7 +215,7 @@ export default function Tesi({ initialActiveTab }) {
         <CustomHeader title={t('carriera.tesi.title')} action={() => navigate('/carriera')} />
         {thesis &&
           activeTab === 'thesis' &&
-          (thesis.thesisStatus === 'ongoing' || thesis.thesisStatus === 'conclusion_rejected') && (
+          (thesis.status === 'ongoing' || thesis.status === 'conclusion_rejected') && (
             <div className="tesi-header-actions">
               <Button
                 className={`btn-primary-${appliedTheme} tesi-header-action-btn`}
@@ -195,7 +233,7 @@ export default function Tesi({ initialActiveTab }) {
               </Button>
             </div>
           )}
-        {thesis && activeTab === 'thesis' && thesis.thesisStatus === 'final_thesis' && (
+        {thesis && activeTab === 'thesis' && thesis.status === 'final_exam' && (
           <Button
             className={`btn-primary-${appliedTheme} tesi-header-action-btn`}
             onClick={() => setShowFinalThesis(true)}
@@ -209,6 +247,54 @@ export default function Tesi({ initialActiveTab }) {
             }}
           >
             <i className="fa-regular fa-circle-check me-1" /> {t('carriera.tesi.upload_final_thesis_button')}
+          </Button>
+        )}
+        {thesis && activeTab === 'thesis' && thesis.status === 'conclusion_approved' && (
+          <Button
+            className={`btn-primary-${appliedTheme} tesi-header-action-btn`}
+            onClick={() => handleMockExternalTransition('https://www.almalaurea.it/', 'almalaurea')}
+            style={{
+              height: '30px',
+              display: 'flex',
+              borderRadius: '6px',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 10px',
+            }}
+          >
+            <i className="fa-solid fa-graduation-cap me-1" /> {t('carriera.tesi.fill_almalaurea_questionnaire_button')}
+          </Button>
+        )}
+        {thesis && activeTab === 'thesis' && thesis.status === 'almalaurea' && (
+          <Button
+            className={`btn-primary-${appliedTheme} tesi-header-action-btn`}
+            onClick={() => handleMockExternalTransition('https://didattica.polito.it/', 'compiled_questionnaire')}
+            style={{
+              height: '30px',
+              display: 'flex',
+              borderRadius: '6px',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 10px',
+            }}
+          >
+            <i className="fa-regular fa-file-lines me-1" /> {t('carriera.tesi.fill_questionnaire_button')}
+          </Button>
+        )}
+        {thesis && activeTab === 'thesis' && thesis.status === 'compiled_questionnaire' && (
+          <Button
+            className={`btn-primary-${appliedTheme} tesi-header-action-btn`}
+            onClick={() => handleMockExternalTransition('https://didattica.polito.it/', 'final_exam')}
+            style={{
+              height: '30px',
+              display: 'flex',
+              borderRadius: '6px',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 10px',
+            }}
+          >
+            <i className="fa-solid fa-calendar-check me-1" /> {t('carriera.tesi.final_exam_enrol_button')}
           </Button>
         )}
         {thesisApplication && activeTab === 'thesis' && thesisApplication.status === 'pending' && (

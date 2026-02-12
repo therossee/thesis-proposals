@@ -54,6 +54,7 @@ export default function ConclusionRequest({ onSubmitResult }) {
   const [embargoMotivations, setEmbargoMotivations] = useState([]);
   const [otherEmbargoReason, setOtherEmbargoReason] = useState('');
 
+  const [requiredResume, setRequiredResume] = useState(false);
   const [resumePdf, setResumePdf] = useState(null);
   const [pdfFile, setPdfFile] = useState(null);
   const [supplementaryZip, setSupplementaryZip] = useState(null);
@@ -120,30 +121,44 @@ export default function ConclusionRequest({ onSubmitResult }) {
       API.getSustainableDevelopmentGoals(),
       API.getEmbargoMotivations(i18n.language),
       API.getThesisProposalsKeywords(i18n.language),
+      API.getRequiredResumeForLoggedStudent(),
     ])
-      .then(([thesisData, teachersData, licensesData, sdgsData, embargoMotivationsData, keywordsData]) => {
-        if (teachersData) setTeachers(teachersData);
+      .then(
+        ([
+          thesisData,
+          teachersData,
+          licensesData,
+          sdgsData,
+          embargoMotivationsData,
+          keywordsData,
+          requiredResumeData,
+        ]) => {
+          if (teachersData) setTeachers(teachersData);
 
-        if (thesisData) {
-          if (thesisData.supervisor) setSupervisor(toOption(thesisData.supervisor));
-          setThesis(thesisData);
-          setAbstractText(thesisData.topic || '');
-          const coSup = thesisData.coSupervisors || thesisData.co_supervisors || [];
-          setCoSupervisors(coSup.map(toOption));
-        }
-        if (licensesData) {
-          setLicenses(licensesData);
-        }
-        if (sdgsData) {
-          setSdgs(sdgsData);
-        }
-        if (embargoMotivationsData) {
-          setEmbargoMotivationsList(embargoMotivationsData);
-        }
-        if (keywordsData) {
-          setKeywordsList(keywordsData);
-        }
-      })
+          if (thesisData) {
+            if (thesisData.supervisor) setSupervisor(toOption(thesisData.supervisor));
+            setThesis(thesisData);
+            setAbstractText(thesisData.topic || '');
+            const coSup = thesisData.coSupervisors || thesisData.co_supervisors || [];
+            setCoSupervisors(coSup.map(toOption));
+          }
+          if (licensesData) {
+            setLicenses(licensesData);
+          }
+          if (sdgsData) {
+            setSdgs(sdgsData);
+          }
+          if (embargoMotivationsData) {
+            setEmbargoMotivationsList(embargoMotivationsData);
+          }
+          if (keywordsData) {
+            setKeywordsList(keywordsData);
+          }
+          if (requiredResumeData) {
+            setRequiredResume(Boolean(requiredResumeData.requiredResume));
+          }
+        },
+      )
       .catch(err => {
         console.error('Error loading conclusion request data:', err);
         setError('Errore nel caricamento dei dati. Riprova.');
@@ -193,7 +208,8 @@ export default function ConclusionRequest({ onSubmitResult }) {
     (!needsEnglishTranslation || String(abstractEngText || '').trim().length > 0) &&
     (!needsEnglishTranslation || abstractEngText.length <= 3550);
 
-  const baseValid = detailsValid && allDeclarationsChecked() && !!pdfFile; // almeno la tesi pdf/a deve esserci per inviare
+  const resumeValid = !requiredResume || !!resumePdf;
+  const baseValid = detailsValid && allDeclarationsChecked() && !!pdfFile && resumeValid; // almeno la tesi pdf/a deve esserci per inviare
 
   const denyValid =
     authorization !== 'deny'
@@ -223,7 +239,7 @@ export default function ConclusionRequest({ onSubmitResult }) {
   const stepValidity = [
     detailsValid,
     authorizationSelected && denyValid && authorizeValid,
-    !!pdfFile,
+    !!pdfFile && resumeValid,
     allDeclarationsChecked(),
     canSubmit,
   ];
@@ -375,8 +391,8 @@ export default function ConclusionRequest({ onSubmitResult }) {
   const declarationsTotalCount = authorization === 'authorize' ? 6 : 5;
 
   const removeFileText = i18n.language === 'it' ? 'Rimuovi file' : 'Remove file';
-  const thesisStatus = thesis?.thesisStatus || thesis?.thesis_status;
-  const canRequestConclusion = !thesisStatus || ['ongoing', 'conclusion_rejected'].includes(thesisStatus);
+  const status = thesis?.status || thesis?.status;
+  const canRequestConclusion = !status || ['ongoing', 'conclusion_rejected'].includes(status);
   const contextValue = useMemo(
     () => ({
       t,
@@ -443,6 +459,7 @@ export default function ConclusionRequest({ onSubmitResult }) {
       declarationsAcceptedCount,
       declarationsTotalCount,
       submissionOutcome,
+      requiredResume,
     }),
     [
       t,
@@ -486,6 +503,7 @@ export default function ConclusionRequest({ onSubmitResult }) {
       declarationsAcceptedCount,
       declarationsTotalCount,
       submissionOutcome,
+      requiredResume,
     ],
   );
 
@@ -509,10 +527,13 @@ export default function ConclusionRequest({ onSubmitResult }) {
                       className={`btn-outlined-${appliedTheme} cr-steps-nav-btn`}
                       size="md"
                       onClick={goToPreviousStep}
-                      disabled={isSubmitting || currentStep === 0}
-                      style={
-                        shouldSyncNavButtonsWidth && navButtonsWidth ? { width: `${navButtonsWidth}px` } : undefined
-                      }
+                      disabled={isSubmitting}
+                      aria-hidden={currentStep === 0}
+                      tabIndex={currentStep === 0 ? -1 : undefined}
+                      style={{
+                        ...(shouldSyncNavButtonsWidth && navButtonsWidth ? { width: `${navButtonsWidth}px` } : {}),
+                        ...(currentStep === 0 ? { visibility: 'hidden', pointerEvents: 'none' } : {}),
+                      }}
                     >
                       <i className="fa-solid fa-arrow-left pe-2" />
                       {t('carriera.conclusione_tesi.previous_step')}
@@ -543,9 +564,7 @@ export default function ConclusionRequest({ onSubmitResult }) {
                         style={undefined}
                       >
                         <i className="fa-solid fa-paper-plane pe-2" />
-                        {isSubmitting
-                          ? t('carriera.conclusione_tesi.sending')
-                          : t('carriera.proposta_di_tesi.candidatura')}
+                        {isSubmitting ? t('carriera.conclusione_tesi.sending') : t('carriera.conclusione_tesi.submit')}
                       </Button>
                     )}
                   </div>

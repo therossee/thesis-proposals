@@ -2846,7 +2846,7 @@ VALUES
     (
         40637,
         'Alberto',
-        'Monge Raffaello',
+        'Monge Roffarello',
         'Docente',
         'alberto.monge@polito.it',
         'https://www.dauin.polito.it/personale/scheda/(matricola)/040637',
@@ -6291,7 +6291,7 @@ VALUES
     ('thesis_request', 2, '2026-03-06T23:59:59'),
     ('thesis_request', 3, '2026-05-08T23:59:59'),
     ('thesis_request', 4, '2026-07-31T23:59:59'),
-    ('exams', 1, '2026-01-12T23:59:59'),
+    ('exams', 1, '2026-02-21T23:59:59'),
     ('exams', 2, '2026-06-30T23:59:59'),
     ('exams', 3, '2026-07-18T23:59:59'),
     ('exams', 4, '2026-09-19T23:59:59'),

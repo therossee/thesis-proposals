@@ -38,6 +38,13 @@ router.get('/sdgs', getSustainableDevelopmentGoals);
 router.get('/licenses', getAvailableLicenses);
 router.get('/embargo-motivations', getEmbargoMotivations);
 router.get('/deadlines', getSessionDeadlines);
-router.post('/upload-final-thesis', upload.single('thesisFile'), uploadFinalThesis);
+router.post(
+  '/upload-final-thesis',
+  upload.fields([
+    { name: 'thesisFile', maxCount: 1 },
+    { name: 'thesisResume', maxCount: 1 },
+  ]),
+  uploadFinalThesis,
+);
 
 module.exports = router;

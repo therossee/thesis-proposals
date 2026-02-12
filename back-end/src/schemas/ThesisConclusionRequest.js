@@ -30,7 +30,7 @@ const thesisConclusionRequestSchema = z.object({
   language: z.enum(['it', 'en']).default('it'),
   coSupervisors: z.array(coSupervisorSchema).nullable().optional(),
   keywords: z.array(keywordSchema).nullable().optional(),
-  licenseId: z.number().int().positive(),
+  licenseId: z.coerce.number().int().positive(),
   sdgs: z.array(sdgSchema).nullable().optional(),
   embargo: z
     .object({
@@ -39,9 +39,12 @@ const thesisConclusionRequestSchema = z.object({
     })
     .nullable()
     .optional(),
-  thesisResume: uploadedFileSchema.refine(file => file.mimetype === 'application/pdf', {
-    message: 'thesisResume must be a PDF file',
-  }),
+  thesisResume: uploadedFileSchema
+    .refine(file => file.mimetype === 'application/pdf', {
+      message: 'thesisResume must be a PDF file',
+    })
+    .nullable()
+    .optional(),
   thesisFile: uploadedFileSchema.refine(file => file.mimetype === 'application/pdf', {
     message: 'thesisFile must be a PDF file',
   }),

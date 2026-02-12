@@ -11,13 +11,9 @@ import '../styles/custom-progress-tracker.css';
 import { getSystemTheme } from '../utils/utils';
 import InfoTooltip from './InfoTooltip';
 
-export default function Timeline({
-  activeStep,
-  statusHistory,
-  conclusionRequestDate,
-  conclusionConfirmedDate,
-  session,
-}) {
+const APPLICATION_STATUSES = new Set(['pending', 'approved', 'rejected', 'cancelled']);
+
+export default function Timeline({ activeStep, statusHistory, session }) {
   const { t, i18n } = useTranslation();
   const { theme } = useContext(ThemeContext);
   const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
@@ -32,13 +28,34 @@ export default function Timeline({
     'conclusion_approved',
     'conclusion_rejected',
     'almalaurea',
+    'compiled_questionnaire',
     'final_exam',
     'final_thesis',
     'done',
   ]);
   const { graduationSession, deadlines } = session || {};
-  const hasStatusHistory = Array.isArray(statusHistory) && statusHistory.length > 0;
-  const inferredStatus = hasStatusHistory ? statusHistory[statusHistory.length - 1].newStatus : null;
+  const orderedStatusHistory = useMemo(() => {
+    if (!Array.isArray(statusHistory) || statusHistory.length === 0) return [];
+    return [...statusHistory].sort((a, b) => moment(a.changeDate).valueOf() - moment(b.changeDate).valueOf());
+  }, [statusHistory]);
+  const lastFinalThesisResetIndex = useMemo(() => {
+    for (let i = orderedStatusHistory.length - 1; i >= 0; i--) {
+      const entry = orderedStatusHistory[i];
+      if (entry?.oldStatus === 'final_thesis' && entry?.newStatus === 'ongoing') {
+        return i;
+      }
+    }
+    return -1;
+  }, [orderedStatusHistory]);
+  const visibleStatusHistory = useMemo(() => {
+    if (orderedStatusHistory.length === 0) return [];
+    if (lastFinalThesisResetIndex < 0) return orderedStatusHistory;
+    return orderedStatusHistory.filter(
+      (entry, index) => APPLICATION_STATUSES.has(entry?.newStatus) || index >= lastFinalThesisResetIndex,
+    );
+  }, [lastFinalThesisResetIndex, orderedStatusHistory]);
+  const hasStatusHistory = visibleStatusHistory.length > 0;
+  const inferredStatus = hasStatusHistory ? visibleStatusHistory[visibleStatusHistory.length - 1].newStatus : null;
   const normalizedActiveStep = validSteps.has(activeStep)
     ? activeStep
     : validSteps.has(inferredStatus)
@@ -60,9 +77,52 @@ export default function Timeline({
   }, [deadlines]);
   const nextDeadline = useMemo(() => sortedDeadlines.find(deadline => deadline.daysLeft >= 0), [sortedDeadlines]);
 
+  const getLastHistory = matcher => {
+    if (visibleStatusHistory.length === 0) return null;
+    for (let i = visibleStatusHistory.length - 1; i >= 0; i--) {
+      if (matcher(visibleStatusHistory[i])) return visibleStatusHistory[i];
+    }
+    return null;
+  };
+
   const getHistoryForStatus = targetStatus => {
-    if (!statusHistory || statusHistory.length === 0) return null;
-    return statusHistory.find(h => h.newStatus === targetStatus);
+    return getLastHistory(h => h?.newStatus === targetStatus);
+  };
+
+  const getFinalUploadOutcomeHistory = () => {
+    let lastFinalThesisIndex = -1;
+    for (let i = visibleStatusHistory.length - 1; i >= 0; i--) {
+      if (visibleStatusHistory[i]?.newStatus === 'final_thesis') {
+        lastFinalThesisIndex = i;
+        break;
+      }
+    }
+
+    if (lastFinalThesisIndex < 0) {
+      return getLastHistory(h => h?.oldStatus === 'final_thesis' && h?.newStatus === 'ongoing');
+    }
+
+    for (let i = visibleStatusHistory.length - 1; i > lastFinalThesisIndex; i--) {
+      const entry = visibleStatusHistory[i];
+      if (entry?.newStatus === 'done' || (entry?.oldStatus === 'final_thesis' && entry?.newStatus === 'ongoing')) {
+        return entry;
+      }
+    }
+
+    return null;
+  };
+
+  const getHistoryForStep = stepKey => {
+    switch (stepKey) {
+      case 'conclusion_outcome':
+        return getLastHistory(h => h?.newStatus === 'conclusion_approved' || h?.newStatus === 'conclusion_rejected');
+      case 'final_upload_outcome':
+        return getFinalUploadOutcomeHistory();
+      case 'outcome':
+        return null;
+      default:
+        return getHistoryForStatus(stepKey);
+    }
   };
 
   const firstStep = {
@@ -79,8 +139,10 @@ export default function Timeline({
       case 'conclusion_approved':
       case 'conclusion_rejected':
       case 'almalaurea':
+      case 'compiled_questionnaire':
       case 'final_exam':
       case 'final_thesis':
+      case 'done':
         return {
           key: 'approved',
           label: t('carriera.tesi.thesis_progress.approved'),
@@ -111,6 +173,10 @@ export default function Timeline({
   const getThesisSteps = () => {
     const isConclusionApproved = normalizedActiveStep === 'conclusion_approved';
     const isConclusionRejected = normalizedActiveStep === 'conclusion_rejected';
+    const finalUploadOutcomeHistory = getFinalUploadOutcomeHistory();
+    const isFinalUploadApproved = finalUploadOutcomeHistory?.newStatus === 'done';
+    const isFinalUploadRejected =
+      finalUploadOutcomeHistory?.oldStatus === 'final_thesis' && finalUploadOutcomeHistory?.newStatus === 'ongoing';
     return [
       {
         key: 'ongoing',
@@ -141,6 +207,11 @@ export default function Timeline({
         description: t('carriera.tesi.thesis_progress.almalaurea'),
       },
       {
+        key: 'compiled_questionnaire',
+        label: t('carriera.tesi.thesis_progress.compiled_questionnaire_title'),
+        description: t('carriera.tesi.thesis_progress.compiled_questionnaire'),
+      },
+      {
         key: 'final_exam',
         label: t('carriera.tesi.thesis_progress.final_exam_title'),
         description: t('carriera.tesi.thesis_progress.final_exam'),
@@ -149,6 +220,19 @@ export default function Timeline({
         key: 'final_thesis',
         label: t('carriera.tesi.thesis_progress.final_thesis_title'),
         description: t('carriera.tesi.thesis_progress.final_thesis'),
+      },
+      {
+        key: 'final_upload_outcome',
+        label: isFinalUploadApproved
+          ? t('carriera.tesi.thesis_progress.final_upload_approved_title')
+          : isFinalUploadRejected
+            ? t('carriera.tesi.thesis_progress.final_upload_rejected_title')
+            : t('carriera.tesi.thesis_progress.final_upload_outcome_title'),
+        description: isFinalUploadApproved
+          ? t('carriera.tesi.thesis_progress.final_upload_approved')
+          : isFinalUploadRejected
+            ? t('carriera.tesi.thesis_progress.final_upload_rejected')
+            : t('carriera.tesi.thesis_progress.final_upload_outcome'),
       },
     ];
   };
@@ -181,6 +265,13 @@ export default function Timeline({
     const isConclusionApproved = activeStep === 'conclusion_approved';
     const isConclusionRejected = activeStep === 'conclusion_rejected';
     const isDone = activeStep === 'done';
+    const isFinalThesisUploaded = activeStep === 'final_thesis';
+    const finalUploadOutcomeHistory = getFinalUploadOutcomeHistory();
+    const isFinalUploadRejected =
+      activeStep === 'ongoing' &&
+      finalUploadOutcomeHistory?.oldStatus === 'final_thesis' &&
+      finalUploadOutcomeHistory?.newStatus === 'ongoing';
+    const isFinalUploadRejectedStep = isFinalUploadRejected && key === 'final_upload_outcome';
 
     if (isConclusionRequested) {
       effectiveActiveStep = 'conclusion_requested';
@@ -188,36 +279,28 @@ export default function Timeline({
       effectiveActiveStep = 'almalaurea';
     } else if (isConclusionRejected) {
       effectiveActiveStep = 'conclusion_outcome';
+    } else if (isFinalThesisUploaded) {
+      // Once uploaded, final_thesis is completed and we wait for the final upload outcome.
+      effectiveActiveStep = 'final_upload_outcome';
     }
     const activeIndex = isDone ? stepKeys.length : stepKeys.indexOf(effectiveActiveStep);
     const thisIndex = stepKeys.indexOf(key);
 
     const isOutcomeWaitingActive = isConclusionRequested && key === 'conclusion_outcome';
-    const isActive = effectiveActiveStep === key || isOutcomeWaitingActive;
+    const isFinalUploadOutcomeWaitingActive = isFinalThesisUploaded && key === 'final_upload_outcome';
+    const isActive = effectiveActiveStep === key || isOutcomeWaitingActive || isFinalUploadOutcomeWaitingActive;
     const isCompleted = thisIndex < activeIndex;
-    const isFuture = thisIndex > activeIndex && !isOutcomeWaitingActive;
+    const isFuture =
+      thisIndex > activeIndex &&
+      !isOutcomeWaitingActive &&
+      !isFinalUploadOutcomeWaitingActive &&
+      !isFinalUploadRejectedStep;
     const isConclusionRequestedStep = isConclusionRequested && key === 'conclusion_requested';
 
     let circleClass;
     let titleClass;
-    let historyEntry = null;
-
-    switch (key) {
-      case 'pending':
-      case 'rejected':
-      case 'cancelled':
-      case 'approved':
-        historyEntry = statusHistory ? getHistoryForStatus(key) : null;
-        break;
-      case 'conclusion_outcome':
-        historyEntry =
-          statusHistory && (isConclusionApproved || isConclusionRejected)
-            ? getHistoryForStatus(isConclusionApproved ? 'conclusion_approved' : 'conclusion_rejected')
-            : null;
-        break;
-      default:
-        historyEntry = null;
-    }
+    const historyEntry = getHistoryForStep(key);
+    const shouldShowTimestamp = Boolean(historyEntry) && (activeStep !== 'ongoing' || isFinalUploadRejectedStep);
 
     if (isActive) {
       if (['approved', 'rejected', 'cancelled'].includes(key)) {
@@ -267,6 +350,11 @@ export default function Timeline({
       }
     }
 
+    if (isFinalUploadRejected && key === 'final_upload_outcome') {
+      circleClass = 'rejected';
+      titleClass = 'active';
+    }
+
     return (
       <div
         key={key}
@@ -282,7 +370,7 @@ export default function Timeline({
         <div className="progress-step-marker">
           <div className={`progress-step-circle ${circleClass}`}>
             {isActive && key === 'approved' && <i className="fa-solid fa-check align-vertical-center" />}
-            {isActive && key === 'rejected' && <i className="fa-solid fa-xmark" />}
+            {((isActive && key === 'rejected') || isFinalUploadRejectedStep) && <i className="fa-solid fa-xmark" />}
             {isActive && key === 'cancelled' && <i className="fa-solid fa-ban" />}
             {isCompleted && <i className="fa-solid fa-check align-vertical-center" />}
           </div>
@@ -290,25 +378,13 @@ export default function Timeline({
         <div className="progress-step-content">
           <h6 className={`progress-step-title ${titleClass}`}>{label}</h6>
           <p className="progress-step-description">{description}</p>
-          {historyEntry && (
+          {shouldShowTimestamp && (
             <>
               <div className="progress-step-date">
                 <i className="fa-solid fa-clock me-1" />
                 {moment(historyEntry.changeDate).format('DD/MM/YYYY - HH:mm')}
               </div>
             </>
-          )}
-          {key === 'conclusion_requested' && conclusionRequestDate && (
-            <div className="progress-step-date">
-              <i className="fa-solid fa-clock me-1" />
-              {moment(conclusionRequestDate).format('DD/MM/YYYY - HH:mm')}
-            </div>
-          )}
-          {key === 'conclusion_outcome' && conclusionConfirmedDate && (
-            <div className="progress-step-date">
-              <i className="fa-solid fa-clock me-1" />
-              {moment(conclusionConfirmedDate).format('DD/MM/YYYY - HH:mm')}
-            </div>
           )}
         </div>
       </div>
@@ -348,14 +424,14 @@ export default function Timeline({
     <>
       <Card className={`mb-3 roundCard py-2${isDisabled ? ' timeline-disabled' : ''}`}>
         <Card.Header className="border-0">
-          <div className="d-flex align-items-center">
+          <div className="d-flex align-items-center timeline-header-row">
             <h3 className="thesis-topic">
               <i className="fa-regular fa-books fa-sm pe-2" />
               {t('carriera.tesi.timeline')}
             </h3>
             <InfoTooltip tooltipText={t('carriera.tesi.timeline_tooltip')} placement="top" id="timeline-tooltip" />
             <Button
-              className={`btn btn-${appliedTheme} btn-header ms-auto`}
+              className={`btn btn-${appliedTheme} btn-header ms-auto timeline-deadlines-btn`}
               onClick={() => {
                 setShow(true);
               }}
@@ -446,6 +522,7 @@ Timeline.propTypes = {
     'conclusion_approved',
     'conclusion_rejected',
     'almalaurea',
+    'compiled_questionnaire',
     'final_exam',
     'final_thesis',
     'done',
@@ -458,8 +535,6 @@ Timeline.propTypes = {
       changeDate: PropTypes.string.isRequired,
     }),
   ),
-  conclusionConfirmedDate: PropTypes.string,
-  conclusionRequestDate: PropTypes.string,
   startDate: PropTypes.string,
   session: PropTypes.shape({
     graduationSession: PropTypes.shape({

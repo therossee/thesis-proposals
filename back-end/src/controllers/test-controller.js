@@ -8,7 +8,6 @@ const {
 
 const updateThesisApplicationStatus = async (req, res) => {
   try {
-    // Example logic to update a thesis application
     const { id, new_status } = req.body;
 
     const application = await ThesisApplication.findByPk(id);
@@ -36,6 +35,7 @@ const updateThesisApplicationStatus = async (req, res) => {
     application.status = new_status;
     await application.save({ transaction: t });
     if (new_status === 'approved') {
+      await application.save({ transaction: t });
       const application_supervisors = await ThesisApplicationSupervisorCoSupervisor.findAll({
         where: { thesis_application_id: id },
       });
@@ -84,59 +84,56 @@ const updateThesisConclusionStatus = async (req, res) => {
   try {
     const { thesisId, conclusionStatus } = req.body;
 
-    const thesis = await Thesis.findByPk(thesisId);
-    if (!thesis) {
-      return res.status(404).json({ error: 'Thesis not found' });
-    }
+    const result = await sequelize.transaction(async t => {
+      const thesis = await Thesis.findByPk(thesisId, { transaction: t });
+      if (!thesis) {
+        return { status: 404, payload: { error: 'Thesis not found' } };
+      }
 
-    if (thesis.thesis_status === conclusionStatus) {
-      return res.status(400).json({ error: 'New status must be different from the current status' });
-    }
+      if (thesis.status === conclusionStatus) {
+        return { status: 400, payload: { error: 'New status must be different from the current status' } };
+      }
 
-    // Update thesis status
-    if (thesis.thesis_status === 'conclusion_requested') {
-      switch (conclusionStatus) {
-        case 'conclusion_approved':
-        case 'conclusion_rejected':
-          thesis.thesis_status = conclusionStatus;
-          if (conclusionStatus === 'conclusion_approved') {
-            thesis.thesis_conclusion_confirmation_date = new Date();
-          }
-          await thesis.save();
-          return res.status(200).json(thesis);
-        default:
-          return res.status(400).json({ error: 'Invalid conclusion status transition' });
+      let isValidTransition = false;
+      if (thesis.status === 'conclusion_requested') {
+        isValidTransition = conclusionStatus === 'conclusion_approved' || conclusionStatus === 'conclusion_rejected';
+      } else if (thesis.status === 'conclusion_approved') {
+        isValidTransition = conclusionStatus === 'almalaurea';
+      } else if (thesis.status === 'almalaurea') {
+        isValidTransition = conclusionStatus === 'compiled_questionnaire';
+      } else if (thesis.status === 'compiled_questionnaire') {
+        isValidTransition = conclusionStatus === 'final_exam';
+      } else if (thesis.status === 'final_exam') {
+        isValidTransition = conclusionStatus === 'final_thesis';
+      } else if (thesis.status === 'final_thesis') {
+        isValidTransition = conclusionStatus === 'done' || conclusionStatus === 'ongoing';
+      } else {
+        return { status: 400, payload: { error: 'Invalid current thesis status for conclusion update' } };
       }
-    } else if (thesis.thesis_status === 'conclusion_approved') {
-      switch (conclusionStatus) {
-        case 'almalaurea':
-          thesis.thesis_status = conclusionStatus;
-          await thesis.save();
-          return res.status(200).json(thesis);
-        default:
-          return res.status(400).json({ error: 'Invalid conclusion status transition' });
+
+      if (!isValidTransition) {
+        return { status: 400, payload: { error: 'Invalid conclusion status transition' } };
       }
-    } else if (thesis.thesis_status === 'almalaurea') {
-      switch (conclusionStatus) {
-        case 'final_exam':
-          thesis.thesis_status = conclusionStatus;
-          await thesis.save();
-          return res.status(200).json(thesis);
-        default:
-          return res.status(400).json({ error: 'Invalid conclusion status transition' });
+
+      await ThesisApplicationStatusHistory.create(
+        {
+          thesis_application_id: thesis.thesis_application_id,
+          old_status: thesis.status,
+          new_status: conclusionStatus,
+        },
+        { transaction: t },
+      );
+
+      thesis.status = conclusionStatus;
+      if (conclusionStatus === 'conclusion_approved') {
+        thesis.thesis_conclusion_confirmation_date = new Date();
       }
-    } else if (thesis.thesis_status === 'final_exam') {
-      switch (conclusionStatus) {
-        case 'final_thesis':
-          thesis.thesis_status = conclusionStatus;
-          await thesis.save();
-          return res.status(200).json(thesis);
-        default:
-          return res.status(400).json({ error: 'Invalid conclusion status transition' });
-      }
-    } else {
-      return res.status(400).json({ error: 'Invalid current thesis status for conclusion update' });
-    }
+      await thesis.save({ transaction: t });
+
+      return { status: 200, payload: thesis };
+    });
+
+    return res.status(result.status).json(result.payload);
   } catch (error) {
     console.error('Error updating thesis conclusion status:', error);
     res.status(500).json({ error: 'Internal server error' });

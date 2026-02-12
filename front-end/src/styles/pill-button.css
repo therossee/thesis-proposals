@@ -62,7 +62,7 @@
   font-weight: var(--font-weight-semibold);
 }
 
-@media (max-width: 576px) {
+@media (max-width: 100px) {
   .pill-button-group {
     width: auto;
     justify-content: space-evenly;

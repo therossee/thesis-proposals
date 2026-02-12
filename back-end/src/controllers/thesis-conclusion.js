@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+const { Op, QueryTypes } = require('sequelize');
 const { ZodError } = require('zod');
 const fs = require('fs/promises');
 const path = require('path');
@@ -19,6 +19,7 @@ const {
   GraduationSession,
   Deadline,
   sequelize,
+  ThesisApplicationStatusHistory,
 } = require('../models');
 
 const selectLicenseAttributes = require('../utils/selectLicenseAttributes');
@@ -130,13 +131,14 @@ const sendThesisConclusionRequest = async (req, res) => {
       if (!thesis) {
         throwHttp(404, 'Thesis not found');
       }
-      if (thesis.thesis_status !== 'ongoing') {
-        throwHttp(400, 'Thesis is not in an ongoing state');
+      if (!['ongoing', 'conclusion_rejected'].includes(thesis.status)) {
+        throwHttp(400, 'Thesis is not in a valid state for conclusion request');
       }
 
       if (!title || !abstract) {
         throwHttp(400, 'Missing thesis title or abstract');
       }
+      const requiredResume = await isResumeRequiredForStudent(loggedStudent);
 
       if (lang === 'en') {
         titleEng = title;
@@ -153,8 +155,11 @@ const sendThesisConclusionRequest = async (req, res) => {
         fields: ['title', 'abstract', 'title_eng', 'abstract_eng', 'language'],
       });
 
-      if (!thesisResume || !thesisFile) {
-        throwHttp(400, 'Missing files (thesisResume, thesisFile)');
+      if (!thesisFile) {
+        throwHttp(400, 'Missing thesisFile');
+      }
+      if (requiredResume && !thesisResume) {
+        throwHttp(400, 'Missing thesisResume');
       }
 
       const uploadBaseDir = path.join(
@@ -379,8 +384,16 @@ const sendThesisConclusionRequest = async (req, res) => {
         thesis.additional_zip = null;
         thesis.additional_zip_path = null;
       }
+      await ThesisApplicationStatusHistory.create(
+        {
+          thesis_application_id: thesis.thesis_application_id,
+          old_status: thesis.status,
+          new_status: 'conclusion_requested',
+        },
+        { transaction },
+      );
       thesis.thesis_conclusion_request_date = new Date();
-      thesis.thesis_status = 'conclusion_requested';
+      thesis.status = 'conclusion_requested';
       await thesis.save({ transaction });
       updatedThesisId = thesis.id;
     });
@@ -414,63 +427,77 @@ const sendThesisConclusionRequest = async (req, res) => {
         attributes: ['motivation_id', 'other_motivation'],
       });
     }
-
-    const responsePayload = thesisConclusionResponseSchema.parse({
-      message: 'Thesis conclusion request submitted successfully',
-      thesis: {
-        id: updatedThesis.id,
-        topic: updatedThesis.topic,
-        title: updatedThesis.title,
-        title_eng: updatedThesis.title_eng,
-        language: updatedThesis.language,
-        abstract: updatedThesis.abstract,
-        abstract_eng: updatedThesis.abstract_eng,
-        thesis_file_path: updatedThesis.thesis_file_path,
-        thesis_resume_path: updatedThesis.thesis_resume_path,
-        additional_zip_path: updatedThesis.additional_zip_path,
-        license_id: updatedThesis.license_id,
-        company_id: updatedThesis.company_id,
-        student_id: updatedThesis.student_id,
-        thesis_application_id: updatedThesis.thesis_application_id,
-        thesis_status: updatedThesis.thesis_status,
-        thesis_start_date: updatedThesis.thesis_start_date.toISOString(),
-        thesis_conclusion_request_date: updatedThesis.thesis_conclusion_request_date
-          ? updatedThesis.thesis_conclusion_request_date.toISOString()
-          : null,
-        thesis_conclusion_confirmation_date: updatedThesis.thesis_conclusion_confirmation_date
-          ? updatedThesis.thesis_conclusion_confirmation_date.toISOString()
-          : null,
-        thesis_supervisor_cosupervisor: thesisSupervisors.map(item => ({
-          teacher_id: item.teacher_id,
-          is_supervisor: item.is_supervisor,
-        })),
-        thesis_sustainable_development_goal: thesisSdgs.map(item => ({
-          goal_id: item.goal_id,
-          sdg_level: item.sdg_level,
-        })),
-        thesis_keyword: thesisKeywords.map(item => ({
-          keyword_id: item.keyword_id,
-          keyword_other: item.keyword_other,
-        })),
-        thesis_embargo: thesisEmbargo
-          ? {
-              id: thesisEmbargo.id,
-              duration: thesisEmbargo.duration,
-              thesis_embargo_motivation: thesisEmbargoMotivations.map(item => ({
-                motivation_id: item.motivation_id,
-                other_motivation: item.other_motivation,
-              })),
-            }
-          : null,
-      },
+    const validatedThesis = thesisConclusionResponseSchema.parse({
+      id: updatedThesis.id,
+      topic: updatedThesis.topic,
+      title: updatedThesis.title,
+      title_eng: updatedThesis.title_eng,
+      language: updatedThesis.language,
+      abstract: updatedThesis.abstract,
+      abstract_eng: updatedThesis.abstract_eng,
+      thesis_file_path: updatedThesis.thesis_file_path,
+      thesis_resume_path: updatedThesis.thesis_resume_path,
+      additional_zip_path: updatedThesis.additional_zip_path,
+      license_id: updatedThesis.license_id,
+      company_id: updatedThesis.company_id,
+      student_id: updatedThesis.student_id,
+      thesis_application_id: updatedThesis.thesis_application_id,
+      status: updatedThesis.status,
+      thesis_start_date: updatedThesis.thesis_start_date.toISOString(),
+      thesis_conclusion_request_date: updatedThesis.thesis_conclusion_request_date
+        ? updatedThesis.thesis_conclusion_request_date.toISOString()
+        : null,
+      thesis_conclusion_confirmation_date: updatedThesis.thesis_conclusion_confirmation_date
+        ? updatedThesis.thesis_conclusion_confirmation_date.toISOString()
+        : null,
+      thesis_supervisor_cosupervisor: thesisSupervisors.map(item => ({
+        teacher_id: item.teacher_id,
+        is_supervisor: item.is_supervisor,
+      })),
+      thesis_sustainable_development_goal: thesisSdgs.map(item => ({
+        goal_id: item.goal_id,
+        sdg_level: item.sdg_level,
+      })),
+      thesis_keyword: thesisKeywords.map(item => ({
+        keyword_id: item.keyword_id,
+        keyword_other: item.keyword_other,
+      })),
+      thesis_embargo: thesisEmbargo
+        ? {
+            id: thesisEmbargo.id,
+            duration: thesisEmbargo.duration,
+            thesis_embargo_motivation: thesisEmbargoMotivations.map(item => ({
+              motivation_id: item.motivation_id,
+              other_motivation: item.other_motivation,
+            })),
+          }
+        : null,
     });
-    res.json(responsePayload);
+    return res.status(200).json({
+      message: 'Thesis conclusion request submitted successfully',
+      thesis: validatedThesis,
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       return res.status(400).json({ error: error.issues.map(issue => issue.message).join(', ') });
     }
     res.status(error.status || 500).json({ error: error.message });
   }
+};
+
+const REQUIRED_RESUME_COLLEGIO_IDS = new Set(['CL003']);
+
+const isResumeRequiredForStudent = async student => {
+  const degreeProgramme = await sequelize.query(
+    `
+      SELECT d.id_collegio AS collegioId
+      FROM degree_programme d
+      WHERE d.id = :degreeId
+      `,
+    { replacements: { degreeId: student.degree_id }, type: QueryTypes.SELECT },
+  );
+  const collegioId = degreeProgramme?.[0]?.collegioId;
+  return REQUIRED_RESUME_COLLEGIO_IDS.has(collegioId);
 };
 
 const getSustainableDevelopmentGoals = async (req, res) => {
@@ -558,46 +585,99 @@ const getSessionDeadlines = async (req, res) => {
 };
 
 const uploadFinalThesis = async (req, res) => {
-  const logged = await LoggedStudent.findOne();
-  if (!logged) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  const loggedStudent = await Student.findByPk(logged.student_id);
-  if (!loggedStudent) {
-    return res.status(404).json({ error: 'Student not found' });
-  }
-  const thesis = await Thesis.findOne({
-    where: { student_id: loggedStudent.id },
-  });
-  if (!thesis) {
-    return res.status(404).json({ error: 'Thesis not found' });
-  }
-  if (thesis.thesis_status !== 'final_thesis') {
-    return res.status(400).json({ error: 'Thesis is not in a final thesis state' });
-  }
-
-  const uploadBaseDir = path.join(__dirname, '..', '..', 'uploads', 'final_thesis', String(loggedStudent.id));
-  await ensureDir(uploadBaseDir);
-  const thesisFile = req.file || null;
-  if (!thesisFile) {
-    return res.status(400).json({ error: 'Missing thesis file' });
-  }
-  const thesisPdfName = `final_thesis_${loggedStudent.id}.pdf`;
-  const thesisPdfPath = path.join(uploadBaseDir, thesisPdfName);
-  let thesisBuffer;
   try {
-    thesisBuffer = await readAndValidatePdfA(thesisFile);
-  } catch (error) {
+    const thesisFile = req.files?.thesisFile?.[0] || null;
+    const thesisResume = req.files?.thesisResume?.[0] || null;
+    if (!thesisFile) {
+      return res.status(400).json({ error: 'Missing thesis file' });
+    }
+
+    const logged = await LoggedStudent.findOne();
+    if (!logged) {
+      await fs.unlink(thesisFile.path).catch(() => {});
+      if (thesisResume?.path) await fs.unlink(thesisResume.path).catch(() => {});
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const loggedStudent = await Student.findByPk(logged.student_id);
+    if (!loggedStudent) {
+      await fs.unlink(thesisFile.path).catch(() => {});
+      if (thesisResume?.path) await fs.unlink(thesisResume.path).catch(() => {});
+      return res.status(404).json({ error: 'Student not found' });
+    }
+    const requiredResume = await isResumeRequiredForStudent(loggedStudent);
+    if (requiredResume && !thesisResume) {
+      await fs.unlink(thesisFile.path).catch(() => {});
+      return res.status(400).json({ error: 'Missing thesis resume file' });
+    }
+
+    const uploadBaseDir = path.join(__dirname, '..', '..', 'uploads', 'final_thesis', String(loggedStudent.id));
+    await ensureDir(uploadBaseDir);
+    const thesisPdfName = `final_thesis_${loggedStudent.id}.pdf`;
+    const thesisPdfPath = path.join(uploadBaseDir, thesisPdfName);
+
+    let thesisBuffer;
+    try {
+      thesisBuffer = await readAndValidatePdfA(thesisFile);
+    } catch (error) {
+      await fs.unlink(thesisFile.path).catch(() => {});
+      if (thesisResume?.path) await fs.unlink(thesisResume.path).catch(() => {});
+      return res.status(error.status || 500).json({ error: error.message });
+    }
+    await fs.writeFile(thesisPdfPath, thesisBuffer);
     await fs.unlink(thesisFile.path).catch(() => {});
+    if (thesisResume?.path) {
+      const resumePdfName = `final_resume_${loggedStudent.id}.pdf`;
+      const resumePdfPath = path.join(uploadBaseDir, resumePdfName);
+      let resumeBuffer;
+      try {
+        resumeBuffer = await readAndValidatePdfA(thesisResume);
+      } catch (error) {
+        await fs.unlink(thesisResume.path).catch(() => {});
+        return res.status(error.status || 500).json({ error: error.message });
+      }
+      await fs.writeFile(resumePdfPath, resumeBuffer);
+      await fs.unlink(thesisResume.path).catch(() => {});
+    }
+
+    const result = await sequelize.transaction(async transaction => {
+      const thesis = await Thesis.findOne({
+        where: { student_id: loggedStudent.id },
+        transaction,
+      });
+      if (!thesis) {
+        return { status: 404, payload: { error: 'Thesis not found' } };
+      }
+      if (thesis.status !== 'final_exam') {
+        return { status: 400, payload: { error: 'Thesis is not in a final exam state' } };
+      }
+
+      await ThesisApplicationStatusHistory.create(
+        {
+          thesis_application_id: thesis.thesis_application_id,
+          old_status: thesis.status,
+          new_status: 'final_thesis',
+        },
+        { transaction },
+      );
+
+      thesis.thesis_file = null;
+      thesis.thesis_file_path = path.relative(path.join(__dirname, '..', '..'), thesisPdfPath);
+      if (thesisResume?.path || requiredResume) {
+        const resumePdfName = `final_resume_${loggedStudent.id}.pdf`;
+        const resumePdfPath = path.join(uploadBaseDir, resumePdfName);
+        thesis.thesis_resume = null;
+        thesis.thesis_resume_path = path.relative(path.join(__dirname, '..', '..'), resumePdfPath);
+      }
+      thesis.status = 'final_thesis';
+      await thesis.save({ transaction });
+
+      return { status: 200, payload: { message: 'Final thesis uploaded successfully' } };
+    });
+
+    return res.status(result.status).json(result.payload);
+  } catch (error) {
     return res.status(error.status || 500).json({ error: error.message });
   }
-  await fs.writeFile(thesisPdfPath, thesisBuffer);
-  await fs.unlink(thesisFile.path).catch(() => {});
-  thesis.thesis_file = null;
-  thesis.thesis_file_path = path.relative(path.join(__dirname, '..', '..'), thesisPdfPath);
-  thesis.thesis_status = 'done';
-  await thesis.save();
-  res.status(200).json({ message: 'Final thesis uploaded successfully' });
 };
 
 module.exports = {

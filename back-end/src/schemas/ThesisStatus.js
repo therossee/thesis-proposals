@@ -6,6 +6,7 @@ const thesisStatusSchema = z.enum([
   'conclusion_approved',
   'conclusion_rejected',
   'almalaurea',
+  'compiled_questionnaire',
   'final_exam',
   'final_thesis',
   'done',

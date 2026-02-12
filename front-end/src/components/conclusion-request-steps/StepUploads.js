@@ -92,6 +92,7 @@ export default function StepUploads() {
     removeFileText,
     appliedTheme,
     isSubmitting,
+    requiredResume,
   } = useConclusionRequest();
 
   return (
@@ -115,25 +116,26 @@ export default function StepUploads() {
             </a>
           </div>
         </div>
-        <Row className="mb-2 g-3">
-          <Col md={4}>
-            <UploadCard
-              t={t}
-              id="summary-for-committee-pdf"
-              label={t('carriera.conclusione_tesi.summary_for_committee_pdf')}
-              maxSizeKey="carriera.conclusione_tesi.max_size_20_mb"
-              accept="application/pdf"
-              file={resumePdf}
-              onFileChange={setResumePdf}
-              onRemove={() => setResumePdf(null)}
-              removeFileText={removeFileText}
-              appliedTheme={appliedTheme}
-              isSubmitting={isSubmitting}
-              tooltipText={t('carriera.conclusione_tesi.summary_for_committee_subtext')}
-            />
-          </Col>
-
-          <Col md={4}>
+        <Row className="mb-2 g-3 justify-content-center">
+          {requiredResume === true && (
+            <Col md="auto">
+              <UploadCard
+                t={t}
+                id="summary-for-committee-pdf"
+                label={t('carriera.conclusione_tesi.summary_for_committee_pdf')}
+                maxSizeKey="carriera.conclusione_tesi.max_size_20_mb"
+                accept="application/pdf"
+                file={resumePdf}
+                onFileChange={setResumePdf}
+                onRemove={() => setResumePdf(null)}
+                removeFileText={removeFileText}
+                appliedTheme={appliedTheme}
+                isSubmitting={isSubmitting}
+                tooltipText={t('carriera.conclusione_tesi.summary_for_committee_subtext')}
+              />
+            </Col>
+          )}
+          <Col md="auto">
             <UploadCard
               t={t}
               id="final-thesis-pdfa"
@@ -149,7 +151,7 @@ export default function StepUploads() {
             />
           </Col>
 
-          <Col md={4}>
+          <Col md="auto">
             <UploadCard
               t={t}
               id="supplementary-zip"

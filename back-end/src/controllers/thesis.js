@@ -81,7 +81,7 @@ const getLoggedStudentThesis = async (req, res) => {
       co_supervisors: coSupervisorsData,
       company: companyData ? companyData.toJSON() : null,
       application_status_history: statusHistoryData,
-      thesis_status: thesisData.thesis_status,
+      status: thesisData.status,
       thesis_start_date: thesisData.thesis_start_date.toISOString(),
       thesis_conclusion_request_date: thesisData.thesis_conclusion_request_date
         ? thesisData.thesis_conclusion_request_date.toISOString()

@@ -28,6 +28,7 @@ export default function StepSubmit() {
     supplementaryZip,
     declarationsAcceptedCount,
     declarationsTotalCount,
+    requiredResume,
   } = useConclusionRequest();
 
   const normalizeText = value => String(value || '').trim() || '-';
@@ -123,9 +124,11 @@ export default function StepSubmit() {
               </>
             )}
 
-            <CustomBlock icon="file-pdf" title="Riassunto PDF" ignoreMoreLines>
-              {resumePdf ? resumePdf.name : '-'}
-            </CustomBlock>
+            {requiredResume && (
+              <CustomBlock icon="file-pdf" title="Riassunto PDF" ignoreMoreLines>
+                {resumePdf ? resumePdf.name : '-'}
+              </CustomBlock>
+            )}
 
             <CustomBlock icon="file-circle-check" title="Tesi PDF/A" ignoreMoreLines>
               {pdfFile ? pdfFile.name : '-'}

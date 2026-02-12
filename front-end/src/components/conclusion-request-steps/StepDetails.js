@@ -44,12 +44,13 @@ export default function StepDetails() {
   return (
     <>
       <div className="cr-section">
-        <div className="cr-section-title">
-          <span>
-            <i className="fa-regular fa-file-lines me-2"></i>
+        <div className="cr-section-title cr-step-details-title">
+          <span className="cr-step-details-title-text">
+            <i className="fa-regular fa-file-lines me-2" />
             {t('carriera.conclusione_tesi.details')}
           </span>
         </div>
+
         <div>
           <Row className="mb-3 g-3 align-items-start cr-first-row">
             <Col md={3} className="cr-supervisor-col">

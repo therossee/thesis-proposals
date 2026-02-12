@@ -38,7 +38,7 @@ export default function Thesis(props) {
   const [showFullAbstract, setShowFullAbstract] = useState(false);
   const { showToast } = useContext(ToastContext);
   const supervisors = data ? [data.supervisor, ...data.coSupervisors] : [];
-  const activeStep = data ? (thesis ? thesis.thesisStatus : thesisApplication.status) : 'none';
+  const activeStep = data ? (thesis ? thesis.status : thesisApplication.status) : 'none';
   const [appStatusHistory, setAppStatusHistory] = useState(thesis ? thesis.applicationStatusHistory : []);
   const modalTitle = thesis ? 'carriera.tesi.modal_cancel.title' : 'carriera.tesi.cancel_application';
   const modalBody = thesis ? 'carriera.tesi.modal_cancel.body' : 'carriera.tesi.cancel_application_content';
@@ -103,7 +103,7 @@ export default function Thesis(props) {
   };
 
   const checkIfConclusionRequest = () => {
-    switch (thesis.thesisStatus) {
+    switch (thesis.status) {
       case 'conclusion_requested':
       case 'conclusion_approved':
       case 'conclusion_rejected':
@@ -567,7 +567,7 @@ Thesis.propTypes = {
         changeDate: PropTypes.string.isRequired,
       }),
     ).isRequired,
-    thesisStatus: PropTypes.string.isRequired,
+    status: PropTypes.string.isRequired,
     thesisFilePath: PropTypes.string,
     thesisResumePath: PropTypes.string,
     additionalZipPath: PropTypes.string,

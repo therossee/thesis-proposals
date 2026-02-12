@@ -1,12 +1,13 @@
 const { z } = require('zod');
 const thesisApplicationStatusSchema = require('./ThesisApplicationStatus');
+const thesisStatusSchema = require('./ThesisStatus');
 
 const thesisApplicationStatusHistorySchema = z
   .object({
-    id: z.number(),
-    old_status: thesisApplicationStatusSchema.nullable(),
-    new_status: thesisApplicationStatusSchema,
-    change_date: z.date(),
+    id: z.coerce.number(),
+    old_status: z.union([thesisApplicationStatusSchema, thesisStatusSchema]).nullable(),
+    new_status: z.union([thesisApplicationStatusSchema, thesisStatusSchema]),
+    change_date: z.coerce.date(),
   })
   .transform(statusHistory => ({
     id: statusHistory.id,

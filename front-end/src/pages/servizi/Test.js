@@ -144,17 +144,21 @@ export default function Test() {
         return 'Conclusione rifiutata';
       case 'almalaurea':
         return 'AlmaLaurea';
+      case 'compiled_questionnaire':
+        return 'Questionario di fine corso';
       case 'final_exam':
         return 'Iscrizione esame finale';
       case 'final_thesis':
         return 'Tesi definitiva';
+      case 'done':
+        return 'Completata';
       default:
         return status;
     }
   };
 
-  const getThesisActions = thesisStatus => {
-    switch (thesisStatus) {
+  const getThesisActions = status => {
+    switch (status) {
       case 'conclusion_requested':
         return [
           { label: 'Approve', status: 'conclusion_approved', variant: 'outline-success', icon: 'check' },
@@ -163,9 +167,23 @@ export default function Test() {
       case 'conclusion_approved':
         return [{ label: 'AlmaLaurea', status: 'almalaurea', variant: 'outline-primary', icon: 'file-lines' }];
       case 'almalaurea':
+        return [
+          {
+            label: 'Questionario fine corso',
+            status: 'compiled_questionnaire',
+            variant: 'outline-primary',
+            icon: 'clipboard-list',
+          },
+        ];
+      case 'compiled_questionnaire':
         return [{ label: 'Final exam', status: 'final_exam', variant: 'outline-primary', icon: 'calendar-check' }];
       case 'final_exam':
         return [{ label: 'Final thesis', status: 'final_thesis', variant: 'outline-primary', icon: 'book' }];
+      case 'final_thesis':
+        return [
+          { label: 'Approve final thesis', status: 'done', variant: 'outline-success', icon: 'check' },
+          { label: 'Reject final thesis', status: 'ongoing', variant: 'outline-danger', icon: 'xmark' },
+        ];
       default:
         return [];
     }
@@ -261,9 +279,9 @@ export default function Test() {
             ))}
 
             {theses.map(thesis => {
-              const thesisStatus = thesis.thesis_status || thesis.thesisStatus;
+              const status = thesis.status;
               const student = studentsById[thesis.student_id] || studentsById[thesis.studentId];
-              const actions = getThesisActions(thesisStatus);
+              const actions = getThesisActions(status);
 
               return (
                 <Card key={`thesis-${thesis.id}`} className="mb-3 roundCard py-2">
@@ -274,7 +292,7 @@ export default function Test() {
                         Thesis ID: {thesis.id}
                       </h5>
                     </div>
-                    <CustomBadge variant="app_status" content={thesisStatus} />
+                    <CustomBadge variant="app_status" content={status} />
                   </Card.Header>
                   <Card.Body>
                     <div className="mb-3">
@@ -288,7 +306,7 @@ export default function Test() {
                         <i className="fa-solid fa-tag me-2" />
                         Stato:
                       </strong>{' '}
-                      {getThesisStatusLabel(thesisStatus)}
+                      {getThesisStatusLabel(status)}
                     </div>
 
                     {actions.length > 0 && (

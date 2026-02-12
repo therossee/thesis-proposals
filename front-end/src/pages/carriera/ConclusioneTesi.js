@@ -37,7 +37,7 @@ export default function ConclusioneTesi() {
       <div className="proposal-container justify-content-between d-flex tesi-header-bar tesi-header-bar--flush-right">
         <CustomHeader title={t('carriera.conclusione_tesi.title')} action={() => navigate(-1)} />
         <div className="tesi-header-actions">
-          <Button className="btn-outlined-light" type="button">
+          <Button className="btn-outlined-light tesi-header-action-btn d-flex align-items-center" type="button">
             <i className="fa-regular fa-floppy-disk me-2" />
             {t('carriera.conclusione_tesi.save_draft')}
           </Button>

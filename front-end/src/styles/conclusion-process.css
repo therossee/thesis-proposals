@@ -223,8 +223,10 @@
 }
 
 .cr-supervisor-field .custom-badge {
+  min-height: 46px;
   width: 100%;
   justify-content: flex-start;
+  align-items: center;
   border-radius: 6px;
 }
 
@@ -294,6 +296,20 @@
 }
 
 .conclusion-process-content .cr-section-title i {
+  color: var(--text-800);
+}
+
+.cr-step-details-title {
+  font-size: var(--font-size-md);
+  margin-bottom: 1rem;
+}
+
+.cr-step-details-title-text {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
   color: var(--text-800);
 }
 

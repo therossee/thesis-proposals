@@ -228,7 +228,7 @@ CREATE TABLE IF NOT EXISTS thesis(
     thesis_file BLOB,
     thesis_resume BLOB,
     license_id INT,
-    thesis_status ENUM ('ongoing', 'conclusion_requested', 'conclusion_approved', 'conclusion_rejected', 'almalaurea_done', 'enrolled_final_exam', 'confirmed_final_exam') NOT NULL DEFAULT 'ongoing',
+    status ENUM ('ongoing', 'conclusion_requested', 'conclusion_approved', 'conclusion_rejected', 'almalaurea_done', 'enrolled_final_exam', 'confirmed_final_exam') NOT NULL DEFAULT 'ongoing',
     thesis_start_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     thesis_conclusion_request_date DATETIME,
     thesis_conclusion_confirmation_date DATETIME,
