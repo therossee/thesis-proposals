@@ -73,8 +73,11 @@ export default function ConclusionRequest({ onSubmitResult }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [showSdgDescription, setShowSdgDescription] = useState(false);
   const [submissionOutcome, setSubmissionOutcome] = useState(null);
+  const [navButtonsWidth, setNavButtonsWidth] = useState(null);
 
   const formBodyRef = useRef(null);
+  const prevButtonRef = useRef(null);
+  const nextButtonRef = useRef(null);
 
   const toOption = teacher => ({
     value: teacher.id,
@@ -156,37 +159,6 @@ export default function ConclusionRequest({ onSubmitResult }) {
     }));
   }, [sdgs, t]);
 
-  const handleSaveDraft = () => {};
-
-  const resetForm = () => {
-    setError('');
-    setCoSupervisors(thesis?.coSupervisors ? thesis.coSupervisors.map(toOption) : []);
-    setTitleText('');
-    setTitleEngText('');
-    setAbstractText(thesis ? thesis.topic || '' : '');
-    setAbstractEngText('');
-    setKeywords([]);
-    setLang('it');
-
-    setPrimarySdg('');
-    setSecondarySdg1('');
-    setSecondarySdg2('');
-
-    setAuthorization('');
-    setLicenseChoice(6);
-    setEmbargoPeriod('');
-    setEmbargoMotivations([]);
-    setOtherEmbargoReason('');
-
-    setResumePdf(null);
-    setPdfFile(null);
-    setSupplementaryZip(null);
-
-    setDecl({ decl1: false, decl2: false, decl3: false, decl4: false, decl5: false, decl6: false });
-    setCurrentStep(0);
-    setSubmissionOutcome(null);
-  };
-
   const handleClose = () => {
     if (isSubmitting) return;
     setError('');
@@ -240,8 +212,12 @@ export default function ConclusionRequest({ onSubmitResult }) {
     { key: 'authorization', label: t('carriera.conclusione_tesi.steps.authorizations') },
     { key: 'uploads', label: t('carriera.conclusione_tesi.steps.uploads') },
     { key: 'declarations', label: t('carriera.conclusione_tesi.steps.declarations') },
-    { key: 'submit', label: t('carriera.conclusione_tesi.steps.submit') },
-    { key: 'outcome', label: t('carriera.conclusione_tesi.steps.outcome') },
+    {
+      key: 'submit',
+      label: submissionOutcome
+        ? t('carriera.conclusione_tesi.steps.outcome')
+        : t('carriera.conclusione_tesi.steps.submit'),
+    },
   ];
 
   const stepValidity = [
@@ -250,12 +226,12 @@ export default function ConclusionRequest({ onSubmitResult }) {
     !!pdfFile,
     allDeclarationsChecked(),
     canSubmit,
-    true, // outcome step is always valid
   ];
+  const shouldSyncNavButtonsWidth = currentStep < steps.length - 1;
 
-  const outcomeStepIndex = steps.length - 1;
+  const submitStepIndex = steps.length - 1;
   const stepItems = steps.map((step, index) => {
-    if (index === outcomeStepIndex && currentStep === outcomeStepIndex) {
+    if (index === submitStepIndex && currentStep === submitStepIndex) {
       if (submissionOutcome === 'success') return { label: step.label, status: 'done' };
       if (submissionOutcome === 'error') return { label: step.label, status: 'error' };
     }
@@ -286,6 +262,24 @@ export default function ConclusionRequest({ onSubmitResult }) {
       formBodyRef.current.scrollTo({ top: 0, behavior: 'auto' });
     }
   }, [currentStep]);
+
+  useEffect(() => {
+    if (submissionOutcome || !shouldSyncNavButtonsWidth) {
+      setNavButtonsWidth(null);
+      return;
+    }
+
+    const calculateButtonsWidth = () => {
+      const prevWidth = prevButtonRef.current?.getBoundingClientRect().width || 0;
+      const nextWidth = nextButtonRef.current?.getBoundingClientRect().width || 0;
+      const maxWidth = Math.max(prevWidth, nextWidth);
+      setNavButtonsWidth(maxWidth > 0 ? Math.ceil(maxWidth) : null);
+    };
+
+    calculateButtonsWidth();
+    window.addEventListener('resize', calculateButtonsWidth);
+    return () => window.removeEventListener('resize', calculateButtonsWidth);
+  }, [currentStep, submissionOutcome, i18n.language, isSubmitting, shouldSyncNavButtonsWidth]);
 
   const handleUpload = async () => {
     setError('');
@@ -506,7 +500,59 @@ export default function ConclusionRequest({ onSubmitResult }) {
       <Col className="mx-auto cr-conclusion-layout">
         <Card className="mb-3 roundCard py-2 d-flex justify-content-center align-items-center cr-steps-card">
           <Card.Body className="w-100">
-            <CustomSteps steps={stepItems} title="Stato richiesta" />
+            <div className={`cr-steps-header-row ${submissionOutcome ? 'cr-steps-header-row--steps-only' : ''}`}>
+              {!submissionOutcome && (
+                <>
+                  <div className="cr-steps-actions cr-steps-actions-left">
+                    <Button
+                      ref={prevButtonRef}
+                      className={`btn-outlined-${appliedTheme} cr-steps-nav-btn`}
+                      size="md"
+                      onClick={goToPreviousStep}
+                      disabled={isSubmitting || currentStep === 0}
+                      style={
+                        shouldSyncNavButtonsWidth && navButtonsWidth ? { width: `${navButtonsWidth}px` } : undefined
+                      }
+                    >
+                      <i className="fa-solid fa-arrow-left pe-2" />
+                      {t('carriera.conclusione_tesi.previous_step')}
+                    </Button>
+                  </div>
+                  <CustomSteps steps={stepItems} title="Stato richiesta" />
+                  <div className="cr-steps-actions cr-steps-actions-right">
+                    {currentStep < steps.length - 1 ? (
+                      <Button
+                        ref={nextButtonRef}
+                        className={`btn-primary-${appliedTheme} cr-steps-nav-btn`}
+                        onClick={goToNextStep}
+                        disabled={isSubmitting || !stepValidity[currentStep]}
+                        style={
+                          shouldSyncNavButtonsWidth && navButtonsWidth ? { width: `${navButtonsWidth}px` } : undefined
+                        }
+                      >
+                        {t('carriera.conclusione_tesi.next_step')} <i className="fa-solid fa-arrow-right ps-2" />
+                      </Button>
+                    ) : (
+                      <Button
+                        ref={nextButtonRef}
+                        className={`btn-primary-${appliedTheme} cr-steps-nav-btn`}
+                        onClick={() => {
+                          setShowConfirmationModal(true);
+                        }}
+                        disabled={!canSubmit || isSubmitting}
+                        style={undefined}
+                      >
+                        <i className="fa-solid fa-paper-plane pe-2" />
+                        {isSubmitting
+                          ? t('carriera.conclusione_tesi.sending')
+                          : t('carriera.proposta_di_tesi.candidatura')}
+                      </Button>
+                    )}
+                  </div>
+                </>
+              )}
+              {submissionOutcome && <CustomSteps steps={stepItems} title="Stato richiesta" />}
+            </div>
           </Card.Body>
         </Card>
         <Card className="mb-3 roundCard py-2 d-flex justify-content-center align-items-center cr-form-card">
@@ -518,65 +564,11 @@ export default function ConclusionRequest({ onSubmitResult }) {
                   {currentStep === 1 && <StepAuthorization />}
                   {currentStep === 2 && <StepUploads />}
                   {currentStep === 3 && <StepDeclarations />}
-                  {currentStep === 4 && <StepSubmit />}
-                  {currentStep === 5 && <StepOutcome />}
+                  {currentStep === 4 && (submissionOutcome ? <StepOutcome /> : <StepSubmit />)}
                 </Form>
               </ConclusionRequestProvider>
             </div>
           </Card.Body>
-
-          {currentStep < steps.length - 1 && (
-            <Card.Footer className="cr-form-footer w-100">
-              <div className="cr-form-footer-left">
-                <Button
-                  className={`btn-outlined-${appliedTheme}`}
-                  size="md"
-                  onClick={handleSaveDraft}
-                  disabled={isSubmitting}
-                >
-                  <i className="fa-regular fa-floppy-disk pe-2" />
-                  {t('carriera.conclusione_tesi.save_draft')}
-                </Button>
-                <Button className={`btn-outlined-${appliedTheme}`} size="md" onClick={() => resetForm()}>
-                  <i className="fa-solid fa-rotate-left pe-2" />
-                  {t('carriera.richiesta_tesi.reset')}
-                </Button>
-              </div>
-
-              <div className="cr-form-footer-right">
-                {currentStep > 0 && (
-                  <Button
-                    className={`btn-outlined-${appliedTheme}`}
-                    size="md"
-                    onClick={goToPreviousStep}
-                    disabled={isSubmitting}
-                  >
-                    <i className="fa-solid fa-arrow-left pe-2" />
-                    {t('carriera.conclusione_tesi.previous_step')}
-                  </Button>
-                )}
-
-                {currentStep < steps.length - 2 ? (
-                  <Button className={`btn-primary-${appliedTheme}`} onClick={goToNextStep} disabled={isSubmitting}>
-                    {t('carriera.conclusione_tesi.next_step')} <i className="fa-solid fa-arrow-right ps-2" />
-                  </Button>
-                ) : currentStep === steps.length - 2 ? (
-                  <Button
-                    className={`btn-primary-${appliedTheme}`}
-                    onClick={() => {
-                      setShowConfirmationModal(true);
-                    }}
-                    disabled={!canSubmit || isSubmitting}
-                  >
-                    <i className="fa-solid fa-paper-plane pe-2" />
-                    {isSubmitting
-                      ? t('carriera.conclusione_tesi.sending')
-                      : t('carriera.conclusione_tesi.request_conclusion')}
-                  </Button>
-                ) : null}
-              </div>
-            </Card.Footer>
-          )}
         </Card>
         <CustomModal
           show={showConfirmationModal}

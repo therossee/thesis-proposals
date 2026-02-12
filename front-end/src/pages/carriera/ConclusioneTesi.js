@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 
+import { Button } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -33,7 +34,15 @@ export default function ConclusioneTesi() {
   return (
     <>
       <CustomBreadcrumb />
-      <CustomHeader title={t('carriera.conclusione_tesi.title')} action={() => navigate(-1)} />
+      <div className="proposal-container justify-content-between d-flex tesi-header-bar tesi-header-bar--flush-right">
+        <CustomHeader title={t('carriera.conclusione_tesi.title')} action={() => navigate(-1)} />
+        <div className="tesi-header-actions">
+          <Button className="btn-outlined-light" type="button">
+            <i className="fa-regular fa-floppy-disk me-2" />
+            {t('carriera.conclusione_tesi.save_draft')}
+          </Button>
+        </div>
+      </div>
       <ConclusionRequest onSubmitResult={handleConclusionRequestResult} />
     </>
   );

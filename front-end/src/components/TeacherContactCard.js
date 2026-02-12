@@ -34,7 +34,7 @@ export default function TeacherContactCard({ supervisor, coSupervisors }) {
         <h3 className="thesis-topic">
           <i className="fa-regular fa-address-card me-2" />
           {t('carriera.tesi.contacts.title')}
-          <InfoTooltip tooltipText={t('carriera.tesi.contacts.tooltip')} placement="top" id="contacts-tooltip" />
+          <InfoTooltip tooltipText={t('carriera.tesi.contacts.title')} placement="top" id="contacts-tooltip" />
         </h3>
         <div className="supervisor-main">
           <div className="contact-item d-flex align-items-start gap-3 mb-3 mt-3">

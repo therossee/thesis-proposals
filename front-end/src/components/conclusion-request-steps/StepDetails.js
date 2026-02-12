@@ -52,7 +52,7 @@ export default function StepDetails() {
         </div>
         <div>
           <Row className="mb-3 g-3 align-items-start cr-first-row">
-            <Col md={3}>
+            <Col md={3} className="cr-supervisor-col">
               <Form.Group>
                 <Form.Label htmlFor="select-supervisor">{t('carriera.conclusione_tesi.supervisor')}</Form.Label>
                 <div className="cr-supervisor-field">
@@ -64,7 +64,7 @@ export default function StepDetails() {
               </Form.Group>
             </Col>
 
-            <Col md={7}>
+            <Col md={7} className="cr-cosupervisors-col">
               <Form.Group>
                 <Form.Label htmlFor="select-cosupervisors">{t('carriera.conclusione_tesi.co_supervisors')}</Form.Label>
                 <CustomSelect
@@ -81,9 +81,11 @@ export default function StepDetails() {
                 <span className="text-muted cr-help">{t('carriera.conclusione_tesi.co_supervisors_help')}</span>
               </Form.Group>
             </Col>
-            <Col md={2}>
+            <Col md={2} className="cr-language-col">
               <Form.Group>
-                <Form.Label htmlFor="select-language">{t('carriera.conclusione_tesi.language')}</Form.Label>
+                <Form.Label htmlFor="select-language" className="cr-language-label">
+                  {t('carriera.conclusione_tesi.language')}
+                </Form.Label>
                 <CustomSelect
                   mode="supervisor"
                   options={languageOptions}

@@ -399,11 +399,6 @@ export default function Thesis(props) {
                             <h3 className="thesis-topic">
                               <i className="fa-regular fa-info-circle" /> {t('carriera.tesi.information.title')}
                             </h3>
-                            <InfoTooltip
-                              tooltipText={t('carriera.tesi.information.title')}
-                              placement="right"
-                              id="thesis-information-tooltip"
-                            />
                           </Card.Header>
                           <Card.Body>
                             <ul>

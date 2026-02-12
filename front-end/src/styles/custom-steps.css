@@ -30,7 +30,11 @@
   box-sizing: border-box;
   width: 24px;
   height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  flex: 0 0 24px;
   border-radius: 50%;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,11 +43,18 @@
 }
 
 .custom-step__dot i {
+  /* Aligned with timeline icon centering approach */
+  position: absolute;
+  inset: 0;
+  margin: auto;
   width: 14px;
   height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: currentColor;
   font-size: 14px;
-  line-height: 14px;
+  line-height: 1;
 }
 
 .custom-step__label {
