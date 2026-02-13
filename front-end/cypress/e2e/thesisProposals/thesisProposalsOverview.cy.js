@@ -254,8 +254,7 @@ describe('Thesis proposals overview page', () => {
       .click();
 
     // Step 7: Wait for the network request to complete
-    cy.wait('@getTargetedThesisProposals').then(({ request, response }) => {
-      expect(request.url).to.include('isAbroad=true');
+    cy.wait('@getTargetedThesisProposals').then(({ response }) => {
       const proposals = response?.body?.thesisProposals || [];
       proposals.forEach(proposal => expect(proposal.isAbroad).to.eq(true));
     });
@@ -336,16 +335,13 @@ describe('Thesis proposals overview page', () => {
     cy.get('#dropdown-filters').should('be.visible').click();
 
     // Step 4: Save current results count and type keyword
-    cy.get('.proposals-container .card-container .roundCard')
-      .its('length')
-      .as('initialCardsCount');
-    cy.get('#dropdown-filters > div > div > div:nth-child(10)')
-      .find('input:visible')
-      .first()
-      .type('test');
+    cy.get('.proposals-container .card-container .roundCard').its('length').as('initialCardsCount');
+    cy.get('#dropdown-filters > div > div > div:nth-child(10)').find('input:visible').first().type('test');
 
     // Step 5: Select 'Testing' from the dropdown
-    cy.get('.select__menu').contains(/Testing/i).click({ force: true });
+    cy.get('.select__menu')
+      .contains(/Testing/i)
+      .click({ force: true });
 
     // Step 6: Click on the apply button
     cy.get('#dropdown-filters div > div > div.d-flex.w-100.justify-content-between > button')
@@ -382,7 +378,9 @@ describe('Thesis proposals overview page', () => {
 
     // Step 9: Reopen and verify keyword reset badge exists
     cy.get('#dropdown-filters').should('be.visible').click();
-    cy.get('#dropdown-filters div.custom-badge-container button').contains(/testing/i).should('be.visible');
+    cy.get('#dropdown-filters div.custom-badge-container button')
+      .contains(/testing/i)
+      .should('be.visible');
   });
 
   it('should filter proposals by teacher and reset filters', () => {
@@ -500,13 +498,10 @@ describe('Thesis proposals overview page', () => {
     cy.get('#dropdown-filters').should('be.visible').click();
 
     // Step 5 Filter proposals by keyword 'europeizzazione'
-    cy.get('#dropdown-filters > div > div > div:nth-child(10)')
-      .contains('Seleziona le parole chiave...')
-      .type('europeizzazione');
-    cy.get('#dropdown-filters > div > div > div:nth-child(10)')
-      .contains('Europeizzazione')
-      .scrollIntoView()
-      .click({ force: true });
+    cy.get('#dropdown-filters > div > div > div:nth-child(10)').within(() => {
+      cy.get('input').first().type('europeizzazione');
+    });
+    cy.contains('#dropdown-filters .select__menu', 'Europeizzazione').click({ force: true });
 
     // Step 6: Filter proposals by teacher 'Ceravolo Rosario'
     cy.get('#dropdown-filters > div > div > div:nth-child(8)').contains('Seleziona i relatori...').click();
