@@ -149,6 +149,33 @@ export default function Tesi({ initialActiveTab }) {
   const handleMockExternalTransition = async (url, nextStatus) => {
     if (!thesis?.id) return;
 
+    const toastKeysByStatus = {
+      almalaurea: {
+        successTitle: 'carriera.tesi.mock_almalaurea_update_success_title',
+        successMessage: 'carriera.tesi.mock_almalaurea_update_success_content',
+        errorTitle: 'carriera.tesi.mock_almalaurea_update_error_title',
+        errorMessage: 'carriera.tesi.mock_almalaurea_update_error_content',
+      },
+      compiled_questionnaire: {
+        successTitle: 'carriera.tesi.mock_questionnaire_update_success_title',
+        successMessage: 'carriera.tesi.mock_questionnaire_update_success_content',
+        errorTitle: 'carriera.tesi.mock_questionnaire_update_error_title',
+        errorMessage: 'carriera.tesi.mock_questionnaire_update_error_content',
+      },
+      final_exam: {
+        successTitle: 'carriera.tesi.mock_final_exam_enrolment_success_title',
+        successMessage: 'carriera.tesi.mock_final_exam_enrolment_success_content',
+        errorTitle: 'carriera.tesi.mock_final_exam_enrolment_error_title',
+        errorMessage: 'carriera.tesi.mock_final_exam_enrolment_error_content',
+      },
+    };
+    const toastKeys = toastKeysByStatus[nextStatus] || {
+      successTitle: 'carriera.tesi.mock_status_update_success_title',
+      successMessage: 'carriera.tesi.mock_status_update_success_content',
+      errorTitle: 'carriera.tesi.mock_status_update_error_title',
+      errorMessage: 'carriera.tesi.mock_status_update_error_content',
+    };
+
     openExternalInBlank(url);
     setIsLoading(true);
     try {
@@ -163,16 +190,16 @@ export default function Tesi({ initialActiveTab }) {
 
       pendingToastRef.current = {
         success: true,
-        title: t('carriera.tesi.mock_status_update_success_title'),
-        message: t('carriera.tesi.mock_status_update_success_content'),
+        title: t(toastKeys.successTitle),
+        message: t(toastKeys.successMessage),
       };
       setRefreshKey(prev => prev + 1);
     } catch (error) {
       console.error('Error updating thesis status after external redirect:', error);
       showToast({
         success: false,
-        title: t('carriera.tesi.mock_status_update_error_title'),
-        message: t('carriera.tesi.mock_status_update_error_content'),
+        title: t(toastKeys.errorTitle),
+        message: t(toastKeys.errorMessage),
       });
     } finally {
       setIsLoading(false);

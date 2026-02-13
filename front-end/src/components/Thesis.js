@@ -46,6 +46,7 @@ export default function Thesis(props) {
   const modalConfirmIcon = thesis ? 'fa-regular fa-trash-can' : 'fa-regular fa-xmark';
   const [sessionDeadlines, setSessionDeadlines] = useState({ graduationSession: null, deadlines: [] });
   const [isEligible, setIsEligible] = useState(true);
+  const [requiredResume, setRequiredResume] = useState(false);
   const { theme } = useContext(ThemeContext);
   const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
   const { t } = useTranslation();
@@ -102,19 +103,24 @@ export default function Thesis(props) {
     );
   };
 
+  const abstractText = thesis?.abstract || '';
+
+  const thesisStatusOrder = [
+    'ongoing',
+    'conclusion_requested',
+    'conclusion_approved',
+    'conclusion_rejected',
+    'almalaurea',
+    'compiled_questionnaire',
+    'final_exam',
+    'final_thesis',
+    'done',
+  ];
+
   const checkIfConclusionRequest = () => {
-    switch (thesis.status) {
-      case 'conclusion_requested':
-      case 'conclusion_approved':
-      case 'conclusion_rejected':
-      case 'compiled_questionnaire':
-      case 'final_exam':
-      case 'final_thesis':
-      case 'done':
-        return true;
-      default:
-        return false;
-    }
+    const currentStatusIndex = thesisStatusOrder.indexOf(thesis?.status);
+    const conclusionRequestedIndex = thesisStatusOrder.indexOf('conclusion_requested');
+    return currentStatusIndex >= conclusionRequestedIndex;
   };
 
   const handleCancelApplication = () => {
@@ -152,6 +158,13 @@ export default function Thesis(props) {
         })
         .catch(error => {
           console.error('Error fetching session deadlines:', error);
+        });
+      API.getRequiredResumeForLoggedStudent()
+        .then(data => {
+          setRequiredResume(data.requiredResume);
+        })
+        .catch(error => {
+          console.error('Error fetching required resume info:', error);
         })
         .finally(() => {
           setIsLoading(false);
@@ -288,12 +301,12 @@ export default function Thesis(props) {
                       {thesis.title}
                     </CustomBlock>
                     <CustomBlock icon="align-left" title="Abstract" ignoreMoreLines>
-                      {thesis.abstract.length > 300 && !showFullAbstract ? (
-                        <>{thesis.abstract.substring(0, 297) + '... '}</>
+                      {abstractText.length > 300 && !showFullAbstract ? (
+                        <>{abstractText.substring(0, 297) + '... '}</>
                       ) : (
-                        <>{thesis.abstract}</>
+                        <>{abstractText || '-'}</>
                       )}
-                      {thesis.abstract.length > 300 && (
+                      {abstractText.length > 300 && (
                         <Button
                           variant="link"
                           onClick={() => setShowFullAbstract(!showFullAbstract)}
@@ -313,12 +326,13 @@ export default function Thesis(props) {
 
                     <div className="mt-3 mb-2 fw-semibold">{t('carriera.conclusione_tesi.uploaded')}</div>
                     <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
-                      {renderDocumentLink(
-                        'file-pdf',
-                        t('carriera.conclusione_tesi.resume'),
-                        thesis.thesisResumePath,
-                        'resume',
-                      )}
+                      {requiredResume &&
+                        renderDocumentLink(
+                          'file-pdf',
+                          t('carriera.conclusione_tesi.resume'),
+                          thesis.thesisResumePath,
+                          'resume',
+                        )}
                       {renderDocumentLink(
                         'file-circle-check',
                         t('carriera.conclusione_tesi.thesis_pdfa'),
