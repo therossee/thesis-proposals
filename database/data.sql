@@ -2846,7 +2846,7 @@ VALUES
     (
         40637,
         'Alberto',
-        'Monge Raffaello',
+        'Monge Roffarello',
         'Docente',
         'alberto.monge@polito.it',
         'https://www.dauin.polito.it/personale/scheda/(matricola)/040637',
@@ -3484,7 +3484,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-08",
-        "2026-02-07 23:59:59", 
+        "2028-02-07 23:59:59", 
         1,
         0,
         "CL003", 
@@ -3504,7 +3504,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-08",
-        "2026-02-07 23:59:59", 
+        "2028-02-07 23:59:59", 
         1,
         0,
         "CL003", 
@@ -3764,7 +3764,7 @@ VALUES
         NULL,
         "Alessandro Aliberti (alessandro.aliberti@polito.it), Marco Castangia (marco.castangia@polito.it)",
         "2024-01-26",
-        "2026-01-25 23:59:59", 
+        "2028-01-25 23:59:59", 
         1,
         0,
         "CL003", 
@@ -3784,7 +3784,7 @@ VALUES
         NULL,
         "Marco Castangia (marco.castangia@polito.it), Christian Camarda (christian@midorisrl.eu)",
         "2024-02-11",
-        "2026-02-10 23:59:59", 
+        "2028-02-10 23:59:59", 
         0,
         0,
         "CL003", 
@@ -3804,7 +3804,7 @@ VALUES
         NULL,
         "Francesco Baldi, Mattia Ricci, Biagio di Pietra \r\nENEA - Italian National Agency for New Technologies, Energy and Sustainable Economic Development\r\nDUEE - Department/Unit for Energy Efficiency\r\nVia Martiri di Monte Sole 4, Bologna, Italy\r\n+39 051 609 8447\r\nfrancesco.baldi@enea.it",
         "2024-02-08",
-        "2026-02-07 23:59:59", 
+        "2028-02-07 23:59:59", 
         0,
         0,
         "CL016", 
@@ -3964,7 +3964,7 @@ VALUES
         NULL,
         NULL,
         "2024-12-16",
-        "2026-12-15 23:59:59", 
+        "2028-12-15 23:59:59", 
         1,
         0,
         "CL003", 
@@ -3984,7 +3984,7 @@ VALUES
         NULL,
         "Pietro Rando Mazzarino (pietro.randomazzarino@polito.it)",
         "2024-02-04",
-        "2026-02-03 23:59:59", 
+        "2028-02-03 23:59:59", 
         1,
         0,
         "CL003", 
@@ -4144,7 +4144,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-21",
-        "2026-02-20 23:59:59", 
+        "2028-02-20 23:59:59", 
         1,
         0,
         "CL009", 
@@ -4164,7 +4164,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-26",
-        "2026-02-25 23:59:59", 
+        "2028-02-25 23:59:59", 
         1,
         0,
         "CL016", 
@@ -4184,7 +4184,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-26",
-        "2026-02-25 23:59:59", 
+        "2028-02-25 23:59:59", 
         1,
         0,
         "CL016", 
@@ -4204,7 +4204,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-26",
-        "2026-02-25 23:59:59", 
+        "2028-02-25 23:59:59", 
         1,
         0,
         "CL016", 
@@ -4224,7 +4224,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-26",
-        "2026-02-25 23:59:59", 
+        "2028-02-25 23:59:59", 
         1,
         0,
         "CL016", 
@@ -4244,7 +4244,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-26",
-        "2026-02-25 23:59:59", 
+        "2028-02-25 23:59:59", 
         1,
         0,
         "CL016", 
@@ -4484,7 +4484,7 @@ VALUES
         NULL,
         NULL,
         "2024-01-11",
-        "2026-01-11 23:59:59",
+        "2028-01-11 23:59:59",
         1,
         0,
         "CL003",
@@ -4504,7 +4504,7 @@ VALUES
         NULL,
         "Rava Marcello, Amarilli Varesio",
         "2024-01-18",
-        "2026-01-17 23:59:59", 
+        "2028-01-17 23:59:59", 
         1,
         0,
         "CL009", 
@@ -4524,7 +4524,7 @@ VALUES
         NULL,
         NULL,
         "2024-01-20",
-        "2026-01-20 23:59:59", 
+        "2028-01-20 23:59:59", 
         1,
         0,
         "CL009", 
@@ -4584,7 +4584,7 @@ VALUES
         NULL,
         "Domenico De Guglielmo",
         "2024-02-05",
-        "2026-02-05 23:59:59",
+        "2028-02-05 23:59:59",
         1,
         0,
         "CL003",
@@ -4604,7 +4604,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-11",
-        "2026-02-10 23:59:59", 
+        "2028-02-10 23:59:59", 
         1,
         0,
         "CL016", 
@@ -4624,7 +4624,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-21",
-        "2026-02-20 23:59:59", 
+        "2028-02-20 23:59:59", 
         1,
         0,
         "CL009", 
@@ -4644,7 +4644,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-21",
-        "2026-02-20 23:59:59", 
+        "2028-02-20 23:59:59", 
         1,
         0,
         "CL009", 
@@ -4664,7 +4664,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-21",
-        "2026-02-20 23:59:59", 
+        "2028-02-20 23:59:59", 
         1,
         0,
         "CL009", 
@@ -4684,7 +4684,7 @@ VALUES
         "For VISA Issue the call is for Chinese students studying at the Politecnico di Torino",
         "Prof. Damiano Padovani (from GTIIT Guandong University)",
         "2024-02-24",
-        "2026-02-23 23:59:59", 
+        "2028-02-23 23:59:59", 
         0,
         1,
         "CL009", 
@@ -4704,7 +4704,7 @@ VALUES
         "Skills acquired: \r\nDigital human \r\nGame development\r\nDMS/OMS functionalities\r\nCoverage Driven Validation\r\nScenario-based testing\r\nCamera-in-the-Loop testing\r\n\r\n",
         NULL,
         "2024-02-26",
-        "2026-02-26 23:59:59",
+        "2028-02-26 23:59:59",
         0,
         0,
         "CL003",
@@ -4724,7 +4724,7 @@ VALUES
         "Skills acquired: \r\nSensor modelling, virtualization and setup\r\nSynthetic data generation and ground truth validation\r\nCarla Simulator for autonomous driving function development and validation\r\n",
         NULL,
         "2024-02-26",
-        "2026-02-26 23:59:59",
+        "2028-02-26 23:59:59",
         0,
         0,
         "CL003",
@@ -4744,7 +4744,7 @@ VALUES
         NULL,
         NULL,
         "2024-02-26",
-        "2026-02-26 23:59:59",
+        "2028-02-26 23:59:59",
         0,
         0,
         "CL003",
@@ -6143,4 +6143,173 @@ VALUES
 INSERT INTO
     logged_student (student_id)
 VALUES
-    (320213);
+    (314796);
+
+-- ------------------------------------------------------------
+-- ↓ companies table ↓
+-- ------------------------------------------------------------
+INSERT INTO
+    company (corporate_name)
+VALUES
+    ("Reply S.p.A."),
+    ("Stellantis N.V."),
+    ("Comau S.p.A."),
+    ("Leonardo S.p.A."),
+    ("Thales Alenia Space Italia S.p.A."),
+    ("Politecnico di Torino"),
+    ("Pirelli & C. S.p.A."),
+    ("ENI S.p.A."),
+    ("IBM Italia S.p.A."),
+    ("Accenture S.p.A."),
+    ("Istituto Italiano di Tecnologia");
+
+
+-- ------------------------------------------------------------
+-- ↓ sustainable development goals table ↓
+-- ------------------------------------------------------------
+INSERT INTO sustainable_development_goal (goal)
+VALUES
+    ("No Poverty"),
+    ("Zero Hunger"),
+    ("Good Health and Well-being"),
+    ("Quality Education"),
+    ("Gender Equality"),
+    ("Clean Water and Sanitation"),
+    ("Affordable and Clean Energy"),
+    ("Decent Work and Economic Growth"),
+    ("Industry, Innovation and Infrastructure"),
+    ("Reduced Inequalities"),
+    ("Sustainable Cities and Communities"),
+    ("Responsible Consumption and Production"),
+    ("Climate Action"),
+    ("Life Below Water"),
+    ("Life On Land"),
+    ("Peace, Justice and Strong Institutions"),
+    ("Partnerships for the Goals"),
+    ("NOT APPLICABLE");
+
+
+
+-- ------------------------------------------------------------
+-- ↓ license table ↓
+-- ------------------------------------------------------------
+INSERT INTO license (name, name_en, description, description_en)
+VALUES
+(
+    "Attribuzione CC BY",
+    "Attribution CC BY",
+    "Questa licenza permette a terzi di distribuire, modificare, ottimizzare ed utilizzare la tua opera come base, anche commercialmente, fino a che ti diano il credito per la creazione originale. Questa è la piu accomodante delle licenze offerte. È raccomandata per la diffusione e l'uso massimo di materiali coperti da licenza",
+    "This license lets others distribute, remix, tweak, and build upon your work, even commercially, as long as they credit you for the original creation. This is the most accommodating of licenses offered. Recommended for maximum dissemination and use of licensed materials."
+)
+,
+(
+    "Attribuzione - Condividi allo stesso modo CC BY-SA",
+    "Attribution - ShareAlike CC BY-SA",
+    "Questa licenza permette a terzi di modificare, ottimizzare ed utilizzare la tua opera come base, anche commercialmente, fino a che ti diano il credito per la creazione originale e autorizza le loro nuove creazioni con i medesimi termini. Questa licenza è spesso comparata con le licenze usate dai software opensource e gratuite \"copyleft\". Tutte le opere basate sulla tua porteranno la stessa licenza, quindi tutte le derivate permetteranno anche un uso commerciale. Questa è la licenza usata da Wikipedia, ed è consigliata per materiali che potrebbero beneficiare dell'incorporazione di contenuti da progetti come Wikipedia e similari.",
+    "This license lets others remix, tweak, and build upon your work even for commercial purposes, as long as they credit you and license their new creations under the identical terms. This license is often compared to \"copyleft\" free and open source software licenses. All new works based on yours will carry the same license, so any derivatives will also allow commercial use. This is the license used by Wikipedia, and is recommended for materials that would benefit from incorporating content from Wikipedia and similarly licensed projects."
+)
+,
+(
+    "Attribuzione - Non opere derivate CC BY-ND",
+    "Attribution - NoDerivs CC BY-ND",
+    "Questa licenza permette la ridistribuzione, commerciale e non, fintanto che viene trasmessa intera ed invariata, dandoti credito.",
+    "This license allows for redistribution, commercial and non-commercial, as long as it is passed along unchanged and in whole, with credit to you."
+)
+,
+(
+    "Attribuzione - Non commerciale CC BY-NC",
+    "Attribution - NonCommercial CC BY-NC",
+    "Questa licenza permette a terzi di modificare, ottimizzare ed utilizzare la tua opera come base per altre non commerciali, e benche le loro nuove opere dovranno accreditarti ed essere non commerciali, non devono licenziare le loro opere derivative con i medesimi termini.",
+    "This license lets others remix, tweak, and build upon your work non-commercially, and although their new works must also acknowledge you and be non-commercial, they don't have to license their derivative works on the same terms."
+)
+,
+(
+    "Attribuzione - Non commerciale - Condividi allo stesso modo CC BY-NC-SA",
+    "Attribution - NonCommercial-ShareAlike CC BY-NC-SA",
+    "Questa licenza permette a terzi di modificare, redistribuire, ottimizzare ed utilizzare la tua opera come base non commerciale, fino a che ti diano il credito e licenzino le loro nuove creazioni mediante i medesimi termini.",
+    "This license lets others remix, tweak, and build upon your work non-commercially, as long as they credit you and license their new creations under the identical terms."
+)
+,
+(
+    "Attribuzione - Non commerciale - Non opere derivate CC BY-NC-ND",
+    "Attribution - NonCommercial-NoDerivs CC BY-NC-ND",
+    "Questa licenza è la piu restrittiva delle nostre sei licenze principali, permettendo a terzi soltanto di scaricare le tue opere e condividerle ad altri fino a che ti diano il giusto credito, ma non possono cambiarle in nessun modo od utilizzarle commercialmente. Per maggiori informazioni consultare <a href='https://creativecommons.org/licenses/?lang=it' target='_blank' rel='noopener noreferrer'>questo link</a>.",
+    "This license is the most restrictive of the six main CC licenses, only allowing others to download your works and share them with others as long as they credit you, but they can't change them in any way or use them commercially. For more information visit <a href='https://creativecommons.org/licenses/?lang=it' target='_blank' rel='noopener noreferrer'>this link</a>."
+);
+
+
+-- ------------------------------------------------------------
+-- ↓ embargo_motivation table ↓
+-- ------------------------------------------------------------
+INSERT INTO embargo_motivation (motivation, motivation_en)
+VALUES
+(
+    "Necessità di evitare la divulgazione di risultati potenzialmente brevettabili contenuti all’interno della tesi, al fine di preservare il requisito della novità necessario per la brevettazione",
+    "Need to avoid disclosure of potentially patentable results contained within the thesis in order to preserve the novelty requirements necessary for patenting"
+)
+,
+(
+    "Esistenza di accordi di riservatezza o impegni al rispetto della segretezza contenuti in contratti o convenzioni con società o Enti terzi",
+    "Existance of confidentiality agreements or prior arrangements or contracts with outside organizations or companies"
+)
+,
+(
+    "Segretezza e/o di proprietà dei risultati e informazioni di enti esterni o aziende private che hanno partecipato alla realizzazione del lavoro di ricerca",
+    "Confidentiality and/or ownership of results and information from external entities or private companies"
+)
+,
+(
+    "Pubblicazione editoriale",
+    "Editorial publication"
+)
+,
+(
+    "Pubblica sicurezza (il contenuto della tesi può in qualche modo mettere a rischio la sicurezza pubblica o nazionale)",
+    "Public security ( the content of the thesis may somehow threaten public or national security)"
+)
+,
+(
+    "Privacy (il contenuto dell’elaborato verte su una persona ancora in vita o deceduta di recente per la quale si teme di violare il diritto alla privacy)",
+    "Privacy (the content of the thesis relates to a person who is still alive or recently deceased and there is a risk of privacy violation)"
+)
+,
+(
+    "Altro",
+    "Other"
+);
+
+INSERT INTO graduation_session (session_name, session_name_en)
+VALUES
+    ('Marzo/Aprile 2026', 'March/April 2026'),
+    ('Luglio 2026', 'July 2026'),
+    ('Settembre 2026', 'September 2026'),
+    ('Novembre/Dicembre 2026', 'November/December 2026');
+
+INSERT INTO deadline(deadline_type, graduation_session_id, deadline_date)
+VALUES
+    ('thesis_request', 1, '2025-10-27T23:59:59'),
+    ('thesis_request', 2, '2026-03-06T23:59:59'),
+    ('thesis_request', 3, '2026-05-08T23:59:59'),
+    ('thesis_request', 4, '2026-07-31T23:59:59'),
+    ('exams', 1, '2026-02-21T23:59:59'),
+    ('exams', 2, '2026-06-30T23:59:59'),
+    ('exams', 3, '2026-07-18T23:59:59'),
+    ('exams', 4, '2026-09-19T23:59:59'),
+    ('internship_report', 1, '2026-02-26T23:59:59'),
+    ('internship_report', 2, '2026-07-01T23:59:59'),
+    ('internship_report', 3, '2026-08-27T23:59:59'),
+    ('internship_report', 4, '2026-11-09T23:59:59'),
+    ('conclusion_request', 1, '2026-02-19T23:59:59'),
+    ('conclusion_request', 2, '2026-06-18T23:59:59'),
+    ('conclusion_request', 3, '2026-08-17T23:59:59'),
+    ('conclusion_request', 4, '2026-10-29T23:59:59'),
+    ('final_exam_registration', 1, '2026-02-21T23:59:59'),
+    ('final_exam_registration', 2, '2026-07-01T23:59:59'),
+    ('final_exam_registration', 3, '2026-08-27T23:59:59'),
+    ('final_exam_registration', 4, '2026-11-09T23:59:59'),
+    ('ielts', 1, '2026-02-07T23:59:59'),
+    ('ielts', 2, '2026-06-13T23:59:59'),
+    ('ielts', 3, '2026-07-18T23:59:59'),
+    ('ielts', 4, '2026-10-10T23:59:59');
+
+

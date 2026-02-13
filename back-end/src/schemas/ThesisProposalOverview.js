@@ -18,19 +18,20 @@ const thesisProposalOverviewSchema = z
     teachers: z.array(teacherOverviewSchema).default([]),
   })
   .transform(proposal => {
-    const teachers = proposal.teachers;
+    const teachers = proposal.teachers || [];
     const supervisor = teachers.find(teacher => teacher.isSupervisor);
     const internalCoSupervisors = teachers.filter(teacher => !teacher.isSupervisor);
 
-    delete proposal.teachers;
-    delete supervisor.isSupervisor;
+    if (supervisor) {
+      delete supervisor.isSupervisor;
+    }
     internalCoSupervisors.forEach(coSupervisor => delete coSupervisor.isSupervisor);
 
     return {
       id: proposal.id,
       topic: proposal.topic,
       description: proposal.description,
-      supervisor: supervisor,
+      supervisor: supervisor || null,
       internalCoSupervisors,
       creationDate: proposal.creation_date,
       expirationDate: proposal.expiration_date,
