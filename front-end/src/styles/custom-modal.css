@@ -51,6 +51,7 @@
   border-radius: 2px;
   background: #fff;
   padding: 18px;
+  font-family: var(--font-family, 'Montserrat', sans-serif);
 }
 
 .modal-footer {
@@ -98,4 +99,8 @@
 
 .modal-cancel {
   color: var(--border);
+}
+
+.modal-footer .btn {
+  font-family: var(--font-family, 'Montserrat', sans-serif);
 }
