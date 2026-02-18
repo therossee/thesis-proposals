@@ -196,6 +196,7 @@ const getLastStudentApplication = async (req, res) => {
       },
       order: [['submission_date', 'DESC']],
       limit: 1,
+      include: [{ model: Company, as: 'company' }],
     });
 
     if (activeApplication.length === 0) {
@@ -240,7 +241,7 @@ const getLastStudentApplication = async (req, res) => {
       student: loggedStudent,
       supervisor: supervisorData,
       co_supervisors: coSupervisorsData,
-      company: app.company || null,
+      company: app.company,
       thesis_proposal: proposalData,
       submission_date: app.submission_date.toISOString(),
       status: app.status || 'pending',

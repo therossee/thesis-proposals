@@ -189,6 +189,22 @@ Teacher.belongsToMany(Thesis, {
   otherKey: 'thesis_id',
 });
 
+ThesisApplication.belongsToMany(Teacher, {
+  through: ThesisApplicationSupervisorCoSupervisor,
+  foreignKey: 'thesis_application_id',
+  otherKey: 'teacher_id',
+});
+
+Teacher.belongsToMany(ThesisApplication, {
+  through: ThesisApplicationSupervisorCoSupervisor,
+  foreignKey: 'teacher_id',
+  otherKey: 'thesis_application_id',
+});
+
+ThesisApplication.belongsTo(Company, {
+  foreignKey: 'company_id',
+});
+
 Thesis.belongsToMany(Teacher, {
   through: ThesisSupervisorCoSupervisor,
   foreignKey: 'thesis_id',

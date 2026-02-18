@@ -32,6 +32,7 @@ const thesisConclusionDraftSchema = require('../schemas/ThesisConclusionDraft');
 const thesisConclusionResponseSchema = require('../schemas/ThesisConclusionResponse');
 const teacherOverviewSchema = require('../schemas/TeacherOverview');
 
+// Helper function to parse JSON fields inputs
 const parseJsonField = (value, fallback) => {
   if (value === undefined || value === null || value === '') return fallback;
   if (typeof value === 'string') {
@@ -45,12 +46,17 @@ const parseJsonField = (value, fallback) => {
   return value;
 };
 
-const ensureDir = async dirPath => {
+// Ensures that a directory exists, creating it if necessary. This is used to prepare the upload directory for thesis conclusion files.
+const ensureDirExists = async dirPath => {
   await fs.mkdir(dirPath, { recursive: true });
 };
 
+// Normalizes path separators to forward slashes for consistent storage and comparison, regardless of the operating system.
+// This helps prevent issues with file paths on Windows vs Unix-based systems.
 const normalizePathSeparators = filePath => String(filePath || '').replace(/\\/g, '/');
 
+// Validates that the given file path is within the expected uploads directory for the student and that the file exists.
+// Returns the normalized path if valid, or null if invalid.
 const resolveValidDraftFilePath = async (filePath, studentId) => {
   if (!filePath) return null;
   const normalized = normalizePathSeparators(filePath);
@@ -66,6 +72,7 @@ const resolveValidDraftFilePath = async (filePath, studentId) => {
   }
 };
 
+// Moves a file from one location to another, handling cross-device moves if necessary.
 const moveFile = async (fromPath, toPath) => {
   try {
     await fs.rename(fromPath, toPath);
@@ -76,6 +83,8 @@ const moveFile = async (fromPath, toPath) => {
   }
 };
 
+// Validates PDF/A by checking for specific metadata in the file content.
+// This is not a foolproof method, but it provides a basic check without relying on external libraries.
 const isPdfAByMetadata = pdfBuffer => {
   if (!Buffer.isBuffer(pdfBuffer) || pdfBuffer.length < 5) return false;
   if (pdfBuffer.subarray(0, 5).toString('latin1') !== '%PDF-') return false;
@@ -98,12 +107,9 @@ const readAndValidatePdfA = async file => {
   return fileBuffer;
 };
 
+// Controller function to handle the submission of a thesis conclusion request. It validates the input, checks the student's eligibility, processes file uploads, updates the thesis record, and returns the updated thesis data in the response.
 const sendThesisConclusionRequest = async (req, res) => {
-  const throwHttp = (status, message) => {
-    const err = new Error(message);
-    err.status = status;
-    throw err;
-  };
+  // Wrap the entire process in a try-catch block to handle validation errors and other exceptions gracefully, returning appropriate HTTP status codes and error messages to the client.
   try {
     let updatedThesisId = null;
     const thesisResume = req.files?.thesisResume?.[0] || null;
@@ -126,6 +132,7 @@ const sendThesisConclusionRequest = async (req, res) => {
       additionalZip,
     });
 
+    //  Extract the validated data from the requestData object for easier access and to ensure that only the expected fields are used in the subsequent logic. This also helps with type safety and code readability.
     const coSupervisors = requestData.coSupervisors;
     const sdgs = requestData.sdgs;
     const keywords = requestData.keywords;
@@ -137,29 +144,32 @@ const sendThesisConclusionRequest = async (req, res) => {
     let titleEng = requestData.titleEng;
     let abstractEng = requestData.abstractEng;
 
+    // Use a database transaction to ensure that all operations related to the thesis conclusion request are atomic. If any step fails, the transaction will be rolled back, preventing partial updates to the database and maintaining data integrity.
     await sequelize.transaction(async transaction => {
+      // Preliminary checks to ensure that the student is logged in, the thesis exists and is in a valid state for conclusion request, and that required fields are present. These checks help prevent unauthorized access and ensure that the request is valid before proceeding with file handling and database updates.
       const logged = await LoggedStudent.findOne({ transaction });
       if (!logged) {
-        throwHttp(401, 'Unauthorized');
+        return res.status(401).json({ error: 'Unauthorized' });
       }
       const loggedStudent = await Student.findByPk(logged.student_id, { transaction });
       if (!loggedStudent) {
-        throwHttp(404, 'Student not found');
+        return res.status(404).json({ error: 'Student not found' });
       }
       const thesis = await Thesis.findOne({
         where: { student_id: loggedStudent.id },
         transaction,
       });
       if (!thesis) {
-        throwHttp(404, 'Thesis not found');
+        return res.status(404).json({ error: 'Thesis not found' });
       }
       if (!['ongoing', 'conclusion_rejected'].includes(thesis.status)) {
-        throwHttp(400, 'Thesis is not in a valid state for conclusion request');
+        return res.status(400).json({ error: 'Thesis is not in a valid state for conclusion request' });
       }
 
       if (!title || !abstract) {
-        throwHttp(400, 'Missing thesis title or abstract');
+        return res.status(400).json({ error: 'Missing thesis title or abstract' });
       }
+      // Check if a thesis resume is required for the student based on their collegio. This helps enforce the requirement for a thesis resume when necessary, ensuring that students provide all required documentation for their conclusion request.
       const requiredResume = await isResumeRequiredForStudent(loggedStudent);
 
       if (lang === 'en') {
@@ -167,6 +177,7 @@ const sendThesisConclusionRequest = async (req, res) => {
         abstractEng = abstract;
       }
 
+      // Sets the thesis values to the new values from the request, and saves the thesis record to the database. This updates the thesis with the new title, abstract, and language, preparing it for the conclusion request process.
       thesis.title = title;
       thesis.abstract = abstract;
       thesis.title_eng = titleEng;
@@ -176,14 +187,17 @@ const sendThesisConclusionRequest = async (req, res) => {
         transaction,
         fields: ['title', 'abstract', 'title_eng', 'abstract_eng', 'language'],
       });
-
+      // Checks that thesisFile is provided and if resume is required. If files are missing, returns a 400 Error response.
       if (!thesisFile) {
-        throwHttp(400, 'Missing thesisFile');
+        return res.status(400).json({ error: 'Missing thesisFile' });
       }
       if (requiredResume && !thesisResume) {
-        throwHttp(400, 'Missing thesisResume');
+        return res.status(400).json({ error: 'Missing thesisResume' });
       }
 
+      // Prepares the upload directory for the student's thesis conclusion files, ensuring that it exists.
+      // Then processes the uploaded thesis file, validating that it is a PDF/A and saving it to the appropriate location.
+      // This step handles the file management aspect of the conclusion request, ensuring that files are stored securely and in an organized manner.
       const uploadBaseDir = path.join(
         __dirname,
         '..',
@@ -192,16 +206,18 @@ const sendThesisConclusionRequest = async (req, res) => {
         'thesis_conclusion_request',
         String(loggedStudent.id),
       );
-      await ensureDir(uploadBaseDir);
-
+      await ensureDirExists(uploadBaseDir);
+      // renames thesis file to a standardized name to avoid issues with special characters and to ensure consistency in file naming. Validates that the file is a PDF/A and saves it to the designated location, throwing an error if the validation fails. This helps maintain the integrity of the thesis files and ensures that they meet the required format for archival and access purposes.
       const thesisPdfName = `thesis_${loggedStudent.id}.pdf`;
       const thesisPdfPath = path.join(uploadBaseDir, thesisPdfName);
+      // tries to validate pdf/A and saves it to the destination path. If validation fails, an error is thrown and the uploaded file is deleted. This ensures that only valid PDF/A files are accepted and stored, and that any invalid uploads are cleaned up to prevent clutter and potential confusion in the upload directory.
       try {
         const thesisBuffer = await readAndValidatePdfA(thesisFile);
         await fs.writeFile(thesisPdfPath, thesisBuffer);
       } finally {
         await fs.unlink(thesisFile.path).catch(() => {});
       }
+      // Supervisors, SDGs, keywords, embargo data, and license are processed and saved to the database. This involves updating the relevant associations and records in the database to reflect the new information provided in the conclusion request. Each aspect is handled separately to ensure that all related data is correctly updated and linked to the thesis record.
       if (coSupervisors) {
         const currentCoSupervisors = await ThesisSupervisorCoSupervisor.findAll({
           where: {
@@ -237,7 +253,7 @@ const sendThesisConclusionRequest = async (req, res) => {
             transaction,
           });
           if (co_supervisors.length !== newIds.length) {
-            throwHttp(400, 'One or more co-supervisors not found');
+            return res.status(400).json({ error: 'One or more co-supervisors not found' });
           }
           for (const coSup of co_supervisors) {
             await ThesisSupervisorCoSupervisor.create(
@@ -271,7 +287,7 @@ const sendThesisConclusionRequest = async (req, res) => {
           transaction,
         });
         if (uniqueGoalIds.length && currentGoals.length !== uniqueGoalIds.length) {
-          throwHttp(400, 'One or more sustainable development goals not found');
+          return res.status(400).json({ error: 'One or more sustainable development goals not found' });
         }
 
         // The schema allows one row per SDG per thesis (PK thesis_id + goal_id).
@@ -298,6 +314,9 @@ const sendThesisConclusionRequest = async (req, res) => {
         }
       }
 
+      // keywords storage supports both existing keywords (by id) and new keywords (by name).
+      // Existing keywords are linked by their ID, while new keywords are stored in the keyword_other field.
+      // This allows for flexibility in keyword management, enabling students to use predefined keywords or add new ones as needed for their thesis conclusion request.
       if (keywords) {
         const keywordIds = keywords
           .map(k => (typeof k === 'object' ? k.id : k))
@@ -332,7 +351,7 @@ const sendThesisConclusionRequest = async (req, res) => {
           );
         }
       }
-
+      // save of thesisResume
       if (thesisResume) {
         const resumeName = `resume_${loggedStudent.id}.pdf`;
         const resumePath = path.join(uploadBaseDir, resumeName);
@@ -343,21 +362,17 @@ const sendThesisConclusionRequest = async (req, res) => {
         thesis.thesis_resume = null;
         thesis.thesis_resume_path = null;
       }
-      thesis.license_id = Number.isFinite(licenseId) && licenseId > 0 ? licenseId : null;
+      thesis.license_id = licenseId > 0 ? licenseId : null;
+      // Save of embargo motivations
       if (embargo) {
         const duration = embargo.duration || embargo.duration_months || embargo.embargoPeriod;
-        const motivationsRaw = Array.isArray(embargo.motivations)
-          ? embargo.motivations
-          : Array.isArray(embargo.motivation)
-            ? embargo.motivation
-            : [];
-
-        if (!duration && motivationsRaw.length === 0) {
-          throwHttp(400, 'Embargo data is incomplete');
+        const motivations = embargo.motivations;
+        if (!duration && motivations.length === 0) {
+          return res.status(400).json({ error: 'Embargo data is incomplete' });
         }
 
         if (!duration) {
-          throwHttp(400, 'Embargo duration is required');
+          return res.status(400).json({ error: 'Embargo duration is required' });
         }
 
         const existingEmbargo = await ThesisEmbargo.findOne({
@@ -383,10 +398,8 @@ const sendThesisConclusionRequest = async (req, res) => {
           { transaction },
         );
 
-        const normalizedMotivations = motivationsRaw.map(m =>
-          typeof m === 'object'
-            ? { id: m.motivationId ?? m.id, other: m.otherMotivation ?? m.other }
-            : { id: m, other: null },
+        const normalizedMotivations = motivations.map(m =>
+          typeof m === 'object' ? { id: m.motivationId, other: m.otherMotivation ?? m.other } : { id: m, other: null },
         );
         const motivationIds = normalizedMotivations.map(m => Number(m?.id)).filter(id => Number.isFinite(id));
         const existingMotivations = motivationIds.length
@@ -395,13 +408,16 @@ const sendThesisConclusionRequest = async (req, res) => {
               transaction,
             })
           : [];
+        // Validates that all provided motivation IDs exist in the database.
+        // If any motivation ID does not correspond to an existing record, a 400 Error response is returned, indicating that one or more embargo motivations were not found.
+        // This ensures that only valid motivations are associated with the embargo.
         if (motivationIds.length && existingMotivations.length !== motivationIds.length) {
-          throwHttp(400, 'One or more embargo motivations not found');
+          return res.status(400).json({ error: 'One or more embargo motivations not found' });
         }
 
         for (const motivation of normalizedMotivations) {
-          const motivationId = Number(motivation?.id);
-          if (!Number.isFinite(motivationId)) continue;
+          const motivationId = motivation?.id;
+          if (!motivationId) continue;
           await ThesisEmbargoMotivation.create(
             {
               thesis_embargo_id: createdEmbargo.id,
@@ -450,7 +466,7 @@ const sendThesisConclusionRequest = async (req, res) => {
 
     const updatedThesis = await Thesis.findByPk(updatedThesisId);
     if (!updatedThesis) {
-      throwHttp(404, 'Thesis not found after update');
+      return res.status(404).json({ error: 'Thesis not found after update' });
     }
 
     const thesisSupervisors = await ThesisSupervisorCoSupervisor.findAll({
@@ -581,8 +597,9 @@ const getEmbargoMotivations = async (req, res) => {
   }
 };
 
-// Restituisce tutte le deadline della sessione di laurea più vicina in base al flag
-
+// This function retrieves the upcoming deadlines for the thesis conclusion process based on the student's current status (no application, pending application, or ongoing thesis).
+// It checks the relevant deadlines for the student's situation and returns the deadlines for the associated graduation session.
+// If there are no upcoming deadlines or if the student is not found, it returns appropriate error responses.
 const getSessionDeadlines = async (req, res) => {
   const requestedType = req.query.type;
   const now = new Date();
@@ -684,6 +701,8 @@ const getSessionDeadlines = async (req, res) => {
 };
 
 const uploadFinalThesis = async (req, res) => {
+  // This function handles the upload of the final thesis file, along with an optional thesis resume and additional ZIP file.
+  // It validates the uploaded files, checks the student's eligibility, saves the files to the appropriate location, updates the thesis record in the database, and returns a success message or error response as needed.
   try {
     const thesisFile = req.files?.thesisFile?.[0] || null;
     const thesisResume = req.files?.thesisResume?.[0] || null;
@@ -714,7 +733,7 @@ const uploadFinalThesis = async (req, res) => {
     }
 
     const uploadBaseDir = path.join(__dirname, '..', '..', 'uploads', 'final_thesis', String(loggedStudent.id));
-    await ensureDir(uploadBaseDir);
+    await ensureDirExists(uploadBaseDir);
     const thesisPdfName = `final_thesis_${loggedStudent.id}.pdf`;
     const thesisPdfPath = path.join(uploadBaseDir, thesisPdfName);
 
@@ -894,7 +913,7 @@ const saveThesisConclusionRequestDraft = async (req, res) => {
 
       const moveDraftFile = async (file, thesisPathField) => {
         if (!file?.path) return;
-        await ensureDir(draftUploadDir);
+        await ensureDirExists(draftUploadDir);
         const safeName = path.basename(file.originalname || file.path);
         const destination = path.join(draftUploadDir, safeName);
         const storedRelativePath = await resolveValidDraftFilePath(thesis[thesisPathField], loggedStudent.id);
