@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 import { Button, Col, Form, Row } from 'react-bootstrap';
 
@@ -21,6 +21,15 @@ function UploadCard({
   isSubmitting,
   tooltipText,
 }) {
+  const fileInputRef = useRef(null);
+
+  const handleRemove = () => {
+    onRemove();
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="cr-upload-col cr-upload-card">
       <div className="cr-upload-header">
@@ -32,6 +41,7 @@ function UploadCard({
       </div>
       <Form.Group>
         <Form.Control
+          ref={fileInputRef}
           type="file"
           accept={accept}
           onChange={e => onFileChange(e.target.files && e.target.files[0] ? e.target.files[0] : null)}
@@ -50,7 +60,7 @@ function UploadCard({
               <Button
                 variant="link"
                 className="cr-file-remove p-0"
-                onClick={onRemove}
+                onClick={handleRemove}
                 disabled={isSubmitting}
                 title={removeFileText}
                 aria-label={removeFileText}
@@ -101,6 +111,9 @@ export default function StepUploads() {
         <i className="fa-regular fa-file-upload" />
         <span>{t('carriera.conclusione_tesi.documents_to_upload')}</span>
       </div>
+      <div className="text-muted cr-help mt-1 mb-2" style={{ fontSize: '0.72rem' }}>
+        {t('carriera.conclusione_tesi.required_fields_note')}
+      </div>
       <div>
         <div className="cr-upload-body mb-3">
           {t('carriera.conclusione_tesi.pdfa_conversion_info')}
@@ -122,7 +135,7 @@ export default function StepUploads() {
               <UploadCard
                 t={t}
                 id="summary-for-committee-pdf"
-                label={t('carriera.conclusione_tesi.summary_for_committee_pdf')}
+                label={`${t('carriera.conclusione_tesi.summary_for_committee_pdf')} *`}
                 maxSizeKey="carriera.conclusione_tesi.max_size_20_mb"
                 accept="application/pdf"
                 file={resumePdf}
@@ -139,7 +152,7 @@ export default function StepUploads() {
             <UploadCard
               t={t}
               id="final-thesis-pdfa"
-              label={t('carriera.conclusione_tesi.final_thesis_pdfa')}
+              label={`${t('carriera.conclusione_tesi.final_thesis_pdfa')} *`}
               maxSizeKey="carriera.conclusione_tesi.max_size_200_mb"
               accept="application/pdf"
               file={pdfFile}

@@ -18,6 +18,24 @@ VALUES
     ("CL016", "Collegio di Architettura e Design"),
     ("CL017", "Collegio di Ingegneria Elettrica ed Energetica"),
     ("CL018", "Collegio di Ingegneria Civile ed Edile");
+    
+-- ------------------------------------------------------------
+-- ↓ company table ↓
+-- ------------------------------------------------------------
+INSERT INTO
+    company (corporate_name)
+VALUES
+    ("Reply S.p.A."),
+    ("Stellantis N.V."),
+    ("Comau S.p.A."),
+    ("Leonardo S.p.A."),
+    ("Thales Alenia Space Italia S.p.A."),
+    ("Politecnico di Torino"),
+    ("Pirelli & C. S.p.A."),
+    ("ENI S.p.A."),
+    ("IBM Italia S.p.A."),
+    ("Accenture S.p.A."),
+    ("Istituto Italiano di Tecnologia");
 
 -- ------------------------------------------------------------
 -- ↓ degree_programme_container table ↓
@@ -5192,26 +5210,6 @@ VALUES
         NULL
     ),
     (
-        14026,
-        "Utilizzo dell'IA per la generazione automatizzata di script di test",
-        "Use of AI for automated test script generation",
-        "Tesi presso Concept Quality Reply\r\n\r\nQuesta tesi riconosce il ruolo fondamentale della generazione di test case utilizzando l’IA generativa per garantire la qualità e l'affidabilità del prodotto durante l'intero ciclo di vita, migliorando la soddisfazione degli utenti e riducendo i costi.\r\n\r\nDescrizione:\r\nEcco una breve descrizione delle attività che il candidato per la tesi potrebbe svolgere all'interno del team sotto la guida di un tutor esperto:\r\n\r\nRivedere la ricerca rilevante su IA generativa e test automatizzati.\r\nDefinire l'ambito e le sfide della generazione di test case basata su IA.\r\nRaccogliere dataset per l'addestramento e la valutazione del modello.\r\nCreare modelli di IA per la generazione di test case.\r\nProgettare esperimenti per valutare le prestazioni del modello.\r\nAnalizzare i risultati degli esperimenti per misurare l'efficacia del sistema.\r\nRaffinare il modello di IA basandosi sui feedback delle valutazioni.\r\nFamiliarità con diversi framework di test per vari aspetti del testing di app mobili (ad esempio, test UI, test di integrazione).\r\nEsperienza pratica con framework di test popolari (es. Selenium, Appium).\r\nScrivere e presentare i risultati della ricerca in una tesi.\r\nObiettivi:\r\nUtilizzare l'IA generativa per trasformare requisiti in linguaggio naturale da diversi formati (PDF, PPT, Word) in un set completo di test case e generare lo script automatizzato finale (Appium, Selenium) dei test automatizzati corrispondenti.\r\n\r\nPrerequisiti:\r\n\r\nConoscenza di Java, Python, JavaScript, HTML, CSS\r\nConoscenza del testing automatizzato (ad esempio, Selenium, Appium)\r\nConoscenza di approcci di IA e Machine Learning\r\nInteresse dimostrato per il testing automatizzato, algoritmi di IA generativa\r\nCompetenze acquisite:\r\n\r\nApprendimento sull’IA generativa per velocizzare i processi di testing e validazione\r\nApprendimento del processo generativo automatizzato dai requisiti funzionali ai test case per i servizi finanziari",
-        "Thesis work at Concept Quality Reply\r\n\r\nContext:\r\nThis thesis recognizes the pivotal role of test case generation, using generative AI, to ensure product quality and reliability throughout the entire product lifecycle, ultimately \r\nenhancing user satisfaction and reducing cost.\r\n\r\nDescription:\r\nHere's a brief description of the activities the candidate for the thesis might undertake within the team under the guidance of an expert tutor:\r\n• Review relevant research on generative AI and automated testing.\r\n• Define the scope and challenges of AI-based test case generation.\r\n• Gather datasets for model training and evaluation.\r\n• Create AI models for test case generation.\r\n• Design experiments to assess model performance.\r\n• Analyze experiment results to measure system effectiveness.\r\n• Refine the AI model based on evaluation feedback.\r\n• Familiarity with various test frameworks for different aspects of mobile app testing (e.g., UI testing, integration testing).\r\n• Hands-on experience with popular testing frameworks (e.g., Selenium, Appium).\r\n• Write and present the research findings in a thesis.\r\n\r\nObjectives:\r\nUse generative AI to transform natural language requirements from different formats (PDF, PPT, Word) into a complete set of test cases, and to generate the final automated script \r\n(Appium, Selenium) of the corresponding automated tests.\r\n\r\nPre-requisites:\r\n• Knowledge of Java, python, javascript, html, css\r\n• Knowledge of automated testing (e.g., Selenium, Appium).\r\n• Knowledge of AI and Machine learning approaches\r\n• Demonstrated interest in automated testing, Generative AI algorithms\r\nSkills acquired:\r\n• Learning about Generative AI to speed-up testing and validation processes\r\n• Learning about automated generative process from functional requirements to test\r\ncases for financial services",
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        "2024-09-03",
-        "2027-09-03 23:59:59",
-        0, /* Discrepancy with real value */
-        0,
-        "CL003",
-        "2",
-        NULL
-    ),
-    (
         14027,
         "Migliorare il Testing del Software attraverso l'IA Generativa",
         "Enhancing Software Testing Through Generative AI",
@@ -5451,6 +5449,50 @@ VALUES
         "2",
         NULL
     );
+    
+INSERT INTO thesis_proposal(
+        id,
+        topic,
+        topic_en,
+        description,
+        description_en,
+        link,
+        required_skills,
+        required_skills_en,
+        additional_notes,
+        additional_notes_en,
+        external_cosupervisors,
+        creation_date,
+        expiration_date,
+        is_internal,
+        is_abroad,
+        id_collegio,
+        level,
+        attachment_url,
+        company_id
+)
+VALUES
+    (
+        14026,
+        "Utilizzo dell'IA per la generazione automatizzata di script di test",
+        "Use of AI for automated test script generation",
+        "Tesi presso Concept Quality Reply\r\n\r\nQuesta tesi riconosce il ruolo fondamentale della generazione di test case utilizzando l’IA generativa per garantire la qualità e l'affidabilità del prodotto durante l'intero ciclo di vita, migliorando la soddisfazione degli utenti e riducendo i costi.\r\n\r\nDescrizione:\r\nEcco una breve descrizione delle attività che il candidato per la tesi potrebbe svolgere all'interno del team sotto la guida di un tutor esperto:\r\n\r\nRivedere la ricerca rilevante su IA generativa e test automatizzati.\r\nDefinire l'ambito e le sfide della generazione di test case basata su IA.\r\nRaccogliere dataset per l'addestramento e la valutazione del modello.\r\nCreare modelli di IA per la generazione di test case.\r\nProgettare esperimenti per valutare le prestazioni del modello.\r\nAnalizzare i risultati degli esperimenti per misurare l'efficacia del sistema.\r\nRaffinare il modello di IA basandosi sui feedback delle valutazioni.\r\nFamiliarità con diversi framework di test per vari aspetti del testing di app mobili (ad esempio, test UI, test di integrazione).\r\nEsperienza pratica con framework di test popolari (es. Selenium, Appium).\r\nScrivere e presentare i risultati della ricerca in una tesi.\r\nObiettivi:\r\nUtilizzare l'IA generativa per trasformare requisiti in linguaggio naturale da diversi formati (PDF, PPT, Word) in un set completo di test case e generare lo script automatizzato finale (Appium, Selenium) dei test automatizzati corrispondenti.\r\n\r\nPrerequisiti:\r\n\r\nConoscenza di Java, Python, JavaScript, HTML, CSS\r\nConoscenza del testing automatizzato (ad esempio, Selenium, Appium)\r\nConoscenza di approcci di IA e Machine Learning\r\nInteresse dimostrato per il testing automatizzato, algoritmi di IA generativa\r\nCompetenze acquisite:\r\n\r\nApprendimento sull’IA generativa per velocizzare i processi di testing e validazione\r\nApprendimento del processo generativo automatizzato dai requisiti funzionali ai test case per i servizi finanziari",
+        "Thesis work at Concept Quality Reply\r\n\r\nContext:\r\nThis thesis recognizes the pivotal role of test case generation, using generative AI, to ensure product quality and reliability throughout the entire product lifecycle, ultimately \r\nenhancing user satisfaction and reducing cost.\r\n\r\nDescription:\r\nHere's a brief description of the activities the candidate for the thesis might undertake within the team under the guidance of an expert tutor:\r\n• Review relevant research on generative AI and automated testing.\r\n• Define the scope and challenges of AI-based test case generation.\r\n• Gather datasets for model training and evaluation.\r\n• Create AI models for test case generation.\r\n• Design experiments to assess model performance.\r\n• Analyze experiment results to measure system effectiveness.\r\n• Refine the AI model based on evaluation feedback.\r\n• Familiarity with various test frameworks for different aspects of mobile app testing (e.g., UI testing, integration testing).\r\n• Hands-on experience with popular testing frameworks (e.g., Selenium, Appium).\r\n• Write and present the research findings in a thesis.\r\n\r\nObjectives:\r\nUse generative AI to transform natural language requirements from different formats (PDF, PPT, Word) into a complete set of test cases, and to generate the final automated script \r\n(Appium, Selenium) of the corresponding automated tests.\r\n\r\nPre-requisites:\r\n• Knowledge of Java, python, javascript, html, css\r\n• Knowledge of automated testing (e.g., Selenium, Appium).\r\n• Knowledge of AI and Machine learning approaches\r\n• Demonstrated interest in automated testing, Generative AI algorithms\r\nSkills acquired:\r\n• Learning about Generative AI to speed-up testing and validation processes\r\n• Learning about automated generative process from functional requirements to test\r\ncases for financial services",
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        "2024-09-03",
+        "2027-09-03 23:59:59",
+        0, /* Discrepancy with real value */
+        0,
+        "CL003",
+        "2",
+        NULL,
+        1
+);
 
 -- ------------------------------------------------------------
 -- ↓ thesis_proposal_degree table ↓
@@ -6144,25 +6186,6 @@ INSERT INTO
     logged_student (student_id)
 VALUES
     (314796);
-
--- ------------------------------------------------------------
--- ↓ companies table ↓
--- ------------------------------------------------------------
-INSERT INTO
-    company (corporate_name)
-VALUES
-    ("Reply S.p.A."),
-    ("Stellantis N.V."),
-    ("Comau S.p.A."),
-    ("Leonardo S.p.A."),
-    ("Thales Alenia Space Italia S.p.A."),
-    ("Politecnico di Torino"),
-    ("Pirelli & C. S.p.A."),
-    ("ENI S.p.A."),
-    ("IBM Italia S.p.A."),
-    ("Accenture S.p.A."),
-    ("Istituto Italiano di Tecnologia");
-
 
 -- ------------------------------------------------------------
 -- ↓ sustainable development goals table ↓

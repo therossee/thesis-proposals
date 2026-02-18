@@ -140,7 +140,6 @@ const getRequiredResumeForLoggedStudent = async (_req, res) => {
     }
 
     const collegioId = collegio_id[0].collegioId;
-    console.log('Collegio ID for logged student:', collegioId);
     const requiredResume = REQUIRED_RESUME_COLLEGIO_IDS.has(collegioId);
     res.status(200).json({ requiredResume });
   } catch (error) {

@@ -145,6 +145,14 @@ Teacher.belongsToMany(ThesisProposal, {
   otherKey: 'thesis_proposal_id',
 });
 
+ThesisProposal.belongsTo(Company, {
+  foreignKey: 'company_id',
+});
+
+Company.hasMany(ThesisProposal, {
+  foreignKey: 'company_id',
+});
+
 // Student and DegreeProgramme (one-to-many)
 Student.belongsTo(DegreeProgramme, {
   foreignKey: 'degree_id',

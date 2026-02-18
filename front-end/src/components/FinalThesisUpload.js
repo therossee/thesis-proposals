@@ -12,10 +12,92 @@ import { getSystemTheme } from '../utils/utils';
 import CustomModal from './CustomModal';
 import LoadingModal from './LoadingModal';
 
+function UploadCard({
+  t,
+  id,
+  label,
+  maxSizeKey,
+  accept,
+  file,
+  onFileChange,
+  onRemove,
+  removeFileText,
+  appliedTheme,
+  isSubmitting,
+  inputRef,
+  required = false,
+}) {
+  return (
+    <div className="cr-upload-col cr-upload-card">
+      <div className="cr-upload-header">
+        <Form.Label htmlFor={id}>
+          {label}
+          {required ? ' *' : ''}
+        </Form.Label>
+        <div className="text-muted cr-upload-meta">({t(maxSizeKey)})</div>
+      </div>
+      <Form.Group>
+        <Form.Control
+          ref={inputRef}
+          type="file"
+          accept={accept}
+          onChange={e => onFileChange(e.target.files && e.target.files[0] ? e.target.files[0] : null)}
+          disabled={isSubmitting}
+          id={id}
+          className="d-none"
+        />
+        <div className="cr-file-row">
+          <Button
+            type="button"
+            className={`btn-outlined-${appliedTheme} mb-0`}
+            onClick={() => inputRef.current?.click()}
+            disabled={isSubmitting}
+          >
+            <i className="fa-regular fa-upload me-2" />
+            {t('carriera.conclusione_tesi.select_file')}
+          </Button>
+          <div className="text-muted cr-file-name-line">
+            <span className="cr-file-name">{file ? file.name : t('carriera.conclusione_tesi.no_file_selected')}</span>
+            {file && (
+              <Button
+                variant="link"
+                className="cr-file-remove p-0"
+                onClick={onRemove}
+                disabled={isSubmitting}
+                title={removeFileText}
+                aria-label={removeFileText}
+              >
+                <i className="fa-regular fa-trash-can" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </Form.Group>
+    </div>
+  );
+}
+
+UploadCard.propTypes = {
+  t: PropTypes.func.isRequired,
+  id: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  maxSizeKey: PropTypes.string.isRequired,
+  accept: PropTypes.string.isRequired,
+  file: PropTypes.object,
+  onFileChange: PropTypes.func.isRequired,
+  onRemove: PropTypes.func.isRequired,
+  removeFileText: PropTypes.string.isRequired,
+  appliedTheme: PropTypes.string.isRequired,
+  isSubmitting: PropTypes.bool.isRequired,
+  inputRef: PropTypes.shape({ current: PropTypes.any }).isRequired,
+  required: PropTypes.bool,
+};
+
 function FinalThesisUpload({ show, setShow, onSubmitResult }) {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [resumePdf, setResumePdf] = useState(null);
   const [pdfFile, setPdfFile] = useState(null);
+  const [additionalZip, setAdditionalZip] = useState(null);
   const { t, i18n } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { theme } = useContext(ThemeContext);
@@ -23,10 +105,15 @@ function FinalThesisUpload({ show, setShow, onSubmitResult }) {
   const [requiredResume, setRequiredResume] = useState(false);
   const resumeInputRef = useRef(null);
   const thesisInputRef = useRef(null);
+  const additionalZipInputRef = useRef(null);
 
   const resetForm = () => {
     setResumePdf(null);
     setPdfFile(null);
+    setAdditionalZip(null);
+    if (resumeInputRef.current) resumeInputRef.current.value = '';
+    if (thesisInputRef.current) thesisInputRef.current.value = '';
+    if (additionalZipInputRef.current) additionalZipInputRef.current.value = '';
   };
 
   useEffect(() => {
@@ -47,7 +134,7 @@ function FinalThesisUpload({ show, setShow, onSubmitResult }) {
     setIsSubmitting(true);
     setShow(false);
     setShowConfirmationModal(false);
-    API.uploadFinalThesis(pdfFile, requiredResume ? resumePdf : null)
+    API.uploadFinalThesis(pdfFile, requiredResume ? resumePdf : null, additionalZip)
       .then(() => {
         onSubmitResult(true);
         resetForm();
@@ -68,7 +155,13 @@ function FinalThesisUpload({ show, setShow, onSubmitResult }) {
   return (
     <>
       {isSubmitting && <LoadingModal show={isSubmitting} onHide={() => setIsSubmitting(false)} />}
-      <Modal show={show} onHide={() => setShow(false)} centered contentClassName="conclusion-process-content-shell">
+      <Modal
+        show={show}
+        onHide={() => setShow(false)}
+        centered
+        dialogClassName="conclusion-process final-thesis-upload-modal"
+        contentClassName="conclusion-process-content-shell"
+      >
         <Modal.Header closeButton>
           <Modal.Title className="cr-modal-title">
             <i className="fa-regular fa-file-upload me-2" />
@@ -78,115 +171,84 @@ function FinalThesisUpload({ show, setShow, onSubmitResult }) {
         <Modal.Body>
           <div className="conclusion-process-content cr-clean">
             <div className="cr-section">
-              <div className="cr-section-description mb-4 text-center">
+              <div className="cr-section-description mb-4 text-start">
                 {t('carriera.conclusione_tesi.final_thesis_modal.instructions')}
               </div>
-              <Row className="mb-2 g-3 justify-content-center">
+              <div className="mb-3 text-start">
+                <a
+                  href="https://didattica.polito.it/pls/portal30/sviluppo.elaborato_finale.consegna_pdf_conv"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`btn btn-outlined-${appliedTheme} d-inline-flex align-items-center`}
+                >
+                  <i className="fa-regular fa-arrow-up-right-from-square me-2" />
+                  {t('carriera.conclusione_tesi.pdfa_conversion_button')}
+                </a>
+              </div>
+              <div className="text-muted cr-help mt-1 mb-2 text-start" style={{ fontSize: 'var(--font-size-xs)' }}>
+                {t('carriera.conclusione_tesi.required_fields_note')}
+              </div>
+              <Row className="mb-2 g-3 justify-content-center final-thesis-upload-row">
                 {requiredResume && (
-                  <Col md={12}>
-                    <div className="cr-upload-col">
-                      <div className="cr-upload-header">
-                        <Form.Label htmlFor="final-thesis-resume-pdfa">
-                          {t('carriera.conclusione_tesi.summary_for_committee_pdfa')}
-                        </Form.Label>
-                        <div className="text-muted cr-upload-meta">
-                          ({t('carriera.conclusione_tesi.max_size_20_mb')})
-                        </div>
-                      </div>
-                      <Form.Group>
-                        <Form.Control
-                          ref={resumeInputRef}
-                          type="file"
-                          accept="application/pdf"
-                          onChange={e => setResumePdf(e.target.files && e.target.files[0] ? e.target.files[0] : null)}
-                          disabled={isSubmitting}
-                          id="final-thesis-resume-pdfa"
-                          required={requiredResume}
-                          className="d-none"
-                        />
-                        <div className="cr-file-row">
-                          <Button
-                            type="button"
-                            className={`btn-outlined-${appliedTheme} mb-0`}
-                            onClick={() => resumeInputRef.current?.click()}
-                            disabled={isSubmitting}
-                          >
-                            <i className="fa-regular fa-upload me-2" />
-                            {t('carriera.conclusione_tesi.select_file')}
-                          </Button>
-                          <div className="text-muted cr-file-name-line">
-                            <span className="cr-file-name">
-                              {resumePdf ? resumePdf.name : t('carriera.conclusione_tesi.no_file_selected')}
-                            </span>
-                            {resumePdf && (
-                              <Button
-                                variant="link"
-                                className="cr-file-remove p-0"
-                                onClick={() => setResumePdf(null)}
-                                disabled={isSubmitting}
-                                title={removeFileText}
-                                aria-label={removeFileText}
-                              >
-                                <i className="fa-regular fa-trash-can" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </Form.Group>
-                    </div>
+                  <Col md={6} lg={4}>
+                    <UploadCard
+                      t={t}
+                      id="final-thesis-resume-pdfa"
+                      label={t('carriera.conclusione_tesi.summary_for_committee_pdfa')}
+                      maxSizeKey="carriera.conclusione_tesi.max_size_20_mb"
+                      accept="application/pdf"
+                      file={resumePdf}
+                      onFileChange={setResumePdf}
+                      onRemove={() => {
+                        setResumePdf(null);
+                        if (resumeInputRef.current) resumeInputRef.current.value = '';
+                      }}
+                      removeFileText={removeFileText}
+                      appliedTheme={appliedTheme}
+                      isSubmitting={isSubmitting}
+                      inputRef={resumeInputRef}
+                      required
+                    />
                   </Col>
                 )}
-                <Col md={12}>
-                  <div className="cr-upload-col">
-                    <div className="cr-upload-header">
-                      <Form.Label htmlFor="final-thesis-pdfa">
-                        {t('carriera.conclusione_tesi.final_thesis_pdfa')}
-                      </Form.Label>
-                      <div className="text-muted cr-upload-meta">
-                        ({t('carriera.conclusione_tesi.max_size_200_mb')})
-                      </div>
-                    </div>
-                    <Form.Group>
-                      <Form.Control
-                        ref={thesisInputRef}
-                        type="file"
-                        accept="application/pdf"
-                        onChange={e => setPdfFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)}
-                        disabled={isSubmitting}
-                        id="final-thesis-pdfa"
-                        required
-                        className="d-none"
-                      />
-                      <div className="cr-file-row">
-                        <Button
-                          type="button"
-                          className={`btn-outlined-${appliedTheme} mb-0`}
-                          onClick={() => thesisInputRef.current?.click()}
-                          disabled={isSubmitting}
-                        >
-                          <i className="fa-regular fa-upload me-2" />
-                          {t('carriera.conclusione_tesi.select_file')}
-                        </Button>
-                        <div className="text-muted cr-file-name-line">
-                          <span className="cr-file-name">
-                            {pdfFile ? pdfFile.name : t('carriera.conclusione_tesi.no_file_selected')}
-                          </span>
-                          {pdfFile && (
-                            <Button
-                              variant="link"
-                              className="cr-file-remove p-0"
-                              onClick={() => setPdfFile(null)}
-                              disabled={isSubmitting}
-                              title={removeFileText}
-                              aria-label={removeFileText}
-                            >
-                              <i className="fa-regular fa-trash-can" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </Form.Group>
-                  </div>
+                <Col md={6} lg={requiredResume ? 4 : 6}>
+                  <UploadCard
+                    t={t}
+                    id="final-thesis-pdfa"
+                    label={t('carriera.conclusione_tesi.final_thesis_pdfa')}
+                    maxSizeKey="carriera.conclusione_tesi.max_size_200_mb"
+                    accept="application/pdf"
+                    file={pdfFile}
+                    onFileChange={setPdfFile}
+                    onRemove={() => {
+                      setPdfFile(null);
+                      if (thesisInputRef.current) thesisInputRef.current.value = '';
+                    }}
+                    removeFileText={removeFileText}
+                    appliedTheme={appliedTheme}
+                    isSubmitting={isSubmitting}
+                    inputRef={thesisInputRef}
+                    required
+                  />
+                </Col>
+                <Col md={6} lg={requiredResume ? 4 : 6}>
+                  <UploadCard
+                    t={t}
+                    id="final-thesis-additional-zip"
+                    label={t('carriera.conclusione_tesi.supplementary_zip')}
+                    maxSizeKey="carriera.conclusione_tesi.max_size_200_mb"
+                    accept=".zip,application/zip"
+                    file={additionalZip}
+                    onFileChange={setAdditionalZip}
+                    onRemove={() => {
+                      setAdditionalZip(null);
+                      if (additionalZipInputRef.current) additionalZipInputRef.current.value = '';
+                    }}
+                    removeFileText={removeFileText}
+                    appliedTheme={appliedTheme}
+                    isSubmitting={isSubmitting}
+                    inputRef={additionalZipInputRef}
+                  />
                 </Col>
               </Row>
             </div>
@@ -195,7 +257,7 @@ function FinalThesisUpload({ show, setShow, onSubmitResult }) {
         <Modal.Footer className="d-flex justify-content-end gap-2">
           <Button className={`btn-outlined-${appliedTheme} mb-3`} size="md" onClick={() => resetForm()}>
             <i className="fa-solid fa-rotate-left pe-2" />
-            Reset
+            {t('carriera.proposte_di_tesi.reset')}
           </Button>
 
           <Button

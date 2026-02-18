@@ -130,7 +130,9 @@ CREATE TABLE IF NOT EXISTS thesis_proposal (
     attachment_url VARCHAR(100) DEFAULT NULL,
     level ENUM("1", "2") NOT NULL, -- 1 for Bachelor, 2 for Master
     id_collegio VARCHAR(10) NOT NULL,
-    FOREIGN KEY (id_collegio) REFERENCES collegio(id) ON DELETE RESTRICT -- RESTRICT policy in order to pay attention to the deletion of a collegio
+    company_id INT,
+    FOREIGN KEY (id_collegio) REFERENCES collegio(id) ON DELETE RESTRICT, -- RESTRICT policy in order to pay attention to the deletion of a collegio
+    FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE RESTRICT -- RESTRICT policy in order to pay attention to the deletion of a company
 );
 
 -- Table for linking thesis proposals with degree programmes containers
@@ -158,14 +160,6 @@ CREATE TABLE IF NOT EXISTS thesis_proposal_type (
     PRIMARY KEY (thesis_proposal_id, type_id),
     FOREIGN KEY (thesis_proposal_id) REFERENCES thesis_proposal(id) ON DELETE CASCADE,
     FOREIGN KEY (type_id) REFERENCES type(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS thesis_proposal_company (
-    thesis_proposal_id INT NOT NULL,
-    company_id INT NOT NULL,
-    PRIMARY KEY (thesis_proposal_id, company_id),
-    FOREIGN KEY (thesis_proposal_id) REFERENCES thesis_proposal(id) ON DELETE CASCADE,
-    FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE RESTRICT -- RESTRICT policy in order to pay attention to the deletion of a company
 );
 
 -- Table for linking thesis proposals with supervisors and cosupervisors
@@ -210,8 +204,8 @@ CREATE TABLE IF NOT EXISTS thesis_application_supervisor_cosupervisor(
 CREATE TABLE IF NOT EXISTS thesis_application_status_history(
     id INT AUTO_INCREMENT NOT NULL,
     thesis_application_id INT NOT NULL,
-    old_status ENUM('pending', 'approved', 'rejected', 'cancelled', 'ongoing', 'conclusion_requested', 'conclusion_approved', 'conclusion_rejected', 'almalaurea', 'compiled_questionnaire', 'final_exam', 'final_thesis', 'done'),
-    new_status ENUM('pending', 'approved', 'rejected', 'cancelled', 'ongoing', 'conclusion_requested', 'conclusion_approved', 'conclusion_rejected', 'almalaurea', 'compiled_questionnaire', 'final_exam', 'final_thesis', 'done') NOT NULL,
+    old_status ENUM('pending', 'approved', 'rejected', 'cancelled', 'ongoing', 'cancel_requested', 'cancel_approved', 'conclusion_requested', 'conclusion_approved', 'conclusion_rejected', 'almalaurea', 'compiled_questionnaire', 'final_exam', 'final_thesis', 'done'),
+    new_status ENUM('pending', 'approved', 'rejected', 'cancelled', 'ongoing', 'cancel_requested', 'cancel_approved', 'conclusion_requested', 'conclusion_approved', 'conclusion_rejected', 'almalaurea', 'compiled_questionnaire', 'final_exam', 'final_thesis', 'done') NOT NULL,
     change_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     FOREIGN KEY (thesis_application_id) REFERENCES thesis_application(id) ON DELETE CASCADE

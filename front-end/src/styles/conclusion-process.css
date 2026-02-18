@@ -261,6 +261,14 @@
   padding-right: 18px;
 }
 
+.final-thesis-upload-modal.modal-dialog {
+  max-width: min(1240px, 96vw);
+}
+
+.final-thesis-upload-row .cr-upload-col {
+  height: 100%;
+}
+
 .conclusion-process-content {
   padding: 1rem 0 1rem 1rem;
 }

@@ -43,6 +43,7 @@ router.post(
   upload.fields([
     { name: 'thesisFile', maxCount: 1 },
     { name: 'thesisResume', maxCount: 1 },
+    { name: 'additionalZip', maxCount: 1 },
   ]),
   uploadFinalThesis,
 );

@@ -33,7 +33,10 @@ export default function StepAuthorization() {
         ) : (
           <i className="fa-regular fa-lock" />
         )}
-        <span>{t('carriera.conclusione_tesi.authorization')}</span>
+        <span>{t('carriera.conclusione_tesi.authorization')} *</span>
+      </div>
+      <div className="text-muted cr-help mt-1 mb-2" style={{ fontSize: '0.72rem' }}>
+        {t('carriera.conclusione_tesi.required_fields_note')}
       </div>
       <div>
         <Row className="mb-3">
@@ -76,7 +79,7 @@ export default function StepAuthorization() {
           <>
             <Row className="mb-3 g-3">
               <Col md={7}>
-                <Form.Label htmlFor="motivations">{t('carriera.conclusione_tesi.motivations')}</Form.Label>
+                <Form.Label htmlFor="motivations">{t('carriera.conclusione_tesi.motivations')} *</Form.Label>
                 {embargoMotivationsList.map(mot => (
                   <React.Fragment key={mot.id}>
                     <Form.Check
@@ -101,7 +104,9 @@ export default function StepAuthorization() {
               </Col>
 
               <Col md={5}>
-                <Form.Label htmlFor="embargo-period">{t('carriera.conclusione_tesi.embargo_period.title')}</Form.Label>
+                <Form.Label htmlFor="embargo-period">
+                  {t('carriera.conclusione_tesi.embargo_period.title')} *
+                </Form.Label>
 
                 <Form.Check
                   type="radio"
@@ -146,7 +151,7 @@ export default function StepAuthorization() {
         {authorization === 'authorize' && (
           <Row className="mb-2">
             <Col md={12}>
-              <Form.Label htmlFor="license-choice">{t('carriera.conclusione_tesi.license_choice')}</Form.Label>
+              <Form.Label htmlFor="license-choice">{t('carriera.conclusione_tesi.license_choice')} *</Form.Label>
 
               {licenses.map(license => (
                 <Form.Check

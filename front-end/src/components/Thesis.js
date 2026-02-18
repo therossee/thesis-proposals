@@ -9,6 +9,7 @@ import API from '../API';
 import { ThemeContext, ToastContext } from '../App';
 import '../styles/utilities.css';
 import { getSystemTheme } from '../utils/utils';
+import CustomBadge from './CustomBadge';
 import CustomBlock from './CustomBlock';
 import CustomModal from './CustomModal';
 import FinalThesisUpload from './FinalThesisUpload';
@@ -104,6 +105,7 @@ export default function Thesis(props) {
   };
 
   const abstractText = thesis?.abstract || '';
+  const normalizedTopic = String(data?.topic || '').replace(/(?:\r?\n){2,}/g, '\n');
 
   const thesisStatusOrder = [
     'ongoing',
@@ -267,15 +269,16 @@ export default function Thesis(props) {
                 </Card>
                 <Card className="mb-3 roundCard py-2 ">
                   <Card.Header className="border-0 d-flex justify-content-center align-items-center">
-                    <h3 className="thesis-topic" style={{ fontStyle: 'italic' }}>
-                      Informazioni di carattere generico
-                    </h3>
+                    <h3 className="thesis-topic">{t('carriera.tesi.information.title')}</h3>
                   </Card.Header>
                   <Card.Body className="pt-2 pb-0">
-                    <p style={{ fontSize: 'var(--font-size-sm)', fontStyle: 'italic' }} className="text-center">
-                      Puoi aggiungere qui altre informazioni utili per lo studente che non ha ancora una tesi in corso o
-                      una candidatura inviata.
-                    </p>
+                    <ul style={{ fontSize: 'var(--font-size-sm)' }} className="mb-0">
+                      <li>{t('carriera.tesi.information.line_1')}</li>
+                      <li>{t('carriera.tesi.information.line_2')}</li>
+                      <li>{t('carriera.tesi.information.line_3')}</li>
+                      <li>{t('carriera.tesi.information.line_4')}</li>
+                      <li>{t('carriera.tesi.information.line_5')}</li>
+                    </ul>
                   </Card.Body>
                 </Card>
               </Col>
@@ -363,12 +366,12 @@ export default function Thesis(props) {
                 </Card.Header>
                 <Card.Body className="pt-2 pb-0">
                   <p className="info-detail">
-                    {data.topic.length > 600 && !showFullTopic ? (
-                      <>{data.topic.substring(0, 597) + '... '}</>
+                    {normalizedTopic.length > 400 && !showFullTopic ? (
+                      <>{normalizedTopic.substring(0, 397) + '... '}</>
                     ) : (
-                      <>{data.topic}</>
+                      <>{normalizedTopic}</>
                     )}
-                    {data.topic.length > 600 && (
+                    {normalizedTopic.length > 400 && (
                       <Button
                         variant="link"
                         onClick={() => setShowFullTopic(!showFullTopic)}
@@ -383,6 +386,11 @@ export default function Thesis(props) {
                       </Button>
                     )}
                   </p>
+                  {data.company && (
+                    <CustomBlock icon="building" title="carriera.proposta_di_tesi.azienda" ignoreMoreLines>
+                      <CustomBadge variant="external-company" content={data.company.corporateName} />
+                    </CustomBlock>
+                  )}
                 </Card.Body>
               </Card>
               <Row className="mb-3">
@@ -539,6 +547,11 @@ function LinkCard() {
           link="https://www.overleaf.com/latex/templates/politecnico-di-torino-thesis-template/cmpmxftwvvbr"
         />
         <LinkBlock
+          icon="file-pdf"
+          title="carriera.tesi.utilities.pdfa_converter"
+          link="carriera.tesi.utilities.pdfa_converter_link"
+        />
+        <LinkBlock
           icon="file-word"
           title="carriera.tesi.utilities.thesis_cover_word"
           link="carriera.tesi.utilities.thesis_cover_word_link"
@@ -599,6 +612,10 @@ Thesis.propTypes = {
     submissionDate: PropTypes.string.isRequired,
     supervisor: PropTypes.object.isRequired,
     coSupervisors: PropTypes.arrayOf(PropTypes.object),
+    company: PropTypes.shape({
+      id: PropTypes.number,
+      corporateName: PropTypes.string,
+    }),
     statusHistory: PropTypes.arrayOf(
       PropTypes.shape({
         oldStatus: PropTypes.string,

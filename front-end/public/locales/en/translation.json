@@ -86,6 +86,7 @@
         },
         "proposta_di_tesi": {
             "dettagli_proposta_di_tesi": "Proposal details",
+            "azienda": "Company",
             "descrizione": "Description",
             "conoscenze_richieste": "Required knowledge",
             "note": "Notes",
@@ -129,6 +130,8 @@
                 "english_version": "English version",
                 "plagiarism_link": "https://youtu.be/FxwDKfmcCUU",
                 "thesis_template": "Thesis template (LaTeX)",
+                "pdfa_converter": "PDF/A converter",
+                "pdfa_converter_link": "https://didattica.polito.it/pls/portal30/sviluppo.elaborato_finale.consegna_pdf_conv",
                 "copyright_link": "https://didattica.polito.it/tesi/DirittoAutoreTesi.pdf",
                 "thesis_cover_word": "Thesis cover page (Word)",
                 "thesis_cover_word_link": "https://didattica.polito.it/portal/pls/portal/sviluppo.dsk_condiviso.download_file?p_id=131377&dsk=57554",
@@ -215,12 +218,12 @@
                 "confirm_text": "Yes, cancel"
             },
             "information": {
-                "title": "Thesis information",
-                "line_1": "Regularly check the timeline on the left to monitor the status and deadlines of your thesis.",
-                "line_2": "Communicate promptly with your supervisor to clarify doubts and receive feedback.",
-                "line_3": "Respect the deadlines indicated in this section and upload the required documents on time.",
-                "line_4": "Ensure that all steps are completed before proceeding to the next step.",
-                "line_5": "In case of technical problems, contact support through the appropriate section."
+                "title": "Thesis request tips",
+                "line_1": "Review the available proposals and choose the ones that best match your interests, otherwise consider submitting a custom request.",
+                "line_2": "Contact a potential supervisor first to confirm availability and alignment on the topic.",
+                "line_3": "In the topic field, write a few clear lines: motivation and relevant skills.",
+                "line_4": "Review your request before submitting and make sure the title and topic are clear and consistent.",
+                "line_5": "If you do not receive a reply, you can send a brief follow-up after a few days."
             },
             "application_form": "New Thesis Request",
             "show_more": "Show more",
@@ -396,6 +399,7 @@
             },
             "select_keywords_placeholder": "Select keywords",
             "sending": "Sending...",
+            "required_fields_note": "Fields marked with * are required.",
             "save_draft": "Save draft",
             "draft_saved": "Draft saved. Attached files are not saved in drafts.",
             "draft_save_failed": "Failed to save draft.",
@@ -417,6 +421,21 @@
             "request_submitted_content": "The supervisor will receive the request to confirm the conclusion of the thesis.",
             "request_submission_failed_title": "Error submitting the request.",
             "request_submission_failed_content": "An error occurred while submitting the request. Please try again later.",
+            "submit_labels": {
+                "supervisor": "Supervisor",
+                "language": "Language",
+                "title_original": "Original title",
+                "title_english": "English title",
+                "abstract_original": "Original abstract",
+                "abstract_english": "English abstract",
+                "keywords": "Keywords",
+                "sdgs": "SDGs",
+                "authorization": "Authorization",
+                "license": "License",
+                "embargo": "Embargo",
+                "embargo_duration": "Embargo duration",
+                "declarations_accepted": "Accepted declarations"
+            },
             "final_thesis_modal": {
                 "title": "Upload final thesis",
                 "body": "Are you sure you want to upload the final thesis? Once uploaded, you will no longer be able to modify the thesis details.",

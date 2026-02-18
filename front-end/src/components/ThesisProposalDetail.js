@@ -39,6 +39,7 @@ function ThesisProposalDetail(props) {
     attachmentUrl,
     keywords,
     types,
+    company,
   } = props.thesisProposal;
 
   const supervisors = [supervisor, ...internalCoSupervisors];
@@ -77,7 +78,7 @@ function ThesisProposalDetail(props) {
         topic: topic,
       },
       topic: topic + '\n' + description,
-      company: null,
+      company: company ? company : null,
       supervisor: props.thesisProposal.supervisor,
       coSupervisors: internalCoSupervisors,
     };
@@ -140,6 +141,11 @@ function ThesisProposalDetail(props) {
               <CustomBlock icon="user" title="carriera.proposte_di_tesi.supervisors" ignoreMoreLines>
                 <CustomBadge variant="teacher" content={supervisors.map(s => s.lastName + ' ' + s.firstName)} />
               </CustomBlock>
+              {company && (
+                <CustomBlock icon="building" title="carriera.proposta_di_tesi.azienda" ignoreMoreLines>
+                  <CustomBadge variant="external-company" content={company.corporateName} />
+                </CustomBlock>
+              )}
               {keywords.length > 0 ? (
                 <CustomBlock icon="key" title="carriera.proposte_di_tesi.keywords" ignoreMoreLines>
                   <CustomBadge variant="keyword" content={keywords.map(item => item.keyword)} />
@@ -271,6 +277,10 @@ ThesisProposalDetail.propTypes = {
     attachmentUrl: PropTypes.string,
     keywords: PropTypes.array,
     types: PropTypes.array,
+    company: PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      corporateName: PropTypes.string.isRequired,
+    }),
   }).isRequired,
 };
 

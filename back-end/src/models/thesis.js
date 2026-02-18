@@ -50,6 +50,10 @@ module.exports = (sequelize, DataTypes) => {
       company_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
+        references: {
+          model: 'company',
+          key: 'id',
+        },
       },
       student_id: {
         type: DataTypes.STRING(6),
@@ -62,6 +66,8 @@ module.exports = (sequelize, DataTypes) => {
       status: {
         type: DataTypes.ENUM(
           'ongoing',
+          'cancel_requested',
+          'cancel_approved',
           'conclusion_requested',
           'conclusion_approved',
           'conclusion_rejected',

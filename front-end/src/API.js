@@ -301,11 +301,12 @@ const updateThesisConclusionStatus = async updateData => {
   }
 };
 
-const uploadFinalThesis = async (thesisFile, thesisResume = null) => {
+const uploadFinalThesis = async (thesisFile, thesisResume = null, additionalZip = null) => {
   try {
     const formData = new FormData();
     formData.append('thesisFile', thesisFile);
     if (thesisResume) formData.append('thesisResume', thesisResume);
+    if (additionalZip) formData.append('additionalZip', additionalZip);
 
     const response = await axios.post(`${URL}/thesis-conclusion/upload-final-thesis`, formData, {
       headers: {

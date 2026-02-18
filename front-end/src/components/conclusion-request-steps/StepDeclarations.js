@@ -13,6 +13,9 @@ export default function StepDeclarations() {
         <i className="fa-regular fa-pen-to-square" />
         <span>{t('carriera.conclusione_tesi.declarations.student_declarations')}</span>
       </div>
+      <div className="text-muted cr-help mt-1 mb-2" style={{ fontSize: '0.72rem' }}>
+        {t('carriera.conclusione_tesi.required_fields_note')}
+      </div>
       <div>
         <Row className="mb-2">
           <Col md="auto">

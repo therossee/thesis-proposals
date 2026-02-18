@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 
 import { Button } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -14,8 +14,10 @@ export default function ConclusioneTesi() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { showToast } = useContext(ToastContext);
+  const [requestSubmittedSuccess, setRequestSubmittedSuccess] = useState(false);
 
   const handleConclusionRequestResult = success => {
+    setRequestSubmittedSuccess(success);
     if (success) {
       showToast({
         success: true,
@@ -36,12 +38,14 @@ export default function ConclusioneTesi() {
       <CustomBreadcrumb />
       <div className="proposal-container justify-content-between d-flex tesi-header-bar tesi-header-bar--flush-right">
         <CustomHeader title={t('carriera.conclusione_tesi.title')} action={() => navigate(-1)} />
-        <div className="tesi-header-actions">
-          <Button className="btn-outlined-light tesi-header-action-btn d-flex align-items-center" type="button">
-            <i className="fa-regular fa-floppy-disk me-2" />
-            {t('carriera.conclusione_tesi.save_draft')}
-          </Button>
-        </div>
+        {!requestSubmittedSuccess && (
+          <div className="tesi-header-actions">
+            <Button className="btn-outlined-light tesi-header-action-btn d-flex align-items-center" type="button">
+              <i className="fa-regular fa-floppy-disk me-2" />
+              {t('carriera.conclusione_tesi.save_draft')}
+            </Button>
+          </div>
+        )}
       </div>
       <ConclusionRequest onSubmitResult={handleConclusionRequestResult} />
     </>

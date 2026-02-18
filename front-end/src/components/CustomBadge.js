@@ -129,14 +129,16 @@ export default function CustomBadge({ variant, content, type, filters, applyFilt
 
   const renderSimpleBadge = () => {
     const contentArray = Array.isArray(content) ? content : [content];
+    const selectedVariant = variant === 'external-company' ? 'external' : variant;
     return contentArray.map((item, index) => (
       <div
         key={`${item}-${index}`}
-        className={`custom-badge badge ${variant}_${appliedTheme} ${variant === 'type' ? 'pe-2' : ''}`}
+        className={`custom-badge badge ${selectedVariant}_${appliedTheme} ${variant === 'type' ? 'pe-2' : ''}`}
       >
-        {(variant === 'type' || variant === 'teacher_inline' || variant === 'sdg') && (
-          <div className="custom-badge-icon">{renderIcon(item)}</div>
-        )}
+        {(variant === 'type' ||
+          variant === 'teacher_inline' ||
+          variant === 'sdg' ||
+          variant === 'external-company') && <div className="custom-badge-icon">{renderIcon(item)}</div>}
         <div className="custom-badge-text">{item}</div>
       </div>
     ));
@@ -499,9 +501,20 @@ CustomBadge.propTypes = {
   variant: PropTypes.string.isRequired,
   content: PropTypes.oneOfType([
     PropTypes.string,
-    PropTypes.shape({ content: PropTypes.string, id: PropTypes.number }),
+    PropTypes.number,
+    PropTypes.shape({
+      content: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.node]),
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    }),
     PropTypes.arrayOf(
-      PropTypes.oneOfType([PropTypes.string, PropTypes.shape({ content: PropTypes.string, id: PropTypes.number })]),
+      PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.number,
+        PropTypes.shape({
+          content: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.node]),
+          id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        }),
+      ]),
     ),
   ]),
   type: PropTypes.oneOf(validTypes),

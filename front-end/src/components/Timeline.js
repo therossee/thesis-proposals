@@ -24,6 +24,8 @@ export default function Timeline({ activeStep, statusHistory, session }) {
     'rejected',
     'cancelled',
     'ongoing',
+    'cancel_requested',
+    'cancel_approved',
     'conclusion_requested',
     'conclusion_approved',
     'conclusion_rejected',
@@ -75,7 +77,31 @@ export default function Timeline({ activeStep, statusHistory, session }) {
       })
       .sort((a, b) => moment.utc(a.deadline_date).valueOf() - moment.utc(b.deadline_date).valueOf());
   }, [deadlines]);
-  const nextDeadline = useMemo(() => sortedDeadlines.find(deadline => deadline.daysLeft >= 0), [sortedDeadlines]);
+  const nextDeadline = useMemo(() => {
+    const upcomingDeadlines = sortedDeadlines.filter(deadline => deadline.daysLeft >= 0);
+    if (!upcomingDeadlines.length) return null;
+
+    const thesisStatuses = new Set([
+      'ongoing',
+      'conclusion_requested',
+      'conclusion_approved',
+      'conclusion_rejected',
+      'almalaurea',
+      'compiled_questionnaire',
+      'final_exam',
+      'final_thesis',
+      'done',
+    ]);
+
+    if (thesisStatuses.has(normalizedActiveStep)) {
+      const thesisRelevantNextDeadline = upcomingDeadlines.find(
+        deadline => deadline.deadline_type === 'conclusion_request' || deadline.deadline_type === 'exams',
+      );
+      if (thesisRelevantNextDeadline) return thesisRelevantNextDeadline;
+    }
+
+    return upcomingDeadlines[0];
+  }, [sortedDeadlines, normalizedActiveStep]);
 
   const getLastHistory = matcher => {
     if (visibleStatusHistory.length === 0) return null;
@@ -300,7 +326,8 @@ export default function Timeline({ activeStep, statusHistory, session }) {
     let circleClass;
     let titleClass;
     const historyEntry = getHistoryForStep(key);
-    const shouldShowTimestamp = Boolean(historyEntry) && (activeStep !== 'ongoing' || isFinalUploadRejectedStep);
+    const shouldShowTimestamp =
+      Boolean(historyEntry) && (activeStep !== 'ongoing' || isFinalUploadRejectedStep || isCompleted);
 
     if (isActive) {
       if (['approved', 'rejected', 'cancelled'].includes(key)) {
@@ -422,7 +449,7 @@ export default function Timeline({ activeStep, statusHistory, session }) {
 
   return (
     <>
-      <Card className={`mb-3 roundCard py-2${isDisabled ? ' timeline-disabled' : ''}`}>
+      <Card className={`mb-3 roundCard py-2 timeline-card${isDisabled ? ' timeline-disabled' : ''}`}>
         <Card.Header className="border-0">
           <div className="d-flex align-items-center timeline-header-row">
             <h3 className="thesis-topic">
@@ -440,7 +467,7 @@ export default function Timeline({ activeStep, statusHistory, session }) {
             </Button>
           </div>
         </Card.Header>
-        <Card.Body>
+        <Card.Body className="timeline-card-body">
           <div className="timeline-scroll" ref={timelineScrollRef}>
             <div className="progress-tracker-container">
               {steps.map(step => renderStep(step, normalizedActiveStep))}

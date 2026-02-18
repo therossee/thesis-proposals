@@ -15,6 +15,7 @@ const {
   EmbargoMotivation,
   License,
   LoggedStudent,
+  ThesisApplication,
   SustainableDevelopmentGoal,
   GraduationSession,
   Deadline,
@@ -236,22 +237,36 @@ const sendThesisConclusionRequest = async (req, res) => {
           }))
           .filter(goal => Number.isFinite(Number(goal.id)));
         const goalIds = normalizedSdgs.map(goal => Number(goal.id));
+        const uniqueGoalIds = [...new Set(goalIds)];
         const currentGoals = await SustainableDevelopmentGoal.findAll({
           where: {
             id: {
-              [Op.in]: goalIds,
+              [Op.in]: uniqueGoalIds,
             },
           },
           transaction,
         });
-        if (goalIds.length && currentGoals.length !== goalIds.length) {
+        if (uniqueGoalIds.length && currentGoals.length !== uniqueGoalIds.length) {
           throwHttp(400, 'One or more sustainable development goals not found');
         }
+
+        // The schema allows one row per SDG per thesis (PK thesis_id + goal_id).
+        // If the same SDG is selected multiple times (e.g. NOT APPLICABLE), keep only one row.
+        // Prefer "primary" when present.
+        const dedupedByGoalId = new Map();
         for (const goal of normalizedSdgs) {
+          const id = Number(goal.id);
+          const previous = dedupedByGoalId.get(id);
+          if (!previous || goal.level === 'primary') {
+            dedupedByGoalId.set(id, { id, level: goal.level });
+          }
+        }
+
+        for (const goal of dedupedByGoalId.values()) {
           await ThesisSustainableDevelopmentGoal.create(
             {
               thesis_id: thesis.id,
-              goal_id: Number(goal.id),
+              goal_id: goal.id,
               sdg_level: goal.level,
             },
             { transaction },
@@ -534,13 +549,49 @@ const getEmbargoMotivations = async (req, res) => {
 // Restituisce tutte le deadline della sessione di laurea più vicina in base al flag
 
 const getSessionDeadlines = async (req, res) => {
-  const type = req.query.type;
+  const requestedType = req.query.type;
   const now = new Date();
+
+  const logged = await LoggedStudent.findOne();
+  if (!logged) {
+    return res.status(401).json({ error: 'No logged-in student found' });
+  }
+
+  const thesis = await Thesis.findOne({
+    where: { student_id: logged.student_id },
+  });
+
+  const activeApplication = await ThesisApplication.findOne({
+    where: {
+      student_id: logged.student_id,
+      status: { [Op.in]: ['pending', 'approved'] },
+    },
+    order: [['submission_date', 'DESC']],
+  });
+
+  let effectiveType = requestedType;
+  if (thesis) effectiveType = 'thesis';
+  else if (activeApplication) effectiveType = 'application';
+  else effectiveType = 'no_application';
+
   let deadlineType;
-  if (type === 'no_application') deadlineType = 'thesis_request';
-  else if (type === 'application') deadlineType = 'conclusion_request';
-  else if (type === 'thesis') deadlineType = 'final_exam_registration';
+  if (effectiveType === 'no_application') deadlineType = 'thesis_request';
+  else if (effectiveType === 'application') deadlineType = 'conclusion_request';
+  else if (effectiveType === 'thesis') deadlineType = 'final_exam_registration';
   else return res.status(400).json({ error: 'Invalid flag' });
+
+  let shouldForceNextSession = false;
+  if (thesis?.thesis_application_id && thesis.status === 'ongoing') {
+    const lastFinalUploadRejected = await ThesisApplicationStatusHistory.findOne({
+      where: {
+        thesis_application_id: thesis.thesis_application_id,
+        old_status: 'final_thesis',
+        new_status: 'ongoing',
+      },
+      order: [['change_date', 'DESC']],
+    });
+    shouldForceNextSession = Boolean(lastFinalUploadRejected);
+  }
 
   const query = {
     where: {
@@ -556,9 +607,22 @@ const getSessionDeadlines = async (req, res) => {
     ],
   };
 
-  const refDeadline = await Deadline.findOne(query);
-  if (!refDeadline) {
+  const upcomingDeadlines = await Deadline.findAll(query);
+  if (!upcomingDeadlines.length) {
     return res.status(404).json({ error: 'No upcoming deadline found for this flag' });
+  }
+
+  let refDeadline = upcomingDeadlines[0];
+  if (shouldForceNextSession) {
+    const firstSessionId =
+      upcomingDeadlines[0].graduation_session_id ||
+      (upcomingDeadlines[0].graduation_session && upcomingDeadlines[0].graduation_session.id);
+    const nextSessionDeadline = upcomingDeadlines.find(
+      d => (d.graduation_session_id || d.graduation_session?.id) !== firstSessionId,
+    );
+    if (nextSessionDeadline) {
+      refDeadline = nextSessionDeadline;
+    }
   }
 
   const sessionId =
@@ -588,6 +652,7 @@ const uploadFinalThesis = async (req, res) => {
   try {
     const thesisFile = req.files?.thesisFile?.[0] || null;
     const thesisResume = req.files?.thesisResume?.[0] || null;
+    const additionalZip = req.files?.additionalZip?.[0] || null;
     if (!thesisFile) {
       return res.status(400).json({ error: 'Missing thesis file' });
     }
@@ -596,17 +661,20 @@ const uploadFinalThesis = async (req, res) => {
     if (!logged) {
       await fs.unlink(thesisFile.path).catch(() => {});
       if (thesisResume?.path) await fs.unlink(thesisResume.path).catch(() => {});
+      if (additionalZip?.path) await fs.unlink(additionalZip.path).catch(() => {});
       return res.status(401).json({ error: 'Unauthorized' });
     }
     const loggedStudent = await Student.findByPk(logged.student_id);
     if (!loggedStudent) {
       await fs.unlink(thesisFile.path).catch(() => {});
       if (thesisResume?.path) await fs.unlink(thesisResume.path).catch(() => {});
+      if (additionalZip?.path) await fs.unlink(additionalZip.path).catch(() => {});
       return res.status(404).json({ error: 'Student not found' });
     }
     const requiredResume = await isResumeRequiredForStudent(loggedStudent);
     if (requiredResume && !thesisResume) {
       await fs.unlink(thesisFile.path).catch(() => {});
+      if (additionalZip?.path) await fs.unlink(additionalZip.path).catch(() => {});
       return res.status(400).json({ error: 'Missing thesis resume file' });
     }
 
@@ -621,6 +689,7 @@ const uploadFinalThesis = async (req, res) => {
     } catch (error) {
       await fs.unlink(thesisFile.path).catch(() => {});
       if (thesisResume?.path) await fs.unlink(thesisResume.path).catch(() => {});
+      if (additionalZip?.path) await fs.unlink(additionalZip.path).catch(() => {});
       return res.status(error.status || 500).json({ error: error.message });
     }
     await fs.writeFile(thesisPdfPath, thesisBuffer);
@@ -633,10 +702,16 @@ const uploadFinalThesis = async (req, res) => {
         resumeBuffer = await readAndValidatePdfA(thesisResume);
       } catch (error) {
         await fs.unlink(thesisResume.path).catch(() => {});
+        if (additionalZip?.path) await fs.unlink(additionalZip.path).catch(() => {});
         return res.status(error.status || 500).json({ error: error.message });
       }
       await fs.writeFile(resumePdfPath, resumeBuffer);
       await fs.unlink(thesisResume.path).catch(() => {});
+    }
+    if (additionalZip?.path) {
+      const additionalZipName = `final_additional_${loggedStudent.id}.zip`;
+      const additionalZipPath = path.join(uploadBaseDir, additionalZipName);
+      await moveFile(additionalZip.path, additionalZipPath);
     }
 
     const result = await sequelize.transaction(async transaction => {
@@ -667,6 +742,12 @@ const uploadFinalThesis = async (req, res) => {
         const resumePdfPath = path.join(uploadBaseDir, resumePdfName);
         thesis.thesis_resume = null;
         thesis.thesis_resume_path = path.relative(path.join(__dirname, '..', '..'), resumePdfPath);
+      }
+      if (additionalZip?.path) {
+        const additionalZipName = `final_additional_${loggedStudent.id}.zip`;
+        const additionalZipPath = path.join(uploadBaseDir, additionalZipName);
+        thesis.additional_zip = null;
+        thesis.additional_zip_path = path.relative(path.join(__dirname, '..', '..'), additionalZipPath);
       }
       thesis.status = 'final_thesis';
       await thesis.save({ transaction });

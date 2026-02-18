@@ -33,6 +33,7 @@ export default function StepDetails() {
     showSdgDescription,
     setShowSdgDescription,
     sdgOptions,
+    isNotApplicableSdg,
     primarySdg,
     setPrimarySdg,
     secondarySdg1,
@@ -49,6 +50,9 @@ export default function StepDetails() {
             <i className="fa-regular fa-file-lines me-2" />
             {t('carriera.conclusione_tesi.details')}
           </span>
+        </div>
+        <div className="text-muted cr-help mt-1 mb-2" style={{ fontSize: '0.72rem' }}>
+          {t('carriera.conclusione_tesi.required_fields_note')}
         </div>
 
         <div>
@@ -107,7 +111,7 @@ export default function StepDetails() {
             <Col md={12}>
               <Form.Group>
                 <Form.Label htmlFor="title-original">
-                  <i className={flagSelector()} /> {t('carriera.conclusione_tesi.title_original')}
+                  <i className={flagSelector()} /> {t('carriera.conclusione_tesi.title_original')} *
                 </Form.Label>
                 <Form.Control
                   as="textarea"
@@ -127,7 +131,7 @@ export default function StepDetails() {
               <Col md={12}>
                 <Form.Group>
                   <Form.Label htmlFor="title-translation">
-                    <i className="fi fi-gb" /> {t('carriera.conclusione_tesi.title_translation')}
+                    <i className="fi fi-gb" /> {t('carriera.conclusione_tesi.title_translation')} *
                   </Form.Label>
                   <div className="text-muted cr-help mb-2">{t('carriera.conclusione_tesi.title_translation_help')}</div>
                   <Form.Control
@@ -149,7 +153,7 @@ export default function StepDetails() {
             <Col md={12}>
               <Form.Group>
                 <Form.Label htmlFor="abstract">
-                  <i className={flagSelector()} /> {t('carriera.conclusione_tesi.abstract')}
+                  <i className={flagSelector()} /> {t('carriera.conclusione_tesi.abstract')} *
                 </Form.Label>
                 <Form.Control
                   as="textarea"
@@ -169,7 +173,7 @@ export default function StepDetails() {
               <Col md={12}>
                 <Form.Group>
                   <Form.Label htmlFor="abstract-translation">
-                    <i className="fi fi-gb" /> {t('carriera.conclusione_tesi.abstract_translation')}
+                    <i className="fi fi-gb" /> {t('carriera.conclusione_tesi.abstract_translation')} *
                   </Form.Label>
                   <div className="text-muted cr-help">{t('carriera.conclusione_tesi.abstract_translation_help')}</div>
                   <Form.Control
@@ -243,49 +247,57 @@ export default function StepDetails() {
             <Row className="mb-2 g-3">
               <Col md={4}>
                 <Form.Group>
-                  <Form.Label htmlFor="primary-sdg">{t('carriera.conclusione_tesi.primary_sdg')}</Form.Label>
+                  <Form.Label htmlFor="idSdgP">{t('carriera.conclusione_tesi.primary_sdg')} *</Form.Label>
                   <CustomSelect
                     mode="sdg"
                     options={sdgOptions.filter(
-                      option => option.value !== secondarySdg1 && option.value !== secondarySdg2,
+                      option =>
+                        isNotApplicableSdg(option) ||
+                        (option.value !== secondarySdg1 && option.value !== secondarySdg2),
                     )}
                     selected={sdgOptions.find(option => option.value === primarySdg)}
                     setSelected={selected => setPrimarySdg(selected ? selected.value : '')}
                     isMulti={false}
                     isClearable={true}
                     className="select-sdg"
-                    id="primary-sdg"
+                    id="idSdgP"
                   />
                 </Form.Group>
               </Col>
               <Col md={4}>
                 <Form.Group>
-                  <Form.Label htmlFor="secondary-sdg-1">{t('carriera.conclusione_tesi.secondary_sdg_1')}</Form.Label>
+                  <Form.Label htmlFor="idSdgS1">{t('carriera.conclusione_tesi.secondary_sdg_1')} *</Form.Label>
                   <CustomSelect
                     mode="sdg"
-                    options={sdgOptions.filter(option => option.value !== primarySdg && option.value !== secondarySdg2)}
+                    options={sdgOptions.filter(
+                      option =>
+                        isNotApplicableSdg(option) || (option.value !== primarySdg && option.value !== secondarySdg2),
+                    )}
                     selected={sdgOptions.find(option => option.value === secondarySdg1)}
                     setSelected={selected => setSecondarySdg1(selected ? selected.value : '')}
                     isMulti={false}
                     isClearable={true}
                     className="select-sdg"
-                    id="secondary-sdg-1"
+                    id="idSdgS1"
                   />
                 </Form.Group>
               </Col>
 
               <Col md={4}>
                 <Form.Group>
-                  <Form.Label htmlFor="secondary-sdg-2">{t('carriera.conclusione_tesi.secondary_sdg_2')}</Form.Label>
+                  <Form.Label htmlFor="idSdgS2">{t('carriera.conclusione_tesi.secondary_sdg_2')} *</Form.Label>
                   <CustomSelect
                     mode="sdg"
-                    options={sdgOptions.filter(option => option.value !== primarySdg && option.value !== secondarySdg1)}
+                    options={sdgOptions.filter(
+                      option =>
+                        isNotApplicableSdg(option) || (option.value !== primarySdg && option.value !== secondarySdg1),
+                    )}
                     selected={sdgOptions.find(option => option.value === secondarySdg2)}
                     setSelected={selected => setSecondarySdg2(selected ? selected.value : '')}
                     isMulti={false}
                     isClearable={true}
                     className="select-sdg"
-                    id="secondary-sdg-2"
+                    id="idSdgS2"
                   />
                 </Form.Group>
               </Col>

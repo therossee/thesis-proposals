@@ -174,6 +174,11 @@ export default function ConclusionRequest({ onSubmitResult }) {
     }));
   }, [sdgs, t]);
 
+  const isNotApplicableSdg = option => {
+    const text = String(option?.label || '').toLowerCase();
+    return text.includes('not applicable') || text.includes('non applicabile');
+  };
+
   const handleClose = () => {
     if (isSubmitting) return;
     setError('');
@@ -206,7 +211,10 @@ export default function ConclusionRequest({ onSubmitResult }) {
     abstractText.length <= 3550 &&
     (!needsEnglishTranslation || String(titleEngText || '').trim().length > 0) &&
     (!needsEnglishTranslation || String(abstractEngText || '').trim().length > 0) &&
-    (!needsEnglishTranslation || abstractEngText.length <= 3550);
+    (!needsEnglishTranslation || abstractEngText.length <= 3550) &&
+    String(primarySdg || '').trim().length > 0 &&
+    String(secondarySdg1 || '').trim().length > 0 &&
+    String(secondarySdg2 || '').trim().length > 0;
 
   const resumeValid = !requiredResume || !!resumePdf;
   const baseValid = detailsValid && allDeclarationsChecked() && !!pdfFile && resumeValid; // almeno la tesi pdf/a deve esserci per inviare
@@ -423,6 +431,7 @@ export default function ConclusionRequest({ onSubmitResult }) {
       showSdgDescription,
       setShowSdgDescription,
       sdgOptions,
+      isNotApplicableSdg,
       primarySdg,
       setPrimarySdg,
       secondarySdg1,
@@ -481,6 +490,7 @@ export default function ConclusionRequest({ onSubmitResult }) {
       isSubmitting,
       showSdgDescription,
       sdgOptions,
+      isNotApplicableSdg,
       primarySdg,
       secondarySdg1,
       secondarySdg2,
