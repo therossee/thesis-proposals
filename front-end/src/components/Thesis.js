@@ -19,6 +19,7 @@ import LoadingModal from './LoadingModal';
 import TeacherContactCard from './TeacherContactCard';
 import ThesisRequestModal from './ThesisRequestModal';
 import Timeline from './Timeline';
+import NextStepsCard from './thesis-page/NextStepsCard';
 import NoApplicationSection from './thesis-page/NoApplicationSection';
 import ThesisSummaryCard from './thesis-page/ThesisSummaryCard';
 import ThesisTopicCard from './thesis-page/ThesisTopicCard';
@@ -200,7 +201,25 @@ export default function Thesis(props) {
                       )}
                     </Col>
                     <Col md={5}>
-                      <LinkCard />
+                      {thesisApplication.status === 'rejected' ? (
+                        <NextStepsCard
+                          t={t}
+                          appliedTheme={appliedTheme}
+                          variant="application_rejected"
+                          isEligible={isEligible}
+                          onOpenRequest={() => setShowRequestModal(true)}
+                        />
+                      ) : thesisApplication.status === 'cancelled' ? (
+                        <NextStepsCard
+                          t={t}
+                          appliedTheme={appliedTheme}
+                          variant="application_cancelled"
+                          isEligible={isEligible}
+                          onOpenRequest={() => setShowRequestModal(true)}
+                        />
+                      ) : (
+                        <LinkCard />
+                      )}
                     </Col>
                   </>
                 )}
