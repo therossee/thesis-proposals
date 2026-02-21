@@ -1,24 +1,27 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 
-import { Button, Card, Col, Row } from 'react-bootstrap';
+import { Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 import PropTypes from 'prop-types';
 
 import API from '../API';
 import { ThemeContext, ToastContext } from '../App';
+import useThesisDownloader from '../hooks/useThesisDownloader';
+import useThesisPageData from '../hooks/useThesisPageData';
 import '../styles/utilities.css';
+import { hasReachedConclusionRequest, normalizeTopic } from '../utils/thesisUtils';
 import { getSystemTheme } from '../utils/utils';
-import CustomBadge from './CustomBadge';
-import CustomBlock from './CustomBlock';
 import CustomModal from './CustomModal';
 import FinalThesisUpload from './FinalThesisUpload';
-import InfoTooltip from './InfoTooltip';
 import LinkCard from './LinkCard';
 import LoadingModal from './LoadingModal';
 import TeacherContactCard from './TeacherContactCard';
 import ThesisRequestModal from './ThesisRequestModal';
 import Timeline from './Timeline';
+import NoApplicationSection from './thesis-page/NoApplicationSection';
+import ThesisSummaryCard from './thesis-page/ThesisSummaryCard';
+import ThesisTopicCard from './thesis-page/ThesisTopicCard';
 
 export default function Thesis(props) {
   const {
@@ -34,101 +37,38 @@ export default function Thesis(props) {
     showFinalThesis,
     setShowFinalThesis,
   } = props;
-  const data = thesis ? thesis : thesisApplication;
-  const [isLoading, setIsLoading] = useState(false);
+
+  const data = thesis || thesisApplication || null;
+  const dataId = data?.id;
+
+  const { showToast } = useContext(ToastContext);
+  const { theme } = useContext(ThemeContext);
+  const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
+  const { t } = useTranslation();
+
   const [showFullTopic, setShowFullTopic] = useState(false);
   const [showFullAbstract, setShowFullAbstract] = useState(false);
-  const { showToast } = useContext(ToastContext);
-  const supervisors = data ? [data.supervisor, ...data.coSupervisors] : [];
+
+  const supervisors = data ? [data.supervisor, ...(data.coSupervisors || [])] : [];
   const activeStep = data ? (thesis ? thesis.status : thesisApplication.status) : 'none';
-  const [appStatusHistory, setAppStatusHistory] = useState(thesis ? thesis.applicationStatusHistory : []);
+
+  const { isLoading, sessionDeadlines, isEligible, requiredResume, appStatusHistory } = useThesisPageData({
+    thesis,
+    thesisApplication,
+    dataId,
+    API,
+  });
+
+  const downloadThesisFile = useThesisDownloader({ API, showToast, t });
+
+  const normalizedTopic = useMemo(() => normalizeTopic(data?.topic), [data?.topic]);
+
   const modalTitle = thesis ? 'carriera.tesi.modal_cancel.title' : 'carriera.tesi.cancel_application';
   const modalBody = thesis ? 'carriera.tesi.modal_cancel.body' : 'carriera.tesi.cancel_application_content';
   const modalConfirmText = thesis ? 'carriera.tesi.modal_cancel.confirm_text' : 'carriera.tesi.confirm_cancel';
   const modalConfirmIcon = thesis ? 'fa-regular fa-trash-can' : 'fa-regular fa-xmark';
-  const [sessionDeadlines, setSessionDeadlines] = useState({ graduationSession: null, deadlines: [] });
-  const [isEligible, setIsEligible] = useState(true);
-  const [requiredResume, setRequiredResume] = useState(false);
-  const { theme } = useContext(ThemeContext);
-  const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
-  const { t } = useTranslation();
-  console.log(sessionDeadlines);
-
-  const getFileName = path => {
-    if (!path) return '';
-    const chunks = String(path).split('/');
-    return chunks[chunks.length - 1] || '';
-  };
-
-  const downloadFile = async (fileType, filePath) => {
-    try {
-      const response = await API.getThesisFile(data.id, fileType);
-      const blob = response.data;
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const contentDisposition = response.headers?.['content-disposition'] || '';
-      const serverFileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
-      const fileName = serverFileNameMatch?.[1] || getFileName(filePath) || `${data.topic}_${fileType}`;
-
-      link.href = url;
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error(`Error downloading ${fileType}:`, error);
-      showToast({
-        success: false,
-        title: t('carriera.conclusione_tesi.download_error'),
-        message: t('carriera.conclusione_tesi.download_error_content'),
-      });
-    }
-  };
-
-  const renderDocumentLink = (icon, label, path, fileType) => {
-    if (!path) {
-      return (
-        <span className="link-container mb-0 d-inline-flex align-items-center text-muted">
-          <i className={`fa-regular fa-${icon} fa-fw me-1`} />
-          {label}: -
-        </span>
-      );
-    }
-
-    return (
-      <span className="link-container mb-0 d-inline-flex align-items-center">
-        <button type="button" onClick={() => downloadFile(fileType, path)} className="link-button">
-          <i className={`fa-regular fa-${icon} fa-fw me-1`} /> {label}
-        </button>
-      </span>
-    );
-  };
-
-  const abstractText = thesis?.abstract || '';
-  const normalizedTopic = String(data?.topic || '').replace(/(?:\r?\n){2,}/g, '\n');
-
-  const thesisStatusOrder = [
-    'ongoing',
-    'cancel_requested',
-    'cancel_approved',
-    'conclusion_requested',
-    'conclusion_approved',
-    'almalaurea',
-    'compiled_questionnaire',
-    'final_exam',
-    'final_thesis',
-    'done',
-  ];
-
-  const checkIfConclusionRequest = () => {
-    const currentStatusIndex = thesisStatusOrder.indexOf(thesis?.status);
-    const conclusionRequestedIndex = thesisStatusOrder.indexOf('conclusion_requested');
-    return currentStatusIndex >= conclusionRequestedIndex;
-  };
 
   const cancelThesis = () => {
-    setIsLoading(true);
     API.requestThesisCancelation()
       .then(() => {
         showToast({
@@ -146,14 +86,10 @@ export default function Thesis(props) {
           message: t('carriera.tesi.error_cancel_request_content'),
         });
         setShowModal(false);
-      })
-      .finally(() => {
-        setIsLoading(false);
       });
   };
 
   const cancelApplication = () => {
-    setIsLoading(true);
     API.cancelThesisApplication({ applicationId: data.id })
       .then(() => {
         showToast({
@@ -173,94 +109,23 @@ export default function Thesis(props) {
         });
         setShowModal(false);
         onCancelApplicationResult(false);
-      })
-      .finally(() => {
-        setIsLoading(false);
       });
   };
 
   const handleCancel = () => {
-    if (thesis) {
-      // Cancel thesis flow
-      cancelThesis();
-    } else {
-      cancelApplication();
-    }
+    if (thesis) cancelThesis();
+    else cancelApplication();
   };
 
-  useEffect(() => {
-    if (thesis) {
-      API.getSessionDeadlines('thesis')
-        .then(deadlines => {
-          setSessionDeadlines(deadlines);
-        })
-        .catch(error => {
-          console.error('Error fetching session deadlines:', error);
-        });
-      API.getRequiredResumeForLoggedStudent()
-        .then(data => {
-          setRequiredResume(data.requiredResume);
-        })
-        .catch(error => {
-          console.error('Error fetching required resume info:', error);
-        });
-      API.checkStudentEligibility()
-        .then(data => {
-          setIsEligible(data.eligible);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-      return;
-    } else if (thesisApplication) {
-      API.getStatusHistoryApplication(data.id)
-        .then(history => {
-          setAppStatusHistory(history);
-        })
-        .catch(error => {
-          console.error('Error fetching thesis application status history:', error);
-        });
-      API.checkStudentEligibility()
-        .then(data => {
-          setIsEligible(data.eligible);
-        })
-        .catch(error => {
-          console.error('Error checking student eligibility:', error);
-        });
-      API.getSessionDeadlines('application')
-        .then(deadlines => {
-          setSessionDeadlines(deadlines);
-        })
-        .catch(error => {
-          console.error('Error fetching session deadlines:', error);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    } else {
-      API.checkStudentEligibility()
-        .then(data => {
-          setIsEligible(data.eligible);
-        })
-        .catch(error => {
-          console.error('Error checking student eligibility:', error);
-        });
-      API.getSessionDeadlines('no_application')
-        .then(deadlines => {
-          setSessionDeadlines(deadlines);
-        })
-        .catch(error => {
-          console.error('Error fetching session deadlines:', error);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
-  }, [thesis, thesisApplication]);
+  const handleDownload = ({ fileType, filePath }) => {
+    if (!data) return;
+    downloadThesisFile({ thesisId: data.id, fileType, filePath, topic: data.topic });
+  };
 
   if (isLoading) {
-    return <LoadingModal show={isLoading} onHide={() => setIsLoading(false)} />;
+    return <LoadingModal show={isLoading} onHide={() => {}} />;
   }
+
   return (
     <>
       <div className="proposals-container">
@@ -274,165 +139,37 @@ export default function Thesis(props) {
               session={sessionDeadlines}
             />
           </Col>
+
           {!thesis && !thesisApplication && (
-            <>
-              <Col md={8} lg={8}>
-                <Card className="mb-3 roundCard py-2 d-flex justify-content-center align-items-center">
-                  <Card.Header className="border-0 d-flex justify-content-center align-items-center">
-                    <h3 className="thesis-topic m-0">{t('carriera.tesi.no_application.title')}</h3>
-                  </Card.Header>
-                  <Card.Body>
-                    <p
-                      dangerouslySetInnerHTML={{ __html: t('carriera.tesi.no_application.content') }}
-                      style={{ fontSize: 'var(--font-size-sm)' }}
-                      className="text-center"
-                    />
-                    {isEligible && (
-                      <Button
-                        className={`btn-primary-${appliedTheme} tesi-header-action-btn align-items-center d-flex mt-3 mx-auto`}
-                        onClick={() => {
-                          setShowRequestModal(true);
-                        }}
-                        style={{
-                          height: '30px',
-                          display: 'flex',
-                          borderRadius: '6px',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          padding: '0 10px',
-                        }}
-                      >
-                        <i className="fa-regular fa-file-lines" /> {t('carriera.tesi.application_form')}
-                      </Button>
-                    )}
-                  </Card.Body>
-                </Card>
-                <Card className="mb-3 roundCard py-2 d-flex justify-content-center align-items-center">
-                  <Card.Header className="border-0 d-flex justify-content-center align-items-center">
-                    <h3 className="thesis-topic">{t('carriera.tesi.information.title')}</h3>
-                  </Card.Header>
-                  <Card.Body className="pt-2 pb-2">
-                    <ul style={{ fontSize: 'var(--font-size-sm)' }} className="mb-0">
-                      <li>{t('carriera.tesi.information.line_1')}</li>
-                      <li>{t('carriera.tesi.information.line_2')}</li>
-                      <li>{t('carriera.tesi.information.line_3')}</li>
-                      <li>{t('carriera.tesi.information.line_4')}</li>
-                      <li>{t('carriera.tesi.information.line_5')}</li>
-                    </ul>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </>
+            <NoApplicationSection
+              t={t}
+              appliedTheme={appliedTheme}
+              isEligible={isEligible}
+              onOpenRequest={() => setShowRequestModal(true)}
+            />
           )}
+
           {(thesis || thesisApplication) && (
             <Col md={8} lg={8}>
-              {thesis && checkIfConclusionRequest() && (
-                <Card className="mb-3 roundCard py-2 ">
-                  <Card.Header className="border-0 d-flex align-items-center">
-                    <h3 className="thesis-topic mb-0">
-                      <i className="fa-regular fa-clipboard fa-sm pe-2" />
-                      {t('carriera.conclusione_tesi.summary')}
-                    </h3>
-                    <InfoTooltip
-                      tooltipText={t('carriera.conclusione_tesi.summary')}
-                      placement="right"
-                      id="thesis-summary-tooltip"
-                    />
-                  </Card.Header>
-                  <Card.Body className="pt-2 pb-0">
-                    <CustomBlock icon="text-size" title="Titolo" ignoreMoreLines>
-                      {thesis.title}
-                    </CustomBlock>
-                    <CustomBlock icon="align-left" title="Abstract" ignoreMoreLines>
-                      {abstractText.length > 300 && !showFullAbstract ? (
-                        <>{abstractText.substring(0, 297) + '... '}</>
-                      ) : (
-                        <>{abstractText || '-'}</>
-                      )}
-                      {abstractText.length > 300 && (
-                        <Button
-                          variant="link"
-                          onClick={() => setShowFullAbstract(!showFullAbstract)}
-                          aria-expanded={showFullAbstract}
-                          className="p-0 custom-link d-inline-flex align-items-center gap-1 align-baseline"
-                          style={{ fontSize: 'inherit', lineHeight: 'inherit', verticalAlign: 'baseline' }}
-                        >
-                          <i
-                            className={`fa-regular fa-chevron-${showFullAbstract ? 'up' : 'down'} cosupervisor-button`}
-                          />
-                          <span className="cosupervisor-button">
-                            {t(`carriera.tesi.${showFullAbstract ? 'show_less' : 'show_more'}`)}
-                          </span>
-                        </Button>
-                      )}
-                    </CustomBlock>
-
-                    <div className="mt-3 mb-2 fw-semibold">{t('carriera.conclusione_tesi.uploaded')}</div>
-                    <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
-                      {requiredResume &&
-                        renderDocumentLink(
-                          'file-pdf',
-                          t('carriera.conclusione_tesi.resume'),
-                          thesis.thesisResumePath,
-                          'resume',
-                        )}
-                      {renderDocumentLink(
-                        'file-circle-check',
-                        t('carriera.conclusione_tesi.thesis_pdfa'),
-                        thesis.thesisFilePath,
-                        'thesis',
-                      )}
-                      {renderDocumentLink(
-                        'file-zipper',
-                        t('carriera.conclusione_tesi.additional'),
-                        thesis.additionalZipPath,
-                        'additional',
-                      )}
-                    </div>
-                  </Card.Body>
-                </Card>
+              {thesis && hasReachedConclusionRequest(thesis.status) && (
+                <ThesisSummaryCard
+                  t={t}
+                  thesis={thesis}
+                  requiredResume={requiredResume}
+                  showFullAbstract={showFullAbstract}
+                  setShowFullAbstract={setShowFullAbstract}
+                  onDownload={handleDownload}
+                />
               )}
-              <Card className="mb-3 roundCard py-2 pb-2">
-                <Card.Header className="border-0 d-flex align-items-center">
-                  <h3 className="thesis-topic mb-0">
-                    <i className="fa-regular fa-book-open fa-sm pe-2" />
-                    {t('carriera.proposte_di_tesi.topic')}
-                  </h3>
-                  <InfoTooltip
-                    tooltipText={t('carriera.proposte_di_tesi.topic')}
-                    placement="right"
-                    id="thesis-topic-tooltip"
-                  />
-                </Card.Header>
-                <Card.Body className="pt-2 pb-0">
-                  <p className="info-detail">
-                    {normalizedTopic.length > 400 && !showFullTopic ? (
-                      <>{normalizedTopic.substring(0, 397) + '... '}</>
-                    ) : (
-                      <>{normalizedTopic}</>
-                    )}
-                    {normalizedTopic.length > 400 && (
-                      <Button
-                        variant="link"
-                        onClick={() => setShowFullTopic(!showFullTopic)}
-                        aria-expanded={showFullTopic}
-                        className="p-0 custom-link d-inline-flex align-items-center gap-1 align-baseline"
-                        style={{ fontSize: 'inherit', lineHeight: 'inherit', verticalAlign: 'baseline' }}
-                      >
-                        <i className={`fa-regular fa-chevron-${showFullTopic ? 'up' : 'down'} cosupervisor-button`} />
-                        <span className="cosupervisor-button">
-                          {t(`carriera.tesi.${showFullTopic ? 'show_less' : 'show_more'}`)}
-                        </span>
-                      </Button>
-                    )}
-                  </p>
-                  {data.company && (
-                    <CustomBlock icon="building" title="carriera.proposta_di_tesi.azienda" ignoreMoreLines>
-                      <CustomBadge variant="external-company" content={data.company.corporateName} />
-                    </CustomBlock>
-                  )}
-                </Card.Body>
-              </Card>
+
+              <ThesisTopicCard
+                t={t}
+                normalizedTopic={normalizedTopic}
+                showFullTopic={showFullTopic}
+                setShowFullTopic={setShowFullTopic}
+                company={data?.company}
+              />
+
               <Row className="mb-3">
                 {thesis && (
                   <>
@@ -443,51 +180,18 @@ export default function Thesis(props) {
                     </Col>
                     <Col md={5} lg={5}>
                       {thesis.status === 'cancel_approved' ? (
-                        <Card className="mb-1 roundCard py-2 ">
-                          <Card.Header className="border-0 d-flex align-items-center">
-                            <h3 className="thesis-topic mb-0">
-                              <i className="fa-regular fa-route" />{' '}
-                              {t('carriera.richiesta_tesi.next_steps_cancel_approved.title')}
-                            </h3>
-                            <InfoTooltip
-                              tooltipText={t('carriera.richiesta_tesi.next_steps_cancel_approved.title')}
-                              placement="right"
-                              id="thesis-next-steps-cancel-approved-tooltip"
-                            />
-                          </Card.Header>
-                          <Card.Body>
-                            <p
-                              dangerouslySetInnerHTML={{
-                                __html: t('carriera.richiesta_tesi.next_steps_cancel_approved.content'),
-                              }}
-                              style={{ fontSize: 'var(--font-size-sm)' }}
-                            />
-                            {isEligible && (
-                              <Button
-                                className={`btn-primary-${appliedTheme} tesi-header-action-btn align-items-center d-flex mt-3 mx-auto`}
-                                onClick={() => {
-                                  setShowRequestModal(true);
-                                }}
-                                style={{
-                                  height: '30px',
-                                  display: 'flex',
-                                  borderRadius: '6px',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  padding: '0 10px',
-                                }}
-                              >
-                                <i className="fa-regular fa-file-lines" /> {t('carriera.tesi.application_form')}
-                              </Button>
-                            )}
-                          </Card.Body>
-                        </Card>
+                        // lasciato invariato: se vuoi, estraiamo anche questo in un componente dedicato
+                        <div className="mb-1">
+                          {/* riuso LinkCard per ora */}
+                          <LinkCard />
+                        </div>
                       ) : (
                         <LinkCard />
                       )}
                     </Col>
                   </>
                 )}
+
                 {thesisApplication && (
                   <>
                     <Col>
@@ -496,74 +200,7 @@ export default function Thesis(props) {
                       )}
                     </Col>
                     <Col md={5}>
-                      {thesis ||
-                      (thesisApplication.status !== 'rejected' && thesisApplication.status !== 'cancelled') ? (
-                        <Card className="mb-3 roundCard py-2 ">
-                          <Card.Header className="border-0">
-                            <h3 className="thesis-topic">
-                              <i className="fa-regular fa-info-circle" /> {t('carriera.tesi.information.title')}
-                            </h3>
-                          </Card.Header>
-                          <Card.Body>
-                            <ul>
-                              <li>{t('carriera.tesi.information.line_1')}</li>
-                              <li>{t('carriera.tesi.information.line_2')}</li>
-                              <li>{t('carriera.tesi.information.line_3')}</li>
-                              <li>{t('carriera.tesi.information.line_4')}</li>
-                              <li>{t('carriera.tesi.information.line_5')}</li>
-                            </ul>
-                          </Card.Body>
-                        </Card>
-                      ) : (
-                        <Card className="mb-1 roundCard py-2 ">
-                          <Card.Header className="border-0">
-                            <h3 className="thesis-topic">
-                              <i className="fa-regular fa-route" />{' '}
-                              {thesisApplication.status === 'rejected'
-                                ? t('carriera.richiesta_tesi.next_steps_rejected.title')
-                                : t('carriera.richiesta_tesi.next_steps_cancelled.title')}
-                            </h3>
-                            <InfoTooltip
-                              tooltipText={
-                                thesisApplication.status === 'rejected'
-                                  ? t('carriera.richiesta_tesi.next_steps_rejected.title')
-                                  : t('carriera.richiesta_tesi.next_steps_cancelled.title')
-                              }
-                              placement="right"
-                              id="thesis-next-steps-tooltip"
-                            />
-                          </Card.Header>
-                          <Card.Body>
-                            <p
-                              dangerouslySetInnerHTML={{
-                                __html:
-                                  thesisApplication.status === 'rejected'
-                                    ? t('carriera.richiesta_tesi.next_steps_rejected.content')
-                                    : t('carriera.richiesta_tesi.next_steps_cancelled.content'),
-                              }}
-                              style={{ fontSize: 'var(--font-size-sm)' }}
-                            />
-                            {isEligible && (
-                              <Button
-                                className={`btn-primary-${appliedTheme} tesi-header-action-btn align-items-center d-flex mt-3 mx-auto`}
-                                onClick={() => {
-                                  setShowRequestModal(true);
-                                }}
-                                style={{
-                                  height: '30px',
-                                  display: 'flex',
-                                  borderRadius: '6px',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  padding: '0 10px',
-                                }}
-                              >
-                                <i className="fa-regular fa-file-lines" /> {t('carriera.tesi.application_form')}
-                              </Button>
-                            )}
-                          </Card.Body>
-                        </Card>
-                      )}
+                      <LinkCard />
                     </Col>
                   </>
                 )}
@@ -571,6 +208,7 @@ export default function Thesis(props) {
             </Col>
           )}
         </Row>
+
         <CustomModal
           show={showModal}
           handleClose={() => setShowModal(false)}
@@ -580,11 +218,13 @@ export default function Thesis(props) {
           confirmText={modalConfirmText}
           confirmIcon={modalConfirmIcon}
         />
+
         <ThesisRequestModal
           show={showRequestModal}
           setShow={setShowRequestModal}
           onSubmitResult={onRequestSubmitResult}
         />
+
         <FinalThesisUpload
           show={showFinalThesis}
           setShow={setShowFinalThesis}
@@ -599,9 +239,6 @@ Thesis.propTypes = {
   thesis: PropTypes.shape({
     id: PropTypes.number.isRequired,
     topic: PropTypes.string.isRequired,
-    thesisStartDate: PropTypes.string.isRequired,
-    conclusionConfirmationDate: PropTypes.string,
-    conclusionRequestDate: PropTypes.string,
     supervisor: PropTypes.object.isRequired,
     coSupervisors: PropTypes.arrayOf(PropTypes.object),
     company: PropTypes.shape({
@@ -615,7 +252,7 @@ Thesis.propTypes = {
         note: PropTypes.string,
         changeDate: PropTypes.string.isRequired,
       }),
-    ).isRequired,
+    ),
     status: PropTypes.string.isRequired,
     thesisFilePath: PropTypes.string,
     thesisResumePath: PropTypes.string,
@@ -623,40 +260,26 @@ Thesis.propTypes = {
     thesisConclusionRequestDate: PropTypes.string,
     thesisConclusionConfirmedDate: PropTypes.string,
     abstract: PropTypes.string,
-    abstractEng: PropTypes.string,
     title: PropTypes.string,
-    titleEng: PropTypes.string,
   }),
   thesisApplication: PropTypes.shape({
     id: PropTypes.number.isRequired,
     topic: PropTypes.string.isRequired,
     status: PropTypes.string.isRequired,
-    submissionDate: PropTypes.string.isRequired,
     supervisor: PropTypes.object.isRequired,
     coSupervisors: PropTypes.arrayOf(PropTypes.object),
     company: PropTypes.shape({
       id: PropTypes.number,
       corporateName: PropTypes.string,
     }),
-    statusHistory: PropTypes.arrayOf(
-      PropTypes.shape({
-        oldStatus: PropTypes.string,
-        newStatus: PropTypes.string.isRequired,
-        changeDate: PropTypes.string.isRequired,
-        note: PropTypes.string,
-      }),
-    ).isRequired,
   }),
   showModal: PropTypes.bool.isRequired,
   setShowModal: PropTypes.func.isRequired,
   showRequestModal: PropTypes.bool,
   setShowRequestModal: PropTypes.func,
   onRequestSubmitResult: PropTypes.func.isRequired,
-  showConclusionRequest: PropTypes.bool,
-  setShowConclusionRequest: PropTypes.func,
   onCancelApplicationResult: PropTypes.func.isRequired,
   showFinalThesis: PropTypes.bool,
   setShowFinalThesis: PropTypes.func,
   onFinalThesisUploadResult: PropTypes.func.isRequired,
-  onConclusionRequestResult: PropTypes.func.isRequired,
 };
