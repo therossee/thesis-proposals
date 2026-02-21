@@ -240,26 +240,39 @@ export default function Tesi({ initialActiveTab }) {
       <CustomBreadcrumb activeTab={tabs.filter(tab => tab.key === activeTab)[0].label} />
       <div className="proposal-container justify-content-between d-flex tesi-header-bar">
         <CustomHeader title={t('carriera.tesi.title')} action={() => navigate('/carriera')} />
-        {thesis &&
-          activeTab === 'thesis' &&
-          (thesis.status === 'ongoing' || thesis.status === 'conclusion_rejected') && (
-            <div className="tesi-header-actions">
-              <Button
-                className={`btn-primary-${appliedTheme} tesi-header-action-btn`}
-                onClick={() => navigate('/carriera/tesi/conclusione_tesi')}
-                style={{
-                  height: '30px',
-                  display: 'flex',
-                  borderRadius: '6px',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0 10px',
-                }}
-              >
-                <i className="fa-regular fa-circle-check me-1" /> {t('carriera.tesi.conclusion_request_button')}
-              </Button>
-            </div>
-          )}
+        {thesis && activeTab === 'thesis' && thesis.status === 'ongoing' && (
+          <div className="tesi-header-actions">
+            <Button
+              variant="outline-danger"
+              onClick={() => setShowModal(true)}
+              className="tesi-header-action-btn"
+              style={{
+                height: '30px',
+                display: 'flex',
+                borderRadius: '6px',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 10px',
+              }}
+            >
+              <i className="fa-regular fa-trash-can me-1" /> {t('carriera.tesi.cancel_thesis')}
+            </Button>
+            <Button
+              className={`btn-primary-${appliedTheme} tesi-header-action-btn`}
+              onClick={() => navigate('/carriera/tesi/conclusione_tesi')}
+              style={{
+                height: '30px',
+                display: 'flex',
+                borderRadius: '6px',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 10px',
+              }}
+            >
+              <i className="fa-regular fa-circle-check me-1" /> {t('carriera.tesi.conclusion_request_button')}
+            </Button>
+          </div>
+        )}
         {thesis && activeTab === 'thesis' && thesis.status === 'final_exam' && (
           <Button
             className={`btn-primary-${appliedTheme} tesi-header-action-btn`}

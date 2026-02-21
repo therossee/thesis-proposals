@@ -120,11 +120,13 @@
             },
             "thesis_progress": {
                 "pending": "Candidatura inviata",
+                "pending_to_submit": "Candidatura da inviare",
                 "outcome": "Esito candidatura",
                 "approved": "Candidatura approvata",
                 "rejected": "Candidatura respinta",
                 "cancelled": "Candidatura ritirata",
                 "pending_description": "La candidatura è stata trasmessa correttamente ed è in revisione dal docente. Lo studente riceverà una notifica automatica al termine della valutazione.",
+                "pending_to_submit_description": "Non risulta ancora nessuna candidatura inviata.",
                 "outcome_description": "In questa sezione verrà visualizzato il giudizio definitivo espresso dal docente relatore al termine della fase istruttoria.",
                 "approved_description": "La candidatura è stata approvata dal docente relatore. Puoi procedere con l'inizio della tesi seguendo le indicazioni fornite.",
                 "rejected_description": "La candidatura è stata respinta dal docente relatore. Puoi consultare qui eventuali motivazioni o note integrative inserite dal docente.",
@@ -156,7 +158,13 @@
                 "final_thesis": "Infine, carica la versione definitiva della tua tesi seguendo le indicazioni fornite dal portale. Assicurati che il documento rispetti i requisiti richiesti.",
                 "final_upload_outcome": "In attesa dell'esito della valutazione del caricamento della tesi finale.",
                 "final_upload_approved": "Il caricamento della tesi finale è stato approvato. Il percorso di tesi è completato.",
-                "final_upload_rejected": "Il caricamento della tesi finale è stato rifiutato. L'iscrizione all'esame finale è annullata. Controlla eventuali note fornite e procedi con le correzioni necessarie per iscriverti alla prossima sessione."
+                "final_upload_rejected": "Il caricamento della tesi finale è stato rifiutato. L'iscrizione all'esame finale è annullata. Controlla eventuali note fornite e procedi con le correzioni necessarie per iscriverti alla prossima sessione.",
+                "cancel_requested_title": "Annullamento richiesto",
+                "cancel_requested": "Hai richiesto l'annullamento della tesi",
+                "cancel_outcome_title": "Esito annullamento",
+                "cancel_outcome": "In attesa dell'esito della richiesta di annullamento della tesi",
+                "cancel_approved_title": "Tesi annullata",
+                "cancel_approved": "La tua tesi è stata annullata. Ora puoi candidarti per altre proposte di tesi o inviare una nuova richiesta di tesi personalizzata."
             },
             "company": {
                 "name": "Azienda",
@@ -197,6 +205,12 @@
             "success_application_cancelled_content": "Ora puoi candidarti per altre proposte di tesi.",
             "error_application_cancelled_content": "Si è verificato un errore durante il ritiro della candidatura. Riprova più tardi.",
             "cancel_application_note_placeholder": "Inserisci qui il motivo del ritiro (opzionale)...",
+            "cancel_thesis": "Richiedi annullamento tesi",
+            "modal_cancel": {
+                "title": "Annulla tesi",
+                "body": "Sei sicuro di voler richiedere l'annullamento della tua tesi? La richiesta verrà inviata al tuo relatore e potrà essere approvata o respinta.\nQualora la richiesta venisse approvata, la tua tesi sarà ufficialmente annullata e potrai candidarti per altre proposte di tesi. La richiesta non può essere ritirata una volta inviata.",
+                "confirm_text": "Sì, annulla"
+            },
             "tabs": {
                 "thesis": "La tua tesi",
                 "thesis_application": "La tua candidatura",
@@ -306,6 +320,10 @@
             "next_steps_rejected": {
                 "title": "Prossimi passi",
                 "content": "La tua candidatura per la tesi è stata respinta dal relatore. Per ulteriori informazioni, contatta direttamente il relatore. Puoi anche candidarti per <a href='/carriera/tesi/proposte_di_tesi'>altre proposte di tesi</a> o inviare una nuova richiesta di tesi personalizzata."
+            },
+            "next_steps_cancel_approved": {
+                "title": "Prossimi passi",
+                "content": "La tua tesi è stata annullata. Ora puoi candidarti per <a href='/carriera/tesi/proposte_di_tesi'>altre proposte di tesi</a> o inviare una nuova richiesta di tesi personalizzata."
             }
         },
         "conclusione_tesi": {
@@ -391,7 +409,8 @@
             "sending": "Invio in corso...",
             "required_fields_note": "I campi contrassegnati con * sono obbligatori.",
             "save_draft": "Salva bozza",
-            "draft_saved": "Bozza salvata con successo.",
+            "save_draft_title": "Salvataggio bozza",
+            "draft_saved": "Bozza salvata con successo. Puoi continuare a compilare la tua richiesta o tornare alla pagina della tesi.",
             "draft_save_failed": "Salvataggio bozza non riuscito.",
             "draft_loaded": "Bozza caricata automaticamente.",
             "draft_load_failed": "Impossibile caricare la bozza salvata.",

@@ -402,6 +402,7 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
 
   const goToNextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
+    handleSaveDraft();
   };
 
   const goToPreviousStep = () => {
@@ -682,7 +683,7 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
 
   const removeFileText = i18n.language === 'it' ? 'Rimuovi file' : 'Remove file';
   const status = thesis?.status || thesis?.status;
-  const canRequestConclusion = !status || ['ongoing', 'conclusion_rejected'].includes(status);
+  const canRequestConclusion = status === 'ongoing';
   const contextValue = useMemo(
     () => ({
       t,

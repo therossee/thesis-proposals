@@ -11,9 +11,6 @@ const {
 const thesisSchema = require('../schemas/Thesis');
 const toSnakeCase = require('../utils/snakeCase');
 
-// ==========================================
-// CONTROLLERS
-// ==========================================
 const getLoggedStudentThesis = async (req, res) => {
   try {
     const logged = await LoggedStudent.findOne();
@@ -69,7 +66,7 @@ const getLoggedStudentThesis = async (req, res) => {
     });
     const statusHistoryData = statusHistoryRecords.map(r => r.toJSON());
 
-    const responsePayload = toSnakeCase({
+    const responsePayload = {
       id: thesisData.id,
       topic: thesisData.topic,
       student: studentData ? studentData.toJSON() : null,
@@ -93,7 +90,7 @@ const getLoggedStudentThesis = async (req, res) => {
       thesis_file_path: thesisData.thesis_file_path,
       thesis_resume_path: thesisData.thesis_resume_path,
       additional_zip_path: thesisData.additional_zip_path,
-    });
+    };
 
     const thesisResponse = thesisSchema.parse(responsePayload);
     return res.status(200).json(thesisResponse);
@@ -242,9 +239,40 @@ const getAllTheses = async (req, res) => {
   }
 };
 
+const sendThesisCancelRequest = async (req, res) => {
+  try {
+    const loggedStudent = await LoggedStudent.findOne();
+    if (!loggedStudent) {
+      return res.status(401).json({ error: 'No logged-in student found' });
+    }
+    const student = await Student.findByPk(loggedStudent.student_id);
+    if (!student) {
+      return res.status(404).json({ error: 'Logged-in student not found' });
+    }
+
+    const thesis = await Thesis.findOne({ where: { student_id: student.id } });
+    if (!thesis) {
+      return res.status(404).json({ error: 'Thesis not found for the logged-in student.' });
+    }
+
+    if (thesis.status !== 'ongoing') {
+      return res.status(400).json({ error: 'Thesis cancellation is not allowed for this thesis status.' });
+    }
+
+    thesis.status = 'cancel_requested';
+    await thesis.save();
+
+    return res.status(200).json({ message: 'Thesis cancellation requested successfully.' });
+  } catch (error) {
+    console.error('Error sending thesis cancellation request:', error);
+    return res.status(500).json({ error: 'An error occurred while sending the thesis cancellation request.' });
+  }
+};
+
 module.exports = {
   getLoggedStudentThesis,
   createStudentThesis,
   getAllTheses,
   getThesisFile,
+  sendThesisCancelRequest,
 };

@@ -10,6 +10,7 @@ const {
   ThesisApplication,
   ThesisApplicationSupervisorCoSupervisor,
   ThesisApplicationStatusHistory,
+  Thesis,
 } = require('../models');
 
 const thesisApplicationRequestSchema = require('../schemas/ThesisApplicationRequest');
@@ -144,32 +145,37 @@ const checkStudentEligibility = async (req, res) => {
     if (!logged || !logged.student_id) {
       return res.status(401).json({ error: 'No logged-in student found' });
     }
-
-    const loggedStudent = await Student.findByPk(logged.student_id);
-    if (!loggedStudent) {
+    const student = await Student.findByPk(logged.student_id);
+    if (!student) {
       return res.status(404).json({ error: 'Student not found' });
     }
-
-    const links = await ThesisApplication.findAll({
-      where: { student_id: loggedStudent.id },
+    const pendingCount = await ThesisApplication.count({
+      where: {
+        student_id: student.id,
+        status: { [Op.in]: ['pending'] },
+      },
     });
-
-    const applicationIds = links.map(l => l.id);
-
-    let eligible = true;
-    // 4. Se ci sono candidature, verifica se ce n'è una attiva
-    if (applicationIds.length > 0) {
-      const activeApplication = await ThesisApplication.findAll({
+    if (pendingCount > 0) {
+      return res.status(200).json({ studentId: logged.student_id, eligible: false });
+    }
+    const approvedCount = await ThesisApplication.findAll({
+      where: {
+        student_id: student.id,
+        status: { [Op.in]: ['approved'] },
+      },
+    });
+    for (const app of approvedCount) {
+      const thesis = await Thesis.findOne({
         where: {
-          id: { [Op.in]: applicationIds },
-          status: { [Op.in]: ['pending', 'approved'] },
+          thesis_application_id: app.id,
         },
       });
-      if (activeApplication.length > 0) eligible = false;
+      if (!thesis || thesis.status !== 'cancel_approved') {
+        return res.status(200).json({ studentId: logged.student_id, eligible: false });
+      }
     }
 
-    // 5. Risposta finale
-    res.status(200).json({ studentId: loggedStudent.id, eligible });
+    res.status(200).json({ studentId: logged.student_id, eligible: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

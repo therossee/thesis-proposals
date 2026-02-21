@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Button, Card, Modal } from 'react-bootstrap';
+import { Button, Card } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 import moment from 'moment';
@@ -9,443 +9,562 @@ import PropTypes from 'prop-types';
 import { ThemeContext } from '../App';
 import '../styles/custom-progress-tracker.css';
 import { getSystemTheme } from '../utils/utils';
+import DeadlinesModal from './DeadlinesModal';
 import InfoTooltip from './InfoTooltip';
 
-const APPLICATION_STATUSES = new Set(['pending', 'approved', 'rejected', 'cancelled']);
+/**
+ * Timeline rules (single file):
+ *
+ * Application:
+ * - pending
+ * - application_outcome (waiting/approved/rejected/cancelled)
+ *
+ * Thesis:
+ * - ongoing
+ * - Optional cancel flow: cancel_request -> cancel_outcome (waiting/cancel_approved)
+ * - Normal flow:
+ *   - conclusion_requested
+ *   - conclusion_outcome (waiting/approved OR rejected detected by history: conclusion_requested -> ongoing)
+ *   - almalaurea
+ *   - compiled_questionnaire
+ *   - final_exam
+ *   - final_thesis
+ *   - final_upload_outcome (waiting/approved OR rejected detected by history: final_thesis -> ongoing)
+ *
+ * Extra rules:
+ * - If a thesis exists (history contains at least one ongoing), application_outcome is forced to approved.
+ * - Reject outcomes do NOT advance progress: they are "special active" steps while progress stays anchored to ongoing.
+ * - If we go (again) from ongoing to conclusion_requested, we reset the phase:
+ *   all steps AFTER conclusion_requested behave as new (not completed by old history).
+ *   Implemented by cutting history from last reset index (transition to conclusion_requested OR reject resets).
+ */
 
-export default function Timeline({ activeStep, statusHistory, session }) {
-  const { t, i18n } = useTranslation();
-  const { theme } = useContext(ThemeContext);
-  const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
+const APPLICATION_OUTCOME_STATUSES = new Set(['approved', 'rejected', 'cancelled']);
+const CANCEL_FLOW_STATUSES = new Set(['cancel_request', 'cancel_approved']);
 
-  const validSteps = new Set([
-    'pending',
-    'approved',
-    'rejected',
-    'cancelled',
+const VALID_STATUSES = new Set([
+  'pending',
+  'approved',
+  'rejected',
+  'cancelled',
+  'ongoing',
+  'cancel_request',
+  'cancel_approved',
+  'conclusion_requested',
+  'conclusion_approved',
+  // no conclusion_rejected
+  'almalaurea',
+  'compiled_questionnaire',
+  'final_exam',
+  'final_thesis',
+  'done',
+]);
+
+const UI_STEP_KEYS = new Set([
+  'pending',
+  'application_outcome',
+  'ongoing',
+  'cancel_request',
+  'cancel_outcome',
+  'conclusion_requested',
+  'conclusion_outcome',
+  'almalaurea',
+  'compiled_questionnaire',
+  'final_exam',
+  'final_thesis',
+  'final_upload_outcome',
+]);
+
+function sortHistory(statusHistory) {
+  if (!Array.isArray(statusHistory) || statusHistory.length === 0) return [];
+  return [...statusHistory].sort((a, b) => moment(a.changeDate).valueOf() - moment(b.changeDate).valueOf());
+}
+
+function inferStatusFromHistory(orderedHistory) {
+  if (!orderedHistory.length) return null;
+  return orderedHistory[orderedHistory.length - 1]?.newStatus ?? null;
+}
+
+function getLastHistory(history, matcher) {
+  for (let i = history.length - 1; i >= 0; i--) {
+    const entry = history[i];
+    if (matcher(entry)) return entry;
+  }
+  return null;
+}
+
+/**
+ * "Reset" points that invalidate completion for steps after them.
+ * - Any transition TO conclusion_requested (restart of end phase)
+ * - conclusion_requested -> ongoing (conclusion rejected)
+ * - final_thesis -> ongoing (final upload rejected)
+ */
+function findLastResetIndex(orderedHistory) {
+  for (let i = orderedHistory.length - 1; i >= 0; i--) {
+    const h = orderedHistory[i];
+    if (!h) continue;
+
+    const isRestartToConclusionRequested = h.newStatus === 'conclusion_requested';
+    const isConclusionRejectedReset = h.oldStatus === 'conclusion_requested' && h.newStatus === 'ongoing';
+    const isFinalUploadRejectedReset = h.oldStatus === 'final_thesis' && h.newStatus === 'ongoing';
+
+    if (isRestartToConclusionRequested || isConclusionRejectedReset || isFinalUploadRejectedReset) return i;
+  }
+  return -1;
+}
+
+function computeVisibleHistory(orderedHistory) {
+  if (orderedHistory.length === 0) return [];
+
+  const resetIndex = findLastResetIndex(orderedHistory);
+  if (resetIndex < 0) return orderedHistory;
+
+  // Keep application outcomes even if before reset.
+  // For the thesis phase, only consider entries from the latest reset onward.
+  return orderedHistory.filter((h, idx) => APPLICATION_OUTCOME_STATUSES.has(h?.newStatus) || idx >= resetIndex);
+}
+
+function didConclusionGetRejected(visibleHistory) {
+  return Boolean(
+    getLastHistory(visibleHistory, h => h?.oldStatus === 'conclusion_requested' && h?.newStatus === 'ongoing'),
+  );
+}
+
+function didFinalUploadGetRejected(visibleHistory) {
+  return Boolean(getLastHistory(visibleHistory, h => h?.oldStatus === 'final_thesis' && h?.newStatus === 'ongoing'));
+}
+
+function getHistoryForStep(visibleHistory, stepKey) {
+  switch (stepKey) {
+    case 'pending':
+      return getLastHistory(visibleHistory, h => h?.newStatus === 'pending');
+
+    case 'application_outcome':
+      return getLastHistory(visibleHistory, h => APPLICATION_OUTCOME_STATUSES.has(h?.newStatus));
+
+    case 'ongoing':
+      return getLastHistory(visibleHistory, h => h?.newStatus === 'ongoing');
+
+    case 'cancel_request':
+      return getLastHistory(visibleHistory, h => h?.newStatus === 'cancel_request');
+
+    case 'cancel_outcome':
+      return getLastHistory(visibleHistory, h => h?.newStatus === 'cancel_approved');
+
+    case 'conclusion_requested':
+      return getLastHistory(visibleHistory, h => h?.newStatus === 'conclusion_requested');
+
+    case 'conclusion_outcome':
+      return getLastHistory(
+        visibleHistory,
+        h =>
+          h?.newStatus === 'conclusion_approved' ||
+          (h?.oldStatus === 'conclusion_requested' && h?.newStatus === 'ongoing'),
+      );
+
+    case 'almalaurea':
+    case 'compiled_questionnaire':
+    case 'final_exam':
+    case 'final_thesis':
+      return getLastHistory(visibleHistory, h => h?.newStatus === stepKey);
+
+    case 'final_upload_outcome':
+      return getLastHistory(
+        visibleHistory,
+        h => h?.newStatus === 'done' || (h?.oldStatus === 'final_thesis' && h?.newStatus === 'ongoing'),
+      );
+
+    default:
+      return null;
+  }
+}
+
+function deriveFlow(currentStatus) {
+  return CANCEL_FLOW_STATUSES.has(currentStatus) ? 'cancel' : 'normal';
+}
+
+function mapStatusToBaseEffectiveActiveStep(currentStatus) {
+  if (APPLICATION_OUTCOME_STATUSES.has(currentStatus)) return 'application_outcome';
+
+  if (currentStatus === 'cancel_request') return 'cancel_request';
+  if (currentStatus === 'cancel_approved') return 'cancel_outcome';
+
+  if (currentStatus === 'conclusion_requested') return 'conclusion_requested';
+  if (currentStatus === 'conclusion_approved') return 'almalaurea';
+
+  if (currentStatus === 'done') return 'final_upload_outcome';
+
+  if (UI_STEP_KEYS.has(currentStatus)) return currentStatus;
+
+  return 'pending';
+}
+
+function buildSteps(t, currentStatus, hasNoData, hasThesis, conclusionRejected, finalUploadRejected) {
+  const flow = deriveFlow(currentStatus);
+
+  const steps = [
+    {
+      key: 'pending',
+      label: hasNoData
+        ? t('carriera.tesi.thesis_progress.pending_to_submit')
+        : t('carriera.tesi.thesis_progress.pending'),
+      description: hasNoData
+        ? t('carriera.tesi.thesis_progress.pending_to_submit_description')
+        : t('carriera.tesi.thesis_progress.pending_description'),
+    },
+  ];
+
+  // application outcome
+  const isApproved = hasThesis || currentStatus === 'approved';
+  const isRejected = !hasThesis && currentStatus === 'rejected';
+  const isCancelled = !hasThesis && currentStatus === 'cancelled';
+
+  steps.push({
+    key: 'application_outcome',
+    label: isApproved
+      ? t('carriera.tesi.thesis_progress.approved')
+      : isRejected
+        ? t('carriera.tesi.thesis_progress.rejected')
+        : isCancelled
+          ? t('carriera.tesi.thesis_progress.cancelled')
+          : t('carriera.tesi.thesis_progress.outcome'),
+    description: isApproved
+      ? t('carriera.tesi.thesis_progress.approved_description')
+      : isRejected
+        ? t('carriera.tesi.thesis_progress.rejected_description')
+        : isCancelled
+          ? t('carriera.tesi.thesis_progress.cancelled_description')
+          : t('carriera.tesi.thesis_progress.outcome_description'),
+  });
+
+  // ongoing
+  steps.push({
+    key: 'ongoing',
+    label: t('carriera.tesi.thesis_progress.ongoing_title'),
+    description: t('carriera.tesi.thesis_progress.ongoing'),
+  });
+
+  // cancel flow (only these steps)
+  if (flow === 'cancel') {
+    const isCancelApproved = currentStatus === 'cancel_approved';
+
+    steps.push(
+      {
+        key: 'cancel_request',
+        label: t('carriera.tesi.thesis_progress.cancel_requested_title'),
+        description: t('carriera.tesi.thesis_progress.cancel_requested'),
+      },
+      {
+        key: 'cancel_outcome',
+        label: isCancelApproved
+          ? t('carriera.tesi.thesis_progress.cancel_approved_title')
+          : t('carriera.tesi.thesis_progress.cancel_outcome_title'),
+        description: isCancelApproved
+          ? t('carriera.tesi.thesis_progress.cancel_approved')
+          : t('carriera.tesi.thesis_progress.cancel_outcome'),
+      },
+    );
+
+    return steps;
+  }
+
+  const isConclusionApproved = currentStatus === 'conclusion_approved';
+
+  steps.push(
+    {
+      key: 'conclusion_requested',
+      label: t('carriera.tesi.thesis_progress.conclusion_request_title'),
+      description: t('carriera.tesi.thesis_progress.conclusion_request'),
+    },
+    {
+      key: 'conclusion_outcome',
+      label: isConclusionApproved
+        ? t('carriera.tesi.thesis_progress.conclusion_confirmed_title')
+        : conclusionRejected
+          ? t('carriera.tesi.thesis_progress.conclusion_rejected_title')
+          : t('carriera.tesi.thesis_progress.conclusion_outcome_title'),
+      description: isConclusionApproved
+        ? t('carriera.tesi.thesis_progress.conclusion_confirmed')
+        : conclusionRejected
+          ? t('carriera.tesi.thesis_progress.conclusion_rejected')
+          : t('carriera.tesi.thesis_progress.conclusion_outcome'),
+    },
+    {
+      key: 'almalaurea',
+      label: t('carriera.tesi.thesis_progress.almalaurea_title'),
+      description: t('carriera.tesi.thesis_progress.almalaurea'),
+    },
+    {
+      key: 'compiled_questionnaire',
+      label: t('carriera.tesi.thesis_progress.compiled_questionnaire_title'),
+      description: t('carriera.tesi.thesis_progress.compiled_questionnaire'),
+    },
+    {
+      key: 'final_exam',
+      label: t('carriera.tesi.thesis_progress.final_exam_title'),
+      description: t('carriera.tesi.thesis_progress.final_exam'),
+    },
+    {
+      key: 'final_thesis',
+      label: t('carriera.tesi.thesis_progress.final_thesis_title'),
+      description: t('carriera.tesi.thesis_progress.final_thesis'),
+    },
+    {
+      key: 'final_upload_outcome',
+      label:
+        currentStatus === 'done'
+          ? t('carriera.tesi.thesis_progress.final_upload_approved_title')
+          : finalUploadRejected
+            ? t('carriera.tesi.thesis_progress.final_upload_rejected_title')
+            : t('carriera.tesi.thesis_progress.final_upload_outcome_title'),
+      description:
+        currentStatus === 'done'
+          ? t('carriera.tesi.thesis_progress.final_upload_approved')
+          : finalUploadRejected
+            ? t('carriera.tesi.thesis_progress.final_upload_rejected')
+            : t('carriera.tesi.thesis_progress.final_upload_outcome'),
+    },
+  );
+
+  return steps;
+}
+
+/**
+ * Key fix:
+ * - Completion/progress is based ONLY on baseActiveStep (real status).
+ * - Rejected outcomes can be "special active" but must NOT advance completion.
+ * - When in conclusion_requested, we don't show special outcome actives (reset phase).
+ */
+function decorateSteps({
+  steps,
+  currentStatus,
+  visibleHistory,
+  hasNoData,
+  hasThesis,
+  conclusionRejected,
+  finalUploadRejected,
+}) {
+  const stepKeys = steps.map(s => s.key);
+
+  const baseActiveStep = mapStatusToBaseEffectiveActiveStep(currentStatus);
+  const baseActiveIndex = currentStatus === 'done' ? stepKeys.length : Math.max(stepKeys.indexOf(baseActiveStep), 0);
+
+  const specialOutcomeActive =
+    currentStatus === 'conclusion_requested'
+      ? null
+      : currentStatus === 'ongoing' && finalUploadRejected
+        ? 'final_upload_outcome'
+        : currentStatus === 'ongoing' && conclusionRejected
+          ? 'conclusion_outcome'
+          : null;
+
+  return steps.map(step => {
+    const key = step.key;
+    const thisIndex = stepKeys.indexOf(key);
+
+    const isFinalUploadOutcomeWaiting = currentStatus === 'final_thesis' && key === 'final_upload_outcome';
+
+    const isActive = key === baseActiveStep || key === specialOutcomeActive || isFinalUploadOutcomeWaiting;
+
+    // Completion uses ONLY the baseActiveIndex (never specialOutcomeActive)
+    const isCompleted = thisIndex < baseActiveIndex;
+
+    // Future is after base progress, but don't fade the special outcome active or waiting outcome
+    const isFuture = thisIndex > baseActiveIndex && key !== specialOutcomeActive && !isFinalUploadOutcomeWaiting;
+
+    const historyEntry = getHistoryForStep(visibleHistory, key);
+
+    const shouldShowTimestamp =
+      Boolean(historyEntry) &&
+      (currentStatus !== 'ongoing' || isCompleted || key === specialOutcomeActive || isFinalUploadOutcomeWaiting);
+
+    let circleClass = 'inactive';
+    let titleClass = '';
+
+    if (isCompleted) {
+      circleClass = 'approved';
+      titleClass = 'completed';
+    } else if (isActive) {
+      titleClass = 'active';
+
+      if (hasNoData && key === 'pending') {
+        circleClass = 'waiting';
+      } else if (key === 'application_outcome') {
+        if (hasThesis) circleClass = 'approved';
+        else if (currentStatus === 'approved') circleClass = 'approved';
+        else if (currentStatus === 'rejected') circleClass = 'rejected';
+        else if (currentStatus === 'cancelled') circleClass = 'cancelled';
+        else circleClass = 'waiting';
+      } else if (key === 'conclusion_outcome') {
+        if (conclusionRejected) circleClass = 'rejected';
+        else if (currentStatus === 'conclusion_approved') circleClass = 'approved';
+        else circleClass = 'waiting';
+      } else if (key === 'cancel_outcome') {
+        circleClass = currentStatus === 'cancel_approved' ? 'rejected' : 'waiting';
+      } else if (key === 'final_upload_outcome') {
+        if (finalUploadRejected) circleClass = 'rejected';
+        else if (currentStatus === 'done') circleClass = 'approved';
+        else circleClass = 'waiting';
+      } else if (key === 'pending') {
+        circleClass = 'pending';
+      } else {
+        circleClass = 'pending';
+      }
+    }
+
+    const disabledClass = hasNoData && key !== 'pending' ? 'disabled' : '';
+    const fadedClass = isFuture ? 'faded' : '';
+
+    return {
+      ...step,
+      ui: {
+        isActive,
+        isCompleted,
+        isFuture,
+        circleClass,
+        titleClass,
+        disabledClass,
+        fadedClass,
+        shouldShowTimestamp,
+        timestampText: shouldShowTimestamp ? moment(historyEntry.changeDate).format('DD/MM/YYYY - HH:mm') : null,
+      },
+    };
+  });
+}
+
+function computeSortedDeadlines(deadlines) {
+  if (!Array.isArray(deadlines) || deadlines.length === 0) return [];
+  return [...deadlines]
+    .map(deadline => {
+      const date = moment.utc(deadline.deadline_date).startOf('day');
+      const daysLeft = date.diff(moment.utc().startOf('day'), 'days');
+      return { ...deadline, daysLeft };
+    })
+    .sort((a, b) => moment.utc(a.deadline_date).valueOf() - moment.utc(b.deadline_date).valueOf());
+}
+
+function computeNextDeadline(sortedDeadlines, currentStatus) {
+  const upcoming = sortedDeadlines.filter(d => d.daysLeft >= 0);
+  if (!upcoming.length) return null;
+
+  const thesisStatuses = new Set([
     'ongoing',
-    'cancel_requested',
+    'cancel_request',
     'cancel_approved',
     'conclusion_requested',
     'conclusion_approved',
-    'conclusion_rejected',
     'almalaurea',
     'compiled_questionnaire',
     'final_exam',
     'final_thesis',
     'done',
   ]);
+
+  if (thesisStatuses.has(currentStatus)) {
+    const relevant = upcoming.find(d => d.deadline_type === 'conclusion_request' || d.deadline_type === 'exams');
+    if (relevant) return relevant;
+  }
+
+  return upcoming[0];
+}
+
+export default function Timeline({ activeStep, statusHistory, session }) {
+  const { t } = useTranslation();
+  const { theme } = useContext(ThemeContext);
+  const appliedTheme = theme === 'auto' ? getSystemTheme() : theme;
+
   const { graduationSession, deadlines } = session || {};
-  const orderedStatusHistory = useMemo(() => {
-    if (!Array.isArray(statusHistory) || statusHistory.length === 0) return [];
-    return [...statusHistory].sort((a, b) => moment(a.changeDate).valueOf() - moment(b.changeDate).valueOf());
-  }, [statusHistory]);
-  const lastFinalThesisResetIndex = useMemo(() => {
-    for (let i = orderedStatusHistory.length - 1; i >= 0; i--) {
-      const entry = orderedStatusHistory[i];
-      if (entry?.oldStatus === 'final_thesis' && entry?.newStatus === 'ongoing') {
-        return i;
-      }
-    }
-    return -1;
-  }, [orderedStatusHistory]);
-  const visibleStatusHistory = useMemo(() => {
-    if (orderedStatusHistory.length === 0) return [];
-    if (lastFinalThesisResetIndex < 0) return orderedStatusHistory;
-    return orderedStatusHistory.filter(
-      (entry, index) => APPLICATION_STATUSES.has(entry?.newStatus) || index >= lastFinalThesisResetIndex,
-    );
-  }, [lastFinalThesisResetIndex, orderedStatusHistory]);
-  const hasStatusHistory = visibleStatusHistory.length > 0;
-  const inferredStatus = hasStatusHistory ? visibleStatusHistory[visibleStatusHistory.length - 1].newStatus : null;
-  const normalizedActiveStep = validSteps.has(activeStep)
-    ? activeStep
-    : validSteps.has(inferredStatus)
-      ? inferredStatus
-      : null;
-  const hasNoData = !normalizedActiveStep && !hasStatusHistory;
-  const isDisabled = hasNoData;
   const [show, setShow] = useState(false);
   const timelineScrollRef = useRef(null);
-  const sortedDeadlines = useMemo(() => {
-    if (!Array.isArray(deadlines) || deadlines.length === 0) return [];
-    return [...deadlines]
-      .map(deadline => {
-        const date = moment.utc(deadline.deadline_date).startOf('day');
-        const daysLeft = date.diff(moment.utc().startOf('day'), 'days');
-        return { ...deadline, daysLeft };
-      })
-      .sort((a, b) => moment.utc(a.deadline_date).valueOf() - moment.utc(b.deadline_date).valueOf());
-  }, [deadlines]);
-  const nextDeadline = useMemo(() => {
-    const upcomingDeadlines = sortedDeadlines.filter(deadline => deadline.daysLeft >= 0);
-    if (!upcomingDeadlines.length) return null;
 
-    const thesisStatuses = new Set([
-      'ongoing',
-      'conclusion_requested',
-      'conclusion_approved',
-      'conclusion_rejected',
-      'almalaurea',
-      'compiled_questionnaire',
-      'final_exam',
-      'final_thesis',
-      'done',
-    ]);
+  const orderedHistory = useMemo(() => sortHistory(statusHistory), [statusHistory]);
+  const inferredStatus = useMemo(() => inferStatusFromHistory(orderedHistory), [orderedHistory]);
 
-    if (thesisStatuses.has(normalizedActiveStep)) {
-      const thesisRelevantNextDeadline = upcomingDeadlines.find(
-        deadline => deadline.deadline_type === 'conclusion_request' || deadline.deadline_type === 'exams',
-      );
-      if (thesisRelevantNextDeadline) return thesisRelevantNextDeadline;
-    }
-
-    return upcomingDeadlines[0];
-  }, [sortedDeadlines, normalizedActiveStep]);
-
-  const getLastHistory = matcher => {
-    if (visibleStatusHistory.length === 0) return null;
-    for (let i = visibleStatusHistory.length - 1; i >= 0; i--) {
-      if (matcher(visibleStatusHistory[i])) return visibleStatusHistory[i];
-    }
+  const currentStatus = useMemo(() => {
+    if (VALID_STATUSES.has(activeStep)) return activeStep;
+    if (VALID_STATUSES.has(inferredStatus)) return inferredStatus;
     return null;
-  };
+  }, [activeStep, inferredStatus]);
 
-  const getHistoryForStatus = targetStatus => {
-    return getLastHistory(h => h?.newStatus === targetStatus);
-  };
+  const hasNoData = !currentStatus && orderedHistory.length === 0;
+  const hasThesis = useMemo(() => orderedHistory.some(h => h?.newStatus === 'ongoing'), [orderedHistory]);
 
-  const getFinalUploadOutcomeHistory = () => {
-    let lastFinalThesisIndex = -1;
-    for (let i = visibleStatusHistory.length - 1; i >= 0; i--) {
-      if (visibleStatusHistory[i]?.newStatus === 'final_thesis') {
-        lastFinalThesisIndex = i;
-        break;
-      }
-    }
+  // Cut history at last reset so steps after reset behave like new.
+  const visibleHistory = useMemo(() => computeVisibleHistory(orderedHistory), [orderedHistory]);
 
-    if (lastFinalThesisIndex < 0) {
-      return getLastHistory(h => h?.oldStatus === 'final_thesis' && h?.newStatus === 'ongoing');
-    }
+  const conclusionRejected = useMemo(() => didConclusionGetRejected(visibleHistory), [visibleHistory]);
+  const finalUploadRejected = useMemo(() => didFinalUploadGetRejected(visibleHistory), [visibleHistory]);
 
-    for (let i = visibleStatusHistory.length - 1; i > lastFinalThesisIndex; i--) {
-      const entry = visibleStatusHistory[i];
-      if (entry?.newStatus === 'done' || (entry?.oldStatus === 'final_thesis' && entry?.newStatus === 'ongoing')) {
-        return entry;
-      }
-    }
+  const steps = useMemo(() => {
+    const statusForModel = currentStatus ?? 'pending';
+    const base = buildSteps(t, statusForModel, hasNoData, hasThesis, conclusionRejected, finalUploadRejected);
+    return decorateSteps({
+      steps: base,
+      currentStatus: statusForModel,
+      visibleHistory,
+      hasNoData,
+      hasThesis,
+      conclusionRejected,
+      finalUploadRejected,
+    });
+  }, [t, currentStatus, hasNoData, hasThesis, conclusionRejected, finalUploadRejected, visibleHistory]);
 
-    return null;
-  };
-
-  const getHistoryForStep = stepKey => {
-    switch (stepKey) {
-      case 'conclusion_outcome':
-        return getLastHistory(h => h?.newStatus === 'conclusion_approved' || h?.newStatus === 'conclusion_rejected');
-      case 'final_upload_outcome':
-        return getFinalUploadOutcomeHistory();
-      case 'outcome':
-        return null;
-      default:
-        return getHistoryForStatus(stepKey);
-    }
-  };
-
-  const firstStep = {
-    key: 'pending',
-    label: t('carriera.tesi.thesis_progress.pending'),
-    description: t('carriera.tesi.thesis_progress.pending_description'),
-  };
-
-  const getSecondStep = () => {
-    switch (normalizedActiveStep) {
-      case 'approved':
-      case 'ongoing':
-      case 'conclusion_requested':
-      case 'conclusion_approved':
-      case 'conclusion_rejected':
-      case 'almalaurea':
-      case 'compiled_questionnaire':
-      case 'final_exam':
-      case 'final_thesis':
-      case 'done':
-        return {
-          key: 'approved',
-          label: t('carriera.tesi.thesis_progress.approved'),
-          description: t('carriera.tesi.thesis_progress.approved_description'),
-          date: normalizedActiveStep !== 'approved',
-        };
-      case 'rejected':
-        return {
-          key: 'rejected',
-          label: t('carriera.tesi.thesis_progress.rejected'),
-          description: t('carriera.tesi.thesis_progress.rejected_description'),
-        };
-      case 'cancelled':
-        return {
-          key: 'cancelled',
-          label: t('carriera.tesi.thesis_progress.cancelled'),
-          description: t('carriera.tesi.thesis_progress.cancelled_description'),
-        };
-      default:
-        return {
-          key: 'outcome',
-          label: t('carriera.tesi.thesis_progress.outcome'),
-          description: t('carriera.tesi.thesis_progress.outcome_description'),
-        };
-    }
-  };
-
-  const getThesisSteps = () => {
-    const isConclusionApproved = normalizedActiveStep === 'conclusion_approved';
-    const isConclusionRejected = normalizedActiveStep === 'conclusion_rejected';
-    const finalUploadOutcomeHistory = getFinalUploadOutcomeHistory();
-    const isFinalUploadApproved = finalUploadOutcomeHistory?.newStatus === 'done';
-    const isFinalUploadRejected =
-      finalUploadOutcomeHistory?.oldStatus === 'final_thesis' && finalUploadOutcomeHistory?.newStatus === 'ongoing';
-    return [
-      {
-        key: 'ongoing',
-        label: t('carriera.tesi.thesis_progress.ongoing_title'),
-        description: t('carriera.tesi.thesis_progress.ongoing'),
-      },
-      {
-        key: 'conclusion_requested',
-        label: t('carriera.tesi.thesis_progress.conclusion_request_title'),
-        description: t('carriera.tesi.thesis_progress.conclusion_request'),
-      },
-      {
-        key: 'conclusion_outcome',
-        label: isConclusionApproved
-          ? t('carriera.tesi.thesis_progress.conclusion_confirmed_title')
-          : isConclusionRejected
-            ? t('carriera.tesi.thesis_progress.conclusion_rejected_title')
-            : t('carriera.tesi.thesis_progress.conclusion_outcome_title'),
-        description: isConclusionApproved
-          ? t('carriera.tesi.thesis_progress.conclusion_confirmed')
-          : isConclusionRejected
-            ? t('carriera.tesi.thesis_progress.conclusion_rejected')
-            : t('carriera.tesi.thesis_progress.conclusion_outcome'),
-      },
-      {
-        key: 'almalaurea',
-        label: t('carriera.tesi.thesis_progress.almalaurea_title'),
-        description: t('carriera.tesi.thesis_progress.almalaurea'),
-      },
-      {
-        key: 'compiled_questionnaire',
-        label: t('carriera.tesi.thesis_progress.compiled_questionnaire_title'),
-        description: t('carriera.tesi.thesis_progress.compiled_questionnaire'),
-      },
-      {
-        key: 'final_exam',
-        label: t('carriera.tesi.thesis_progress.final_exam_title'),
-        description: t('carriera.tesi.thesis_progress.final_exam'),
-      },
-      {
-        key: 'final_thesis',
-        label: t('carriera.tesi.thesis_progress.final_thesis_title'),
-        description: t('carriera.tesi.thesis_progress.final_thesis'),
-      },
-      {
-        key: 'final_upload_outcome',
-        label: isFinalUploadApproved
-          ? t('carriera.tesi.thesis_progress.final_upload_approved_title')
-          : isFinalUploadRejected
-            ? t('carriera.tesi.thesis_progress.final_upload_rejected_title')
-            : t('carriera.tesi.thesis_progress.final_upload_outcome_title'),
-        description: isFinalUploadApproved
-          ? t('carriera.tesi.thesis_progress.final_upload_approved')
-          : isFinalUploadRejected
-            ? t('carriera.tesi.thesis_progress.final_upload_rejected')
-            : t('carriera.tesi.thesis_progress.final_upload_outcome'),
-      },
-    ];
-  };
-
-  const secondStep = getSecondStep();
-  const thesisSteps = getThesisSteps();
-  const steps = [firstStep, secondStep, ...thesisSteps];
+  const sortedDeadlines = useMemo(() => computeSortedDeadlines(deadlines), [deadlines]);
+  const nextDeadline = useMemo(
+    () => computeNextDeadline(sortedDeadlines, currentStatus ?? 'pending'),
+    [sortedDeadlines, currentStatus],
+  );
 
   useEffect(() => {
     const container = timelineScrollRef.current;
     if (!container) return;
+
     const activeElement = container.querySelector('.progress-step.is-active-step');
     if (!activeElement) {
       container.scrollTop = 0;
       return;
     }
+
     const targetScrollTop = activeElement.offsetTop - container.clientHeight / 2 + activeElement.clientHeight / 2;
     const maxScrollTop = container.scrollHeight - container.clientHeight;
     container.scrollTop = Math.min(Math.max(targetScrollTop, 0), Math.max(maxScrollTop, 0));
-  }, [normalizedActiveStep, hasNoData, steps.length]);
+  }, [currentStatus, hasNoData, steps.length]);
 
-  const renderStep = (step, activeStep) => {
-    const { key, label, description } = step;
-
-    const stepKeys = steps.map(s => s.key);
-    const fallbackActiveStep = hasNoData ? 'pending' : activeStep;
-    const isPendingOnly = fallbackActiveStep === 'pending' && !hasNoData;
-    let effectiveActiveStep = isPendingOnly ? 'outcome' : fallbackActiveStep;
-    const isConclusionRequested = activeStep === 'conclusion_requested';
-    const isConclusionApproved = activeStep === 'conclusion_approved';
-    const isConclusionRejected = activeStep === 'conclusion_rejected';
-    const isDone = activeStep === 'done';
-    const isFinalThesisUploaded = activeStep === 'final_thesis';
-    const finalUploadOutcomeHistory = getFinalUploadOutcomeHistory();
-    const isFinalUploadRejected =
-      activeStep === 'ongoing' &&
-      finalUploadOutcomeHistory?.oldStatus === 'final_thesis' &&
-      finalUploadOutcomeHistory?.newStatus === 'ongoing';
-    const isFinalUploadRejectedStep = isFinalUploadRejected && key === 'final_upload_outcome';
-
-    if (isConclusionRequested) {
-      effectiveActiveStep = 'conclusion_requested';
-    } else if (isConclusionApproved) {
-      effectiveActiveStep = 'almalaurea';
-    } else if (isConclusionRejected) {
-      effectiveActiveStep = 'conclusion_outcome';
-    } else if (isFinalThesisUploaded) {
-      // Once uploaded, final_thesis is completed and we wait for the final upload outcome.
-      effectiveActiveStep = 'final_upload_outcome';
-    }
-    const activeIndex = isDone ? stepKeys.length : stepKeys.indexOf(effectiveActiveStep);
-    const thisIndex = stepKeys.indexOf(key);
-
-    const isOutcomeWaitingActive = isConclusionRequested && key === 'conclusion_outcome';
-    const isFinalUploadOutcomeWaitingActive = isFinalThesisUploaded && key === 'final_upload_outcome';
-    const isActive = effectiveActiveStep === key || isOutcomeWaitingActive || isFinalUploadOutcomeWaitingActive;
-    const isCompleted = thisIndex < activeIndex;
-    const isFuture =
-      thisIndex > activeIndex &&
-      !isOutcomeWaitingActive &&
-      !isFinalUploadOutcomeWaitingActive &&
-      !isFinalUploadRejectedStep;
-    const isConclusionRequestedStep = isConclusionRequested && key === 'conclusion_requested';
-
-    let circleClass;
-    let titleClass;
-    const historyEntry = getHistoryForStep(key);
-    const shouldShowTimestamp =
-      Boolean(historyEntry) && (activeStep !== 'ongoing' || isFinalUploadRejectedStep || isCompleted);
-
-    if (isActive) {
-      if (['approved', 'rejected', 'cancelled'].includes(key)) {
-        circleClass = key;
-      } else if (hasNoData && key === 'pending') {
-        circleClass = 'waiting';
-      } else if (key === 'outcome') {
-        circleClass = 'waiting';
-      } else {
-        circleClass = 'pending';
-      }
-      titleClass = 'active';
-    } else if (isCompleted) {
-      circleClass = 'approved';
-      titleClass = 'completed';
-    } else {
-      circleClass = 'inactive';
-      titleClass = '';
-    }
-
-    if (isConclusionRequested && key === 'conclusion_requested') {
-      circleClass = 'pending';
-      titleClass = 'active';
-    }
-
-    if (isConclusionRequested && key === 'conclusion_outcome') {
-      circleClass = 'waiting';
-      titleClass = 'active';
-    }
-
-    if (isConclusionApproved) {
-      // outcome is confirmed and completed; next step (almalaurea) is the new pending active step
-      if (key === 'conclusion_outcome') {
-        circleClass = 'approved';
-        titleClass = 'completed';
-      }
-    }
-
-    if (isConclusionRejected) {
-      if (key === 'conclusion_requested') {
-        circleClass = 'approved';
-        titleClass = 'completed';
-      }
-      if (key === 'conclusion_outcome') {
-        circleClass = 'rejected';
-        titleClass = 'active';
-      }
-    }
-
-    if (isFinalUploadRejected && key === 'final_upload_outcome') {
-      circleClass = 'rejected';
-      titleClass = 'active';
-    }
+  const renderStep = step => {
+    const { key, label, description, ui } = step;
 
     return (
       <div
         key={key}
-        className={[
-          'progress-step',
-          isActive ? 'is-active-step' : '',
-          isDisabled && !(hasNoData && key === 'pending') && !isConclusionRequestedStep ? 'disabled' : '',
-          isFuture && !isConclusionRequestedStep ? 'faded' : '',
-        ]
+        className={['progress-step', ui.isActive ? 'is-active-step' : '', ui.disabledClass, ui.fadedClass]
           .filter(Boolean)
           .join(' ')}
       >
         <div className="progress-step-marker">
-          <div className={`progress-step-circle ${circleClass}`}>
-            {isActive && key === 'approved' && <i className="fa-solid fa-check align-vertical-center" />}
-            {((isActive && key === 'rejected') || isFinalUploadRejectedStep) && <i className="fa-solid fa-xmark" />}
-            {isActive && key === 'cancelled' && <i className="fa-solid fa-ban" />}
-            {isCompleted && <i className="fa-solid fa-check align-vertical-center" />}
+          <div className={`progress-step-circle ${ui.circleClass}`}>
+            {ui.isActive && ui.circleClass === 'approved' && <i className="fa-solid fa-check align-vertical-center" />}
+            {ui.isActive && ui.circleClass === 'rejected' && <i className="fa-solid fa-xmark" />}
+            {ui.isActive && ui.circleClass === 'cancelled' && <i className="fa-solid fa-ban" />}
+            {ui.isCompleted && <i className="fa-solid fa-check align-vertical-center" />}
           </div>
         </div>
+
         <div className="progress-step-content">
-          <h6 className={`progress-step-title ${titleClass}`}>{label}</h6>
+          <h6 className={`progress-step-title ${ui.titleClass}`}>{label}</h6>
           <p className="progress-step-description">{description}</p>
-          {shouldShowTimestamp && (
-            <>
-              <div className="progress-step-date">
-                <i className="fa-solid fa-clock me-1" />
-                {moment(historyEntry.changeDate).format('DD/MM/YYYY - HH:mm')}
-              </div>
-            </>
+
+          {ui.shouldShowTimestamp && (
+            <div className="progress-step-date">
+              <i className="fa-solid fa-clock me-1" />
+              {ui.timestampText}
+            </div>
           )}
         </div>
       </div>
     );
   };
 
-  const getDeadlineSeverity = daysLeft => {
-    if (daysLeft < 0) {
-      return {
-        className: 'deadline-status-overdue',
-        label: t('carriera.tesi.deadline_status.overdue'),
-        icon: 'fa-solid fa-triangle-exclamation',
-      };
-    }
-    if (daysLeft === 0) {
-      return {
-        className: 'deadline-status-today',
-        label: t('carriera.tesi.deadline_status.today'),
-        icon: 'fa-solid fa-clock',
-      };
-    }
-    if (daysLeft <= 7) {
-      return {
-        className: 'deadline-status-soon',
-        label: t('carriera.tesi.deadline_status.soon'),
-        icon: 'fa-solid fa-bell',
-      };
-    }
-    return {
-      className: 'deadline-status-upcoming',
-      label: t('carriera.tesi.deadline_status.upcoming'),
-      icon: 'fa-solid fa-calendar-days',
-    };
-  };
+  const isDisabled = hasNoData;
 
   return (
     <>
@@ -459,80 +578,27 @@ export default function Timeline({ activeStep, statusHistory, session }) {
             <InfoTooltip tooltipText={t('carriera.tesi.timeline_tooltip')} placement="top" id="timeline-tooltip" />
             <Button
               className={`btn btn-${appliedTheme} btn-header ms-auto timeline-deadlines-btn`}
-              onClick={() => {
-                setShow(true);
-              }}
+              onClick={() => setShow(true)}
             >
               <i className="fa-regular fa-calendar-clock fa-lg me-1" /> {t('carriera.tesi.show_deadlines')}
             </Button>
           </div>
         </Card.Header>
+
         <Card.Body className="timeline-card-body">
           <div className="timeline-scroll" ref={timelineScrollRef}>
-            <div className="progress-tracker-container">
-              {steps.map(step => renderStep(step, normalizedActiveStep))}
-            </div>
+            <div className="progress-tracker-container">{steps.map(renderStep)}</div>
           </div>
         </Card.Body>
       </Card>
-      <Modal show={show} onHide={() => setShow(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <i className="fa-regular fa-calendar-clock fa-lg me-1" />
-            {graduationSession
-              ? i18n.language === 'en'
-                ? graduationSession.session_name_en
-                : graduationSession.session_name
-              : t('carriera.tesi.no_deadlines_available')}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="deadline-modal-body">
-          {sortedDeadlines.length > 0 ? (
-            <div className="deadline-list">
-              {nextDeadline && (
-                <div className="next-deadline-card">
-                  <div className="next-deadline-header">{t('carriera.tesi.next_deadline')}</div>
-                  <div className="next-deadline-title">
-                    {t(`carriera.tesi.deadlines.${nextDeadline.deadline_type}`)}
-                  </div>
-                  <div className="next-deadline-meta">
-                    <span>{moment.utc(nextDeadline.deadline_date).format('DD/MM/YYYY')}</span>
-                    <span className="next-deadline-separator">•</span>
-                    <span>
-                      {nextDeadline.daysLeft === 0
-                        ? t('carriera.tesi.deadline_countdown.today')
-                        : t('carriera.tesi.deadline_countdown.days_left', { count: nextDeadline.daysLeft })}
-                    </span>
-                  </div>
-                </div>
-              )}
 
-              {sortedDeadlines.map(deadline => {
-                const severity = getDeadlineSeverity(deadline.daysLeft);
-                return (
-                  <div key={deadline.deadline_type} className="deadline-row">
-                    <div className="deadline-row-main">
-                      <div className="deadline-row-title">{t(`carriera.tesi.deadlines.${deadline.deadline_type}`)}</div>
-                      <div className="deadline-row-date">{moment.utc(deadline.deadline_date).format('DD/MM/YYYY')}</div>
-                    </div>
-                    <div className={`deadline-status ${severity.className}`}>
-                      <i className={`${severity.icon} me-1`} />
-                      {severity.label}
-                      {deadline.daysLeft > 0 && (
-                        <span className="deadline-status-days">
-                          {t('carriera.tesi.deadline_countdown.days_short', { count: deadline.daysLeft })}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p>{t('carriera.tesi.no_deadlines_available')}</p>
-          )}
-        </Modal.Body>
-      </Modal>
+      <DeadlinesModal
+        show={show}
+        onHide={() => setShow(false)}
+        graduationSession={graduationSession}
+        sortedDeadlines={sortedDeadlines}
+        nextDeadline={nextDeadline}
+      />
     </>
   );
 }
@@ -545,9 +611,10 @@ Timeline.propTypes = {
     'cancelled',
     'none',
     'ongoing',
+    'cancel_request',
+    'cancel_approved',
     'conclusion_requested',
     'conclusion_approved',
-    'conclusion_rejected',
     'almalaurea',
     'compiled_questionnaire',
     'final_exam',

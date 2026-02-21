@@ -70,7 +70,6 @@ module.exports = (sequelize, DataTypes) => {
           'cancel_approved',
           'conclusion_requested',
           'conclusion_approved',
-          'conclusion_rejected',
           'almalaurea',
           'compiled_questionnaire',
           'final_exam',

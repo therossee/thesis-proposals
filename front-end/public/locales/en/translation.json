@@ -147,7 +147,9 @@
             "your_application": "Your application: ",
             "thesis_progress": {
                 "pending": "Application under review",
+                "pending_to_submit": "Application to submit",
                 "pending_description": "Your application has been correctly submitted and is under review by the supervisor. During this period, you cannot yet view the outcome or details of the evaluation. The system will send an automatic notification as soon as the evaluation procedure is completed.",
+                "pending_to_submit_description": "No application has been submitted yet.",
                 "approved": "Application approved",
                 "approved_description": "Your application has been evaluated positively by the supervisor and is approved. You are now authorized to proceed with the subsequent obligations provided for in the thesis initiation process, following the timing and methods indicated by the regulations.",
                 "rejected": "Application rejected",
@@ -183,7 +185,13 @@
                 "final_thesis": "Upload the final version of the thesis following the instructions provided by the supervisor and the regulations.",
                 "final_upload_outcome": "Waiting for the outcome of the final thesis upload review.",
                 "final_upload_approved": "The final thesis upload has been approved. The thesis process is complete.",
-                "final_upload_rejected": "The final thesis upload was rejected. The thesis returns to 'ongoing' for revisions."
+                "final_upload_rejected": "The final thesis upload was rejected. The thesis returns to 'ongoing' for revisions.",
+                "cancel_requested_title": "Cancellation requested",
+                "cancel_requested": "You have requested the cancellation of the thesis",
+                "cancel_outcome_title": "Cancellation outcome",
+                "cancel_outcome": "Waiting for the outcome of the thesis cancellation request",
+                "cancel_approved_title": "Thesis cancelled",
+                "cancel_approved": "Your thesis has been cancelled"
             },
             "proceed_to_thesis": "Proceed to start your thesis",
             "start_thesis": "Start your thesis",
@@ -205,7 +213,7 @@
             "success_application_cancelled_content": "You can now apply for other thesis proposals.",
             "error_application_cancelled_content": "An error occurred while canceling the application. Please try again later.",
             "conclusion_request_button": "Request conclusion",
-            "cancel_thesis": "Cancel thesis",
+            "cancel_thesis": "Request thesis cancellation",
             "tabs": {
                 "thesis": "Your thesis",
                 "thesis_application": "Your application",
@@ -318,6 +326,10 @@
             "next_steps_rejected": {
                 "title": "Next steps",
                 "content": "Your thesis application has been rejected by the supervisor. For further information, contact the supervisor directly. You can also apply for <a href='/carriera/tesi/proposte_di_tesi'>other thesis proposals</a> or submit a new custom thesis request."
+            },
+            "next_steps_cancel_approved": {
+                "title": "Next steps",
+                "content": "Your thesis has been cancelled. You can now apply for <a href='/carriera/tesi/proposte_di_tesi'>other thesis proposals</a> or submit a new custom thesis request."
             }
         },
         "conclusione_tesi": {
@@ -401,7 +413,8 @@
             "sending": "Sending...",
             "required_fields_note": "Fields marked with * are required.",
             "save_draft": "Save draft",
-            "draft_saved": "Draft saved successfully.",
+            "save_draft_title": "Draft saved",
+            "draft_saved": "The thesis conclusion request draft has been saved successfully. You can continue filling the form or go back to the thesis page.",
             "draft_save_failed": "Failed to save draft.",
             "draft_loaded": "Draft loaded automatically.",
             "draft_load_failed": "Unable to load the saved draft.",

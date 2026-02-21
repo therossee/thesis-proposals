@@ -37,7 +37,7 @@ export default function ConclusioneTesi() {
   const handleSaveDraftResult = success => {
     showToast({
       success,
-      title: t('carriera.conclusione_tesi.save_draft'),
+      title: t('carriera.conclusione_tesi.save_draft_title'),
       message: success ? t('carriera.conclusione_tesi.draft_saved') : t('carriera.conclusione_tesi.draft_save_failed'),
     });
   };

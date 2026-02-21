@@ -96,7 +96,7 @@ const updateThesisConclusionStatus = async (req, res) => {
 
       let isValidTransition = false;
       if (thesis.status === 'conclusion_requested') {
-        isValidTransition = conclusionStatus === 'conclusion_approved' || conclusionStatus === 'conclusion_rejected';
+        isValidTransition = conclusionStatus === 'conclusion_approved' || conclusionStatus === 'ongoing';
       } else if (thesis.status === 'conclusion_approved') {
         isValidTransition = conclusionStatus === 'almalaurea';
       } else if (thesis.status === 'almalaurea') {
@@ -107,6 +107,12 @@ const updateThesisConclusionStatus = async (req, res) => {
         isValidTransition = conclusionStatus === 'final_thesis';
       } else if (thesis.status === 'final_thesis') {
         isValidTransition = conclusionStatus === 'done' || conclusionStatus === 'ongoing';
+      } else if (thesis.status === 'cancel_requested') {
+        isValidTransition = conclusionStatus === 'cancel_approved' || conclusionStatus === 'ongoing';
+      } else if (thesis.status === 'cancel_approved' || thesis.status === 'done') {
+        isValidTransition = false;
+      } else if (thesis.status === 'ongoing') {
+        isValidTransition = conclusionStatus === 'cancel_requested' || conclusionStatus === 'conclusion_requested';
       } else {
         return { status: 400, payload: { error: 'Invalid current thesis status for conclusion update' } };
       }

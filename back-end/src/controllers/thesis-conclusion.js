@@ -93,7 +93,7 @@ const sendThesisConclusionRequest = async (req, res) => {
           return res.status(404).json({ error: 'Thesis not found' });
         }
 
-        if (!['ongoing', 'conclusion_rejected'].includes(thesis.status)) {
+        if (thesis.status !== 'ongoing') {
           return res.status(400).json({ error: 'Thesis is not in a valid state for conclusion request' });
         }
 
@@ -705,8 +705,9 @@ const saveThesisConclusionRequestDraft = async (req, res) => {
     await sequelize.transaction(async transaction => {
       const thesis = await Thesis.findOne({ where: { student_id: loggedStudent.id }, transaction });
       if (!thesis) return res.status(404).json({ error: 'Thesis not found' });
-      if (!['ongoing', 'conclusion_rejected'].includes(thesis.status))
+      if (thesis.status !== 'ongoing') {
         return res.status(400).json({ error: 'No draft can be saved for current thesis status' });
+      }
 
       const fieldsToSave = [];
       const setField = (field, value) => {

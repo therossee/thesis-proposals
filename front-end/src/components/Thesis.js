@@ -14,6 +14,7 @@ import CustomBlock from './CustomBlock';
 import CustomModal from './CustomModal';
 import FinalThesisUpload from './FinalThesisUpload';
 import InfoTooltip from './InfoTooltip';
+import LinkCard from './LinkCard';
 import LoadingModal from './LoadingModal';
 import TeacherContactCard from './TeacherContactCard';
 import ThesisRequestModal from './ThesisRequestModal';
@@ -109,9 +110,10 @@ export default function Thesis(props) {
 
   const thesisStatusOrder = [
     'ongoing',
+    'cancel_requested',
+    'cancel_approved',
     'conclusion_requested',
     'conclusion_approved',
-    'conclusion_rejected',
     'almalaurea',
     'compiled_questionnaire',
     'final_exam',
@@ -125,7 +127,32 @@ export default function Thesis(props) {
     return currentStatusIndex >= conclusionRequestedIndex;
   };
 
-  const handleCancelApplication = () => {
+  const cancelThesis = () => {
+    setIsLoading(true);
+    API.requestThesisCancelation()
+      .then(() => {
+        showToast({
+          success: true,
+          title: t('carriera.tesi.success_cancel_request'),
+          message: t('carriera.tesi.success_cancel_request_content'),
+        });
+        setShowModal(false);
+      })
+      .catch(error => {
+        console.error('Error cancelling thesis:', error);
+        showToast({
+          success: false,
+          title: t('carriera.tesi.error_cancel_request'),
+          message: t('carriera.tesi.error_cancel_request_content'),
+        });
+        setShowModal(false);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const cancelApplication = () => {
     setIsLoading(true);
     API.cancelThesisApplication({ applicationId: data.id })
       .then(() => {
@@ -152,6 +179,15 @@ export default function Thesis(props) {
       });
   };
 
+  const handleCancel = () => {
+    if (thesis) {
+      // Cancel thesis flow
+      cancelThesis();
+    } else {
+      cancelApplication();
+    }
+  };
+
   useEffect(() => {
     if (thesis) {
       API.getSessionDeadlines('thesis')
@@ -167,6 +203,10 @@ export default function Thesis(props) {
         })
         .catch(error => {
           console.error('Error fetching required resume info:', error);
+        });
+      API.checkStudentEligibility()
+        .then(data => {
+          setIsEligible(data.eligible);
         })
         .finally(() => {
           setIsLoading(false);
@@ -402,7 +442,49 @@ export default function Thesis(props) {
                       )}
                     </Col>
                     <Col md={5} lg={5}>
-                      <LinkCard />
+                      {thesis.status === 'cancel_approved' ? (
+                        <Card className="mb-1 roundCard py-2 ">
+                          <Card.Header className="border-0 d-flex align-items-center">
+                            <h3 className="thesis-topic mb-0">
+                              <i className="fa-regular fa-route" />{' '}
+                              {t('carriera.richiesta_tesi.next_steps_cancel_approved.title')}
+                            </h3>
+                            <InfoTooltip
+                              tooltipText={t('carriera.richiesta_tesi.next_steps_cancel_approved.title')}
+                              placement="right"
+                              id="thesis-next-steps-cancel-approved-tooltip"
+                            />
+                          </Card.Header>
+                          <Card.Body>
+                            <p
+                              dangerouslySetInnerHTML={{
+                                __html: t('carriera.richiesta_tesi.next_steps_cancel_approved.content'),
+                              }}
+                              style={{ fontSize: 'var(--font-size-sm)' }}
+                            />
+                            {isEligible && (
+                              <Button
+                                className={`btn-primary-${appliedTheme} tesi-header-action-btn align-items-center d-flex mt-3 mx-auto`}
+                                onClick={() => {
+                                  setShowRequestModal(true);
+                                }}
+                                style={{
+                                  height: '30px',
+                                  display: 'flex',
+                                  borderRadius: '6px',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  padding: '0 10px',
+                                }}
+                              >
+                                <i className="fa-regular fa-file-lines" /> {t('carriera.tesi.application_form')}
+                              </Button>
+                            )}
+                          </Card.Body>
+                        </Card>
+                      ) : (
+                        <LinkCard />
+                      )}
                     </Col>
                   </>
                 )}
@@ -492,7 +574,7 @@ export default function Thesis(props) {
         <CustomModal
           show={showModal}
           handleClose={() => setShowModal(false)}
-          handleConfirm={handleCancelApplication}
+          handleConfirm={handleCancel}
           titleText={modalTitle}
           bodyText={modalBody}
           confirmText={modalConfirmText}
@@ -512,66 +594,6 @@ export default function Thesis(props) {
     </>
   );
 }
-
-function LinkBlock({ icon, title, link }) {
-  const { t } = useTranslation();
-
-  return (
-    <div className="link-container mb-3">
-      {icon && <i className={`fa-regular fa-${icon} fa-fw`} />}
-      <a href={t(link)} target="_blank" rel="noopener noreferrer">{`${t(title)}`}</a>
-    </div>
-  );
-}
-
-function LinkCard() {
-  const { t } = useTranslation();
-  return (
-    <Card className="mb-3 roundCard py-2 ">
-      <Card.Header className="border-0 d-flex align-items-center">
-        <h3 className="thesis-topic mb-0">
-          <i className="fa-regular fa-book fa-sm pe-2" />
-          {t('carriera.tesi.utilities.title')}
-        </h3>
-        <InfoTooltip tooltipText={t('carriera.tesi.utilities.title')} placement="right" id="thesis-utilities-tooltip" />
-      </Card.Header>
-      <Card.Body className="pt-2 pb-0">
-        <LinkBlock
-          icon="copyright"
-          title="carriera.tesi.utilities.copyright"
-          link="carriera.tesi.utilities.copyright_link"
-        />
-        <LinkBlock
-          icon="file-lines"
-          title="carriera.tesi.utilities.thesis_template"
-          link="https://www.overleaf.com/latex/templates/politecnico-di-torino-thesis-template/cmpmxftwvvbr"
-        />
-        <LinkBlock
-          icon="file-pdf"
-          title="carriera.tesi.utilities.pdfa_converter"
-          link="carriera.tesi.utilities.pdfa_converter_link"
-        />
-        <LinkBlock
-          icon="file-word"
-          title="carriera.tesi.utilities.thesis_cover_word"
-          link="carriera.tesi.utilities.thesis_cover_word_link"
-        />
-        <LinkBlock icon="file-image" title="carriera.tesi.utilities.logo" link="carriera.tesi.utilities.logo_link" />
-        <LinkBlock
-          icon="link"
-          title="carriera.tesi.utilities.plagiarism"
-          link="carriera.tesi.utilities.plagiarism_link"
-        />
-      </Card.Body>
-    </Card>
-  );
-}
-
-LinkBlock.propTypes = {
-  icon: PropTypes.string,
-  title: PropTypes.string.isRequired,
-  link: PropTypes.string.isRequired,
-};
 
 Thesis.propTypes = {
   thesis: PropTypes.shape({

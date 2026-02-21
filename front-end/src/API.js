@@ -365,6 +365,16 @@ const getRequiredResumeForLoggedStudent = async () => {
   }
 };
 
+const requestThesisCancelation = async () => {
+  try {
+    const response = await axios.post(`${URL}/thesis/cancel`);
+    return response.data;
+  } catch (error) {
+    console.error('Error requesting thesis cancelation:', error);
+    throw error;
+  }
+};
+
 // ------------------------------------
 
 const buildParams = (lang, page, limit, filters, search, sorting) => {
@@ -447,6 +457,7 @@ const API = {
   uploadFinalThesis,
   getRequiredResumeForLoggedStudent,
   getThesisFile,
+  requestThesisCancelation,
 };
 
 export default API;

@@ -140,8 +140,10 @@ export default function Test() {
         return 'Richiesta conclusione';
       case 'conclusion_approved':
         return 'Conclusione approvata';
-      case 'conclusion_rejected':
-        return 'Conclusione rifiutata';
+      case 'cancel_requested':
+        return 'Richiesta annullamento';
+      case 'cancel_approved':
+        return 'Annullamento approvato';
       case 'almalaurea':
         return 'AlmaLaurea';
       case 'compiled_questionnaire':
@@ -162,7 +164,7 @@ export default function Test() {
       case 'conclusion_requested':
         return [
           { label: 'Approve', status: 'conclusion_approved', variant: 'outline-success', icon: 'check' },
-          { label: 'Reject', status: 'conclusion_rejected', variant: 'outline-danger', icon: 'xmark' },
+          { label: 'Reject', status: 'ongoing', variant: 'outline-danger', icon: 'xmark' },
         ];
       case 'conclusion_approved':
         return [{ label: 'AlmaLaurea', status: 'almalaurea', variant: 'outline-primary', icon: 'file-lines' }];
@@ -183,6 +185,11 @@ export default function Test() {
         return [
           { label: 'Approve final thesis', status: 'done', variant: 'outline-success', icon: 'check' },
           { label: 'Reject final thesis', status: 'ongoing', variant: 'outline-danger', icon: 'xmark' },
+        ];
+      case 'cancel_requested':
+        return [
+          { label: 'Approve cancelation', status: 'cancel_approved', variant: 'outline-success', icon: 'check' },
+          { label: 'Reject cancelation', status: 'ongoing', variant: 'outline-danger', icon: 'xmark' },
         ];
       default:
         return [];
