@@ -182,6 +182,7 @@ const createStudentThesis = async (req, res) => {
       supervisor: supervisorData,
       co_supervisors: coSupervisorsData,
       company: thesis_data.company ? thesis_data.company.toJSON() : null,
+      status: completeThesis.status,
       thesis_start_date: completeThesis.thesis_start_date.toISOString(),
       thesis_conclusion_request_date: completeThesis.thesis_conclusion_request_date,
       thesis_conclusion_confirmation_date: completeThesis.thesis_conclusion_confirmation_date,

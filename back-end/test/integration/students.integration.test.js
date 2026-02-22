@@ -6,6 +6,8 @@ const { sequelize } = require('../../src/models');
 const request = require('supertest');
 
 let server;
+const DEFAULT_STUDENT_ID = '320213';
+const TEMP_STUDENT_ID = '399999';
 
 beforeAll(async () => {
   server = app.listen(0, () => {
@@ -100,7 +102,7 @@ describe('GET /api/students/logged-student', () => {
 
 describe('PUT /api/students/logged-student', () => {
   afterAll(async () => {
-    await request(server).put('/api/students/logged-student').send({ student_id: '320213' });
+    await request(server).put('/api/students/logged-student').send({ student_id: DEFAULT_STUDENT_ID });
   });
   test('Should update the logged student', async () => {
     const response = await request(server).put('/api/students/logged-student').send({ student_id: '314796' });
@@ -118,5 +120,49 @@ describe('PUT /api/students/logged-student', () => {
     const response = await request(server).put('/api/students/logged-student').send({ student_id: '999999' });
     expect(response.status).toBe(404);
     expect(response.body).toEqual({ error: 'Student not found' });
+  });
+});
+
+describe('GET /api/students/required-resume', () => {
+  beforeAll(async () => {
+    await sequelize.query('DELETE FROM logged_student WHERE student_id = :studentId', {
+      replacements: { studentId: TEMP_STUDENT_ID },
+    });
+    await sequelize.query('DELETE FROM student WHERE id = :studentId', {
+      replacements: { studentId: TEMP_STUDENT_ID },
+    });
+    await sequelize.query(
+      `
+      INSERT INTO student (id, first_name, last_name, profile_picture_url, degree_id)
+      VALUES (:id, 'Temp', 'Student', NULL, '32-1')
+      `,
+      { replacements: { id: TEMP_STUDENT_ID } },
+    );
+  });
+
+  afterAll(async () => {
+    await request(server).put('/api/students/logged-student').send({ student_id: DEFAULT_STUDENT_ID });
+    await sequelize.query('DELETE FROM logged_student WHERE student_id = :studentId', {
+      replacements: { studentId: TEMP_STUDENT_ID },
+    });
+    await sequelize.query('DELETE FROM student WHERE id = :studentId', {
+      replacements: { studentId: TEMP_STUDENT_ID },
+    });
+  });
+
+  test('Should return requiredResume=true for a CL003 student', async () => {
+    await request(server).put('/api/students/logged-student').send({ student_id: DEFAULT_STUDENT_ID });
+
+    const response = await request(server).get('/api/students/required-resume');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ requiredResume: true });
+  });
+
+  test('Should return requiredResume=false for a non-CL003 student', async () => {
+    await request(server).put('/api/students/logged-student').send({ student_id: TEMP_STUDENT_ID });
+
+    const response = await request(server).get('/api/students/required-resume');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ requiredResume: false });
   });
 });

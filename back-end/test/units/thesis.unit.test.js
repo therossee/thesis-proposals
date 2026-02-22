@@ -1,6 +1,12 @@
 require('jest');
 
-const { getLoggedStudentThesis, createStudentThesis } = require('../../src/controllers/thesis');
+const {
+  getLoggedStudentThesis,
+  createStudentThesis,
+  getAllTheses,
+  getThesisFile,
+  sendThesisCancelRequest,
+} = require('../../src/controllers/thesis');
 
 const {
   sequelize,
@@ -15,7 +21,7 @@ const {
 
 jest.mock('../../src/models', () => ({
   sequelize: { transaction: jest.fn() },
-  Thesis: { findOne: jest.fn(), findByPk: jest.fn(), create: jest.fn() },
+  Thesis: { findOne: jest.fn(), findByPk: jest.fn(), findAll: jest.fn(), create: jest.fn() },
   ThesisSupervisorCoSupervisor: { findAll: jest.fn(), create: jest.fn() },
   Teacher: { findByPk: jest.fn() },
   Student: { findByPk: jest.fn() },
@@ -349,6 +355,152 @@ describe('Student Thesis Controllers', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: 'An error occurred while creating the thesis.' });
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe('getThesisFile', () => {
+    test('should return 404 if thesis is not found', async () => {
+      req = { params: { id: 123, fileType: 'thesis' } };
+      res = { status: jest.fn().mockReturnThis(), json: jest.fn(), download: jest.fn() };
+      Thesis.findByPk.mockResolvedValue(null);
+
+      await getThesisFile(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Thesis not found' });
+    });
+
+    test('should return 400 for invalid file type', async () => {
+      req = { params: { id: 123, fileType: 'unsupported' } };
+      res = { status: jest.fn().mockReturnThis(), json: jest.fn(), download: jest.fn() };
+      Thesis.findByPk.mockResolvedValue({ id: 123 });
+
+      await getThesisFile(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid file type requested' });
+    });
+
+    test('should return 404 if requested file path is missing', async () => {
+      req = { params: { id: 123, fileType: 'resume' } };
+      res = { status: jest.fn().mockReturnThis(), json: jest.fn(), download: jest.fn() };
+      Thesis.findByPk.mockResolvedValue({ id: 123, thesis_resume_path: null });
+
+      await getThesisFile(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Requested file not found for this thesis' });
+    });
+
+    test('should download thesis file when requested file exists', async () => {
+      req = { params: { id: 123, fileType: 'thesis' } };
+      res = { status: jest.fn().mockReturnThis(), json: jest.fn(), download: jest.fn() };
+      Thesis.findByPk.mockResolvedValue({ id: 123, thesis_file_path: '/tmp/test-thesis.pdf' });
+
+      await getThesisFile(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.download).toHaveBeenCalledWith('/tmp/test-thesis.pdf');
+    });
+
+    test('should return 500 on unexpected error', async () => {
+      req = { params: { id: 123, fileType: 'thesis' } };
+      res = { status: jest.fn().mockReturnThis(), json: jest.fn(), download: jest.fn() };
+      Thesis.findByPk.mockRejectedValue(new Error('DB failure'));
+
+      await getThesisFile(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'An error occurred while fetching the thesis file.' });
+    });
+  });
+
+  describe('getAllTheses', () => {
+    test('should return all theses', async () => {
+      const theses = [{ id: 1 }, { id: 2 }];
+      Thesis.findAll.mockResolvedValue(theses);
+
+      await getAllTheses(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(theses);
+    });
+
+    test('should return 500 on unexpected error', async () => {
+      Thesis.findAll.mockRejectedValue(new Error('DB failure'));
+
+      await getAllTheses(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'An error occurred while fetching all theses.' });
+    });
+  });
+
+  describe('sendThesisCancelRequest', () => {
+    test('should return 401 if no logged student', async () => {
+      LoggedStudent.findOne.mockResolvedValue(null);
+
+      await sendThesisCancelRequest(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'No logged-in student found' });
+    });
+
+    test('should return 404 if logged student record does not exist', async () => {
+      LoggedStudent.findOne.mockResolvedValue({ student_id: '999999' });
+      Student.findByPk.mockResolvedValue(null);
+
+      await sendThesisCancelRequest(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Logged-in student not found' });
+    });
+
+    test('should return 404 if thesis is not found', async () => {
+      LoggedStudent.findOne.mockResolvedValue({ student_id: '1' });
+      Student.findByPk.mockResolvedValue({ id: '1' });
+      Thesis.findOne.mockResolvedValue(null);
+
+      await sendThesisCancelRequest(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Thesis not found for the logged-in student.' });
+    });
+
+    test('should return 400 if thesis status is not ongoing', async () => {
+      LoggedStudent.findOne.mockResolvedValue({ student_id: '1' });
+      Student.findByPk.mockResolvedValue({ id: '1' });
+      Thesis.findOne.mockResolvedValue({ status: 'final_exam' });
+
+      await sendThesisCancelRequest(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Thesis cancellation is not allowed for this thesis status.' });
+    });
+
+    test('should set thesis status to cancel_requested and return 200', async () => {
+      const thesis = { status: 'ongoing', save: jest.fn().mockResolvedValue(undefined) };
+      LoggedStudent.findOne.mockResolvedValue({ student_id: '1' });
+      Student.findByPk.mockResolvedValue({ id: '1' });
+      Thesis.findOne.mockResolvedValue(thesis);
+
+      await sendThesisCancelRequest(req, res);
+
+      expect(thesis.status).toBe('cancel_requested');
+      expect(thesis.save).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Thesis cancellation requested successfully.' });
+    });
+
+    test('should return 500 on unexpected error', async () => {
+      LoggedStudent.findOne.mockRejectedValue(new Error('DB failure'));
+
+      await sendThesisCancelRequest(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'An error occurred while sending the thesis cancellation request.',
+      });
     });
   });
 });
