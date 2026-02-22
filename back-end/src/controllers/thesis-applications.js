@@ -170,7 +170,7 @@ const checkStudentEligibility = async (req, res) => {
           thesis_application_id: app.id,
         },
       });
-      if (!thesis || thesis.status !== 'cancel_approved') {
+      if (thesis?.status !== 'cancel_approved') {
         return res.status(200).json({ studentId: logged.student_id, eligible: false });
       }
     }

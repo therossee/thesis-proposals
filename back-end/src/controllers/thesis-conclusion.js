@@ -43,6 +43,7 @@ const {
 const { writeValidatedPdf } = require('../utils/pdfa');
 const { parseJsonField } = require('../utils/parseJson');
 const { isResumeRequiredForStudent } = require('../utils/requiredResume');
+const { httpError } = require('../utils/httpError');
 
 const sendThesisConclusionRequest = async (req, res) => {
   try {
@@ -490,8 +491,13 @@ const getEmbargoMotivations = async (req, res) => {
 };
 
 const getSessionDeadlines = async (req, res) => {
-  const requestedType = req.query.type;
   const now = new Date();
+  const getSessionId = deadline => deadline?.graduation_session_id ?? deadline?.graduation_session?.id;
+  const deadlineTypeByEffectiveType = {
+    no_application: 'thesis_request',
+    application: 'conclusion_request',
+    thesis: 'final_exam_registration',
+  };
 
   const logged = await LoggedStudent.findOne();
   if (!logged) return res.status(401).json({ error: 'No logged-in student found' });
@@ -506,16 +512,9 @@ const getSessionDeadlines = async (req, res) => {
     order: [['submission_date', 'DESC']],
   });
 
-  let effectiveType = requestedType;
-  if (thesis) effectiveType = 'thesis';
-  else if (activeApplication) effectiveType = 'application';
-  else effectiveType = 'no_application';
-
-  let deadlineType;
-  if (effectiveType === 'no_application') deadlineType = 'thesis_request';
-  else if (effectiveType === 'application') deadlineType = 'conclusion_request';
-  else if (effectiveType === 'thesis') deadlineType = 'final_exam_registration';
-  else return res.status(400).json({ error: 'Invalid flag' });
+  const effectiveType = thesis ? 'thesis' : activeApplication ? 'application' : 'no_application';
+  const deadlineType = deadlineTypeByEffectiveType[effectiveType];
+  if (!deadlineType) return res.status(400).json({ error: 'Invalid flag' });
 
   let shouldForceNextSession = false;
   if (thesis?.thesis_application_id && thesis.status === 'ongoing') {
@@ -543,19 +542,14 @@ const getSessionDeadlines = async (req, res) => {
     return res.status(404).json({ error: 'No upcoming deadline found for this flag' });
   }
 
-  let refDeadline = upcomingDeadlines[0];
-  if (shouldForceNextSession) {
-    const firstSessionId =
-      upcomingDeadlines[0].graduation_session_id ||
-      (upcomingDeadlines[0].graduation_session && upcomingDeadlines[0].graduation_session.id);
-    const nextSessionDeadline = upcomingDeadlines.find(
-      d => (d.graduation_session_id || d.graduation_session?.id) !== firstSessionId,
-    );
-    if (nextSessionDeadline) refDeadline = nextSessionDeadline;
-  }
+  const firstDeadline = upcomingDeadlines[0];
+  const firstSessionId = getSessionId(firstDeadline);
+  const refDeadline =
+    shouldForceNextSession && firstSessionId
+      ? upcomingDeadlines.find(deadline => getSessionId(deadline) !== firstSessionId) || firstDeadline
+      : firstDeadline;
 
-  const sessionId =
-    refDeadline.graduation_session_id || (refDeadline.graduation_session && refDeadline.graduation_session.id);
+  const sessionId = getSessionId(refDeadline);
   if (!sessionId) return res.status(500).json({ error: 'Graduation session not found for deadline' });
 
   const sessionDeadlines = await Deadline.findAll({
@@ -568,6 +562,140 @@ const getSessionDeadlines = async (req, res) => {
     graduationSession: refDeadline.graduation_session,
     deadlines: sessionDeadlines,
   });
+};
+
+const normalizeDraftTextFields = draftData => {
+  const alignNullable = value => (value === undefined ? undefined : (value ?? null));
+  const fromItOrEn = (itValue, enValue, language) =>
+    language === 'en' ? alignNullable(itValue ?? enValue) : alignNullable(itValue);
+  const fromEnOrIt = (itValue, enValue, language) =>
+    language === 'en' ? alignNullable(itValue ?? enValue) : alignNullable(enValue);
+
+  return {
+    title: fromItOrEn(draftData.title, draftData.titleEng, draftData.language),
+    titleEng: fromEnOrIt(draftData.title, draftData.titleEng, draftData.language),
+    abstract: fromItOrEn(draftData.abstract, draftData.abstractEng, draftData.language),
+    abstractEng: fromEnOrIt(draftData.abstract, draftData.abstractEng, draftData.language),
+  };
+};
+
+const saveDraftFiles = async ({
+  thesis,
+  loggedStudentId,
+  baseUploadDir,
+  draftUploadDir,
+  files,
+  removeFlags,
+  setField,
+}) => {
+  const removeStoredDraftFile = async thesisPathField => {
+    if (!thesis[thesisPathField]) return;
+    const storedRelativePath = await resolveValidDraftFilePath(thesis[thesisPathField], loggedStudentId, baseUploadDir);
+    if (!storedRelativePath) return;
+    const storedAbsolutePath = path.join(baseUploadDir, storedRelativePath);
+    await safeUnlink(storedAbsolutePath);
+    setField(thesisPathField, null);
+  };
+
+  const moveDraftFile = async (file, thesisPathField) => {
+    if (!file?.path) return;
+    await ensureDirExists(draftUploadDir);
+    const safeName = path.basename(file.originalname || file.path);
+    const destination = path.join(draftUploadDir, safeName);
+
+    const storedRelativePath = await resolveValidDraftFilePath(thesis[thesisPathField], loggedStudentId, baseUploadDir);
+    if (storedRelativePath) {
+      const storedAbsolutePath = path.join(baseUploadDir, storedRelativePath);
+      if (path.resolve(storedAbsolutePath) !== path.resolve(destination)) {
+        await safeUnlink(storedAbsolutePath);
+      }
+    }
+
+    await moveFile(file.path, destination);
+    setField(thesisPathField, path.relative(baseUploadDir, destination));
+  };
+
+  if (removeFlags.removeThesisResume && !files.thesisResume) await removeStoredDraftFile('thesis_resume_path');
+  if (removeFlags.removeThesisFile && !files.thesisFile) await removeStoredDraftFile('thesis_file_path');
+  if (removeFlags.removeAdditionalZip && !files.additionalZip) await removeStoredDraftFile('additional_zip_path');
+
+  await moveDraftFile(files.thesisResume, 'thesis_resume_path');
+  await moveDraftFile(files.thesisFile, 'thesis_file_path');
+  await moveDraftFile(files.additionalZip, 'additional_zip_path');
+};
+
+const saveDraftCoSupervisors = async ({ thesisId, coSupervisors, transaction }) => {
+  if (coSupervisors === undefined) return;
+
+  await ThesisSupervisorCoSupervisor.destroy({
+    where: { thesis_id: thesisId, is_supervisor: false, scope: 'draft' },
+    transaction,
+  });
+
+  const ids = (coSupervisors || [])
+    .map(coSup => (typeof coSup === 'object' ? coSup.id : coSup))
+    .filter(id => id !== null && id !== undefined);
+
+  if (!ids.length) return;
+
+  const teachers = await Teacher.findAll({ where: { id: { [Op.in]: ids } }, transaction });
+  if (teachers.length !== ids.length) {
+    throw httpError(400, 'One or more co-supervisors not found');
+  }
+
+  await ThesisSupervisorCoSupervisor.bulkCreate(
+    ids.map(teacherId => ({
+      thesis_id: thesisId,
+      teacher_id: teacherId,
+      scope: 'draft',
+      is_supervisor: false,
+    })),
+    { transaction },
+  );
+};
+
+const saveDraftSdgs = async ({ thesisId, sdgs, transaction }) => {
+  if (sdgs === undefined) return;
+
+  const normalizedSdgs = (sdgs || [])
+    .map(goal => ({
+      id: typeof goal === 'object' ? (goal.goalId ?? goal.id) : goal,
+      level: typeof goal === 'object' ? goal.level : null,
+    }))
+    .filter(goal => Number.isFinite(Number(goal.id)));
+
+  const uniqueGoalIds = [...new Set(normalizedSdgs.map(goal => Number(goal.id)))];
+  if (uniqueGoalIds.length) {
+    const existingGoals = await SustainableDevelopmentGoal.findAll({
+      where: { id: { [Op.in]: uniqueGoalIds } },
+      transaction,
+    });
+    if (existingGoals.length !== uniqueGoalIds.length) {
+      throw httpError(400, 'One or more sustainable development goals not found');
+    }
+  }
+
+  await ThesisSustainableDevelopmentGoal.destroy({ where: { thesis_id: thesisId }, transaction });
+
+  const dedupedByGoalId = new Map();
+  for (const goal of normalizedSdgs) {
+    const id = Number(goal.id);
+    const previous = dedupedByGoalId.get(id);
+    if (!previous || goal.level === 'primary') {
+      dedupedByGoalId.set(id, { id, level: goal.level || 'secondary' });
+    }
+  }
+
+  if (!dedupedByGoalId.size) return;
+
+  await ThesisSustainableDevelopmentGoal.bulkCreate(
+    [...dedupedByGoalId.values()].map(goal => ({
+      thesis_id: thesisId,
+      goal_id: goal.id,
+      sdg_level: goal.level,
+    })),
+    { transaction },
+  );
 };
 
 const uploadFinalThesis = async (req, res) => {
@@ -704,9 +832,9 @@ const saveThesisConclusionRequestDraft = async (req, res) => {
 
     await sequelize.transaction(async transaction => {
       const thesis = await Thesis.findOne({ where: { student_id: loggedStudent.id }, transaction });
-      if (!thesis) return res.status(404).json({ error: 'Thesis not found' });
+      if (!thesis) throw httpError(404, 'Thesis not found');
       if (thesis.status !== 'ongoing') {
-        return res.status(400).json({ error: 'No draft can be saved for current thesis status' });
+        throw httpError(400, 'No draft can be saved for current thesis status');
       }
 
       const fieldsToSave = [];
@@ -716,146 +844,44 @@ const saveThesisConclusionRequestDraft = async (req, res) => {
         fieldsToSave.push(field);
       };
 
-      const alignIfEnglish = value => (value === undefined ? undefined : (value ?? null));
-      const normalizedTitle =
-        draftData.language === 'en'
-          ? alignIfEnglish(draftData.title ?? draftData.titleEng)
-          : alignIfEnglish(draftData.title);
-      const normalizedTitleEng =
-        draftData.language === 'en'
-          ? alignIfEnglish(draftData.title ?? draftData.titleEng)
-          : alignIfEnglish(draftData.titleEng);
-      const normalizedAbstract =
-        draftData.language === 'en'
-          ? alignIfEnglish(draftData.abstract ?? draftData.abstractEng)
-          : alignIfEnglish(draftData.abstract);
-      const normalizedAbstractEng =
-        draftData.language === 'en'
-          ? alignIfEnglish(draftData.abstract ?? draftData.abstractEng)
-          : alignIfEnglish(draftData.abstractEng);
-
-      setField('title', normalizedTitle);
-      setField('title_eng', normalizedTitleEng);
-      setField('abstract', normalizedAbstract);
-      setField('abstract_eng', normalizedAbstractEng);
+      const normalizedTexts = normalizeDraftTextFields(draftData);
+      setField('title', normalizedTexts.title);
+      setField('title_eng', normalizedTexts.titleEng);
+      setField('abstract', normalizedTexts.abstract);
+      setField('abstract_eng', normalizedTexts.abstractEng);
       setField('language', draftData.language);
       if (draftData.licenseId !== undefined) setField('license_id', draftData.licenseId);
       setField('thesis_draft_date', new Date());
 
-      const removeStoredDraftFile = async thesisPathField => {
-        if (!thesis[thesisPathField]) return;
-        const storedRelativePath = await resolveValidDraftFilePath(
-          thesis[thesisPathField],
-          loggedStudent.id,
-          baseUploadDir,
-        );
-        if (!storedRelativePath) return;
-        const storedAbsolutePath = path.join(baseUploadDir, storedRelativePath);
-        await safeUnlink(storedAbsolutePath);
-        setField(thesisPathField, null);
-      };
-
-      const moveDraftFile = async (file, thesisPathField) => {
-        if (!file?.path) return;
-        await ensureDirExists(draftUploadDir);
-        const safeName = path.basename(file.originalname || file.path);
-        const destination = path.join(draftUploadDir, safeName);
-
-        const storedRelativePath = await resolveValidDraftFilePath(
-          thesis[thesisPathField],
-          loggedStudent.id,
-          baseUploadDir,
-        );
-        if (storedRelativePath) {
-          const storedAbsolutePath = path.join(baseUploadDir, storedRelativePath);
-          if (path.resolve(storedAbsolutePath) !== path.resolve(destination)) {
-            await safeUnlink(storedAbsolutePath);
-          }
-        }
-
-        await moveFile(file.path, destination);
-        setField(thesisPathField, path.relative(baseUploadDir, destination));
-      };
-
-      if (draftData.removeThesisResume && !thesisResume) await removeStoredDraftFile('thesis_resume_path');
-      if (draftData.removeThesisFile && !thesisFile) await removeStoredDraftFile('thesis_file_path');
-      if (draftData.removeAdditionalZip && !additionalZip) await removeStoredDraftFile('additional_zip_path');
-
-      await moveDraftFile(thesisResume, 'thesis_resume_path');
-      await moveDraftFile(thesisFile, 'thesis_file_path');
-      await moveDraftFile(additionalZip, 'additional_zip_path');
+      await saveDraftFiles({
+        thesis,
+        loggedStudentId: loggedStudent.id,
+        baseUploadDir,
+        draftUploadDir,
+        files: { thesisResume, thesisFile, additionalZip },
+        removeFlags: {
+          removeThesisResume: draftData.removeThesisResume,
+          removeThesisFile: draftData.removeThesisFile,
+          removeAdditionalZip: draftData.removeAdditionalZip,
+        },
+        setField,
+      });
 
       if (fieldsToSave.length) {
         await thesis.save({ transaction, fields: [...new Set(fieldsToSave)] });
       }
 
-      if (draftData.coSupervisors !== undefined) {
-        await ThesisSupervisorCoSupervisor.destroy({
-          where: { thesis_id: thesis.id, is_supervisor: false, scope: 'draft' },
-          transaction,
-        });
+      await saveDraftCoSupervisors({
+        thesisId: thesis.id,
+        coSupervisors: draftData.coSupervisors,
+        transaction,
+      });
 
-        const ids = (draftData.coSupervisors || [])
-          .map(coSup => (typeof coSup === 'object' ? coSup.id : coSup))
-          .filter(id => id !== null && id !== undefined);
-
-        if (ids.length) {
-          const teachers = await Teacher.findAll({ where: { id: { [Op.in]: ids } }, transaction });
-          if (teachers.length !== ids.length)
-            return res.status(400).json({ error: 'One or more co-supervisors not found' });
-
-          await ThesisSupervisorCoSupervisor.bulkCreate(
-            ids.map(teacherId => ({
-              thesis_id: thesis.id,
-              teacher_id: teacherId,
-              scope: 'draft',
-              is_supervisor: false,
-            })),
-            { transaction },
-          );
-        }
-      }
-
-      if (draftData.sdgs !== undefined) {
-        const normalizedSdgs = (draftData.sdgs || [])
-          .map(goal => ({
-            id: typeof goal === 'object' ? (goal.goalId ?? goal.id) : goal,
-            level: typeof goal === 'object' ? goal.level : null,
-          }))
-          .filter(goal => Number.isFinite(Number(goal.id)));
-
-        const uniqueGoalIds = [...new Set(normalizedSdgs.map(goal => Number(goal.id)))];
-        if (uniqueGoalIds.length) {
-          const existingGoals = await SustainableDevelopmentGoal.findAll({
-            where: { id: { [Op.in]: uniqueGoalIds } },
-            transaction,
-          });
-          if (existingGoals.length !== uniqueGoalIds.length)
-            return res.status(400).json({ error: 'One or more sustainable development goals not found' });
-        }
-
-        await ThesisSustainableDevelopmentGoal.destroy({ where: { thesis_id: thesis.id }, transaction });
-
-        const dedupedByGoalId = new Map();
-        for (const goal of normalizedSdgs) {
-          const id = Number(goal.id);
-          const previous = dedupedByGoalId.get(id);
-          if (!previous || goal.level === 'primary') {
-            dedupedByGoalId.set(id, { id, level: goal.level || 'secondary' });
-          }
-        }
-
-        if (dedupedByGoalId.size) {
-          await ThesisSustainableDevelopmentGoal.bulkCreate(
-            [...dedupedByGoalId.values()].map(goal => ({
-              thesis_id: thesis.id,
-              goal_id: goal.id,
-              sdg_level: goal.level,
-            })),
-            { transaction },
-          );
-        }
-      }
+      await saveDraftSdgs({
+        thesisId: thesis.id,
+        sdgs: draftData.sdgs,
+        transaction,
+      });
     });
 
     return res.status(200).json({ message: 'Draft saved successfully' });

@@ -109,8 +109,6 @@ const updateThesisConclusionStatus = async (req, res) => {
         isValidTransition = conclusionStatus === 'done' || conclusionStatus === 'ongoing';
       } else if (thesis.status === 'cancel_requested') {
         isValidTransition = conclusionStatus === 'cancel_approved' || conclusionStatus === 'ongoing';
-      } else if (thesis.status === 'cancel_approved' || thesis.status === 'done') {
-        isValidTransition = false;
       } else if (thesis.status === 'ongoing') {
         isValidTransition = conclusionStatus === 'cancel_requested' || conclusionStatus === 'conclusion_requested';
       } else {
