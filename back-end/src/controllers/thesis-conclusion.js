@@ -133,7 +133,6 @@ const getSessionDeadlines = async (req, res) => {
 
   const effectiveType = thesis ? 'thesis' : activeApplication ? 'application' : 'no_application';
   const deadlineType = deadlineTypeByEffectiveType[effectiveType];
-  if (!deadlineType) return res.status(400).json({ error: 'Invalid flag' });
 
   let shouldForceNextSession = false;
   if (thesis?.thesis_application_id && thesis.status === 'ongoing') {

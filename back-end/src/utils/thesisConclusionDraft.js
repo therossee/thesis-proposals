@@ -225,9 +225,7 @@ const saveDraftTransaction = async ({
     setField,
   });
 
-  if (fieldsToSave.length) {
-    await thesis.save({ transaction, fields: [...new Set(fieldsToSave)] });
-  }
+  await thesis.save({ transaction, fields: [...new Set(fieldsToSave)] });
 
   await saveDraftCoSupervisors({
     thesisId: thesis.id,
