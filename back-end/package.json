@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "./src/index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test jest --detectOpenHandles",
-    "test:coverage": "cross-env NODE_ENV=test jest --coverage --colors",
+    "test": "cross-env NODE_ENV=test jest --detectOpenHandles --runInBand",
+    "test:coverage": "cross-env NODE_ENV=test jest --coverage --runInBand --colors",
     "test:unit": "cross-env NODE_ENV=test npx jest --coverage --coverageDirectory=coverage/coverage_unit --colors --runInBand units/*",
     "test:integration": "cross-env NODE_ENV=test npx jest --coverage --coverageDirectory=coverage/coverage_integration  --runInBand --colors integration/*",
     "start": "node ./src/index",
