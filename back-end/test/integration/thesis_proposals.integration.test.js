@@ -21,16 +21,16 @@ afterAll(async () => {
 
 describe('GET /api/thesis-proposals', () => {
   test('Should return the list of all active thesis proposals ordered by id', async () => {
-    const response = await request(app).get('/api/thesis-proposals');
+    const response = await request(server).get('/api/thesis-proposals');
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Object);
     expect(response.body).toHaveProperty('count');
     expect(response.body).toHaveProperty('thesisProposals');
     expect(response.body).toHaveProperty('currentPage');
     expect(response.body).toHaveProperty('totalPages');
-    expect(response.body.count).toEqual(7);
+    expect(response.body.count).toEqual(6);
     expect(response.body.thesisProposals).toBeInstanceOf(Array);
-    expect(response.body.thesisProposals.length).toEqual(7);
+    expect(response.body.thesisProposals.length).toEqual(6);
     expect(response.body.currentPage).toEqual(1);
     expect(response.body.totalPages).toEqual(1);
     let previousId = null;
@@ -47,9 +47,9 @@ describe('GET /api/thesis-proposals', () => {
   });
 
   test('Should filter thesis proposals by search', async () => {
-    const response = await request(app).get('/api/thesis-proposals').query({ search: 'descrizione' });
+    const response = await request(server).get('/api/thesis-proposals').query({ search: 'descrizione' });
     expect(response.status).toBe(200);
-    expect(response.body.count).toBe(7);
+    expect(response.body.count).toBe(6);
     response.body.thesisProposals.forEach(proposal => {
       const topic = proposal.topic.toLowerCase();
       const description = proposal.description.toLowerCase();
@@ -58,16 +58,16 @@ describe('GET /api/thesis-proposals', () => {
   });
 
   test('Should filter thesis proposals by isInternal', async () => {
-    const response = await request(app).get('/api/thesis-proposals').query({ isInternal: 'true' });
+    const response = await request(server).get('/api/thesis-proposals').query({ isInternal: 'true' });
     expect(response.status).toBe(200);
-    expect(response.body.count).toBe(4);
+    expect(response.body.count).toBe(3);
     response.body.thesisProposals.forEach(proposal => {
       expect(proposal.isInternal).toBe(true);
     });
   });
 
   test('Should filter thesis proposals by isAbroad', async () => {
-    const response = await request(app).get('/api/thesis-proposals').query({ isAbroad: 'true' });
+    const response = await request(server).get('/api/thesis-proposals').query({ isAbroad: 'true' });
     expect(response.status).toBe(200);
     expect(response.body.count).toBe(1);
     response.body.thesisProposals.forEach(proposal => {
@@ -77,7 +77,7 @@ describe('GET /api/thesis-proposals', () => {
 
   test('Should filter thesis proposals by teacherId', async () => {
     const teacherId = 3019;
-    const response = await request(app).get('/api/thesis-proposals').query({ teacherId });
+    const response = await request(server).get('/api/thesis-proposals').query({ teacherId });
     expect(response.status).toBe(200);
     expect(response.body.count).toBe(2);
     response.body.thesisProposals.forEach(proposal => {
@@ -92,7 +92,7 @@ describe('GET /api/thesis-proposals', () => {
 
   test('Should filter thesis proposals by keywordId', async () => {
     const keywordId = 1;
-    const response = await request(app).get('/api/thesis-proposals').query({ keywordId });
+    const response = await request(server).get('/api/thesis-proposals').query({ keywordId });
     expect(response.status).toBe(200);
     expect(response.body.count).toBe(4);
     response.body.thesisProposals.forEach(proposal => {
@@ -102,7 +102,7 @@ describe('GET /api/thesis-proposals', () => {
 
   test('Should filter thesis proposals by typeId', async () => {
     const typeId = 1;
-    const response = await request(app).get('/api/thesis-proposals').query({ typeId });
+    const response = await request(server).get('/api/thesis-proposals').query({ typeId });
     expect(response.status).toBe(200);
     expect(response.body.count).toBe(1);
     response.body.thesisProposals.forEach(proposal => {
@@ -111,7 +111,7 @@ describe('GET /api/thesis-proposals', () => {
   });
 
   test('Should filter thesis proposals by multiple filters (search, isInternal, teacherId)', async () => {
-    const response = await request(app)
+    const response = await request(server)
       .get('/api/thesis-proposals')
       .query({ search: 'descrizione', isInternal: 'true', teacherId: 3019 });
     expect(response.status).toBe(200);
@@ -129,7 +129,7 @@ describe('GET /api/thesis-proposals', () => {
   });
 
   test('Should filter thesis proposals by multiple filters (teacherId, keywordId, typeId)', async () => {
-    const response = await request(app)
+    const response = await request(server)
       .get('/api/thesis-proposals')
       .query({ teacherId: 3019, keywordId: 8, typeId: 1 });
     expect(response.status).toBe(200);
@@ -145,7 +145,7 @@ describe('GET /api/thesis-proposals', () => {
   });
 
   test('Should filter thesis proposals by multiple filters (keywordId, typeId)', async () => {
-    const response = await request(app).get('/api/thesis-proposals').query({ keywordId: 1, typeId: 2 });
+    const response = await request(server).get('/api/thesis-proposals').query({ keywordId: 1, typeId: 2 });
     expect(response.status).toBe(200);
     expect(response.body.count).toBe(2);
     response.body.thesisProposals.forEach(proposal => {
@@ -155,7 +155,7 @@ describe('GET /api/thesis-proposals', () => {
   });
 
   test('Should return an empty list if no thesis proposals match the filters', async () => {
-    const response = await request(app).get('/api/thesis-proposals').query({ search: 'non esiste' });
+    const response = await request(server).get('/api/thesis-proposals').query({ search: 'non esiste' });
     expect(response.status).toBe(200);
     expect(response.body.count).toBe(0);
     expect(response.body.thesisProposals).toBeInstanceOf(Array);
@@ -165,26 +165,26 @@ describe('GET /api/thesis-proposals', () => {
 
 describe('GET /api/thesis-proposals/targeted', () => {
   test('Should return the list of targeted thesis proposals for the student degree course', async () => {
-    const response = await request(app).get('/api/thesis-proposals/targeted');
+    const response = await request(server).get('/api/thesis-proposals/targeted');
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Object);
     expect(response.body).toHaveProperty('count');
     expect(response.body).toHaveProperty('thesisProposals');
     expect(response.body).toHaveProperty('currentPage');
     expect(response.body).toHaveProperty('totalPages');
-    expect(response.body.count).toEqual(5);
+    expect(response.body.count).toEqual(4);
     expect(response.body.thesisProposals).toBeInstanceOf(Array);
-    expect(response.body.thesisProposals.length).toEqual(5);
+    expect(response.body.thesisProposals.length).toEqual(4);
     expect(response.body.currentPage).toEqual(1);
     expect(response.body.totalPages).toEqual(1);
   });
 
   test('Should filter targeted thesis proposals by search (in english)', async () => {
-    const response = await request(app)
+    const response = await request(server)
       .get('/api/thesis-proposals/targeted')
       .query({ lang: 'en', search: 'description' });
     expect(response.status).toBe(200);
-    expect(response.body.count).toBe(5);
+    expect(response.body.count).toBe(4);
     response.body.thesisProposals.forEach(proposal => {
       const topic = proposal.topic.toLowerCase();
       const description = proposal.description.toLowerCase();
@@ -193,16 +193,16 @@ describe('GET /api/thesis-proposals/targeted', () => {
   });
 
   test('Should filter targeted thesis proposals by isInternal', async () => {
-    const response = await request(app).get('/api/thesis-proposals/targeted').query({ isInternal: 'true' });
+    const response = await request(server).get('/api/thesis-proposals/targeted').query({ isInternal: 'true' });
     expect(response.status).toBe(200);
-    expect(response.body.count).toBe(4);
+    expect(response.body.count).toBe(3);
     response.body.thesisProposals.forEach(proposal => {
       expect(proposal.isInternal).toBe(true);
     });
   });
 
   test('Should filter targeted thesis proposals by isAbroad', async () => {
-    const response = await request(app).get('/api/thesis-proposals/targeted').query({ isAbroad: 'true' });
+    const response = await request(server).get('/api/thesis-proposals/targeted').query({ isAbroad: 'true' });
     expect(response.status).toBe(200);
     expect(response.body.count).toBe(1);
     response.body.thesisProposals.forEach(proposal => {
@@ -212,7 +212,7 @@ describe('GET /api/thesis-proposals/targeted', () => {
 
   test('Should filter targeted thesis proposals by teacherId', async () => {
     const teacherId = 3019;
-    const response = await request(app).get('/api/thesis-proposals/targeted').query({ teacherId });
+    const response = await request(server).get('/api/thesis-proposals/targeted').query({ teacherId });
     expect(response.status).toBe(200);
     expect(response.body.count).toBe(2);
     response.body.thesisProposals.forEach(proposal => {
@@ -227,7 +227,7 @@ describe('GET /api/thesis-proposals/targeted', () => {
 
   test('Should filter targeted thesis proposals by keywordId', async () => {
     const keywordId = 1;
-    const response = await request(app).get('/api/thesis-proposals/targeted').query({ keywordId });
+    const response = await request(server).get('/api/thesis-proposals/targeted').query({ keywordId });
     expect(response.status).toBe(200);
     expect(response.body.count).toBe(3);
     response.body.thesisProposals.forEach(proposal => {
@@ -237,7 +237,7 @@ describe('GET /api/thesis-proposals/targeted', () => {
 
   test('Should filter targeted thesis proposals by typeId', async () => {
     const typeId = 1;
-    const response = await request(app).get('/api/thesis-proposals/targeted').query({ typeId });
+    const response = await request(server).get('/api/thesis-proposals/targeted').query({ typeId });
     expect(response.status).toBe(200);
     expect(response.body.count).toBe(1);
     response.body.thesisProposals.forEach(proposal => {
@@ -246,7 +246,7 @@ describe('GET /api/thesis-proposals/targeted', () => {
   });
 
   test('Should filter targeted thesis proposals by multiple filters (search, isInternal, teacherId)', async () => {
-    const response = await request(app)
+    const response = await request(server)
       .get('/api/thesis-proposals/targeted')
       .query({ search: 'descrizione', isInternal: 'true', teacherId: 3019 });
     expect(response.status).toBe(200);
@@ -264,7 +264,7 @@ describe('GET /api/thesis-proposals/targeted', () => {
   });
 
   test('Should filter targeted thesis proposals by multiple filters (teacherId, keywordId, typeId)', async () => {
-    const response = await request(app)
+    const response = await request(server)
       .get('/api/thesis-proposals/targeted')
       .query({ teacherId: 3019, keywordId: 8, typeId: 1 });
     expect(response.status).toBe(200);
@@ -280,7 +280,7 @@ describe('GET /api/thesis-proposals/targeted', () => {
   });
 
   test('Should return a 500 error if orderBy is not valid', async () => {
-    const response = await request(app).get('/api/thesis-proposals/targeted').query({ orderBy: 'invalid' });
+    const response = await request(server).get('/api/thesis-proposals/targeted').query({ orderBy: 'invalid' });
     expect(response.status).toBe(500);
     expect(response.body).toBeInstanceOf(Object);
     expect(response.body).toHaveProperty('error');
@@ -288,7 +288,7 @@ describe('GET /api/thesis-proposals/targeted', () => {
   });
 
   test('Should return a 500 error if sortBy is not valid', async () => {
-    const response = await request(app).get('/api/thesis-proposals/targeted').query({ sortBy: 'invalid' });
+    const response = await request(server).get('/api/thesis-proposals/targeted').query({ sortBy: 'invalid' });
     expect(response.status).toBe(500);
     expect(response.body).toBeInstanceOf(Object);
     expect(response.body).toHaveProperty('error');
@@ -298,7 +298,7 @@ describe('GET /api/thesis-proposals/targeted', () => {
 
 describe('GET /api/thesis-proposals/types', () => {
   test('Should return the list of all thesis types', async () => {
-    const response = await request(app).get('/api/thesis-proposals/types');
+    const response = await request(server).get('/api/thesis-proposals/types');
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
     expect(response.body.length).toBe(2);
@@ -309,7 +309,7 @@ describe('GET /api/thesis-proposals/types', () => {
   });
 
   test('Should filter thesis types by search_string', async () => {
-    const response = await request(app).get('/api/thesis-proposals/types').query({ search: 'ricerca' });
+    const response = await request(server).get('/api/thesis-proposals/types').query({ search: 'ricerca' });
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(1);
     expect(response.body[0]).toEqual({ id: 1, type: 'RICERCA' });
@@ -318,7 +318,7 @@ describe('GET /api/thesis-proposals/types', () => {
 
 describe('GET /api/thesis-proposals/keywords', () => {
   test('Should return the list of all keywords', async () => {
-    const response = await request(app).get('/api/thesis-proposals/keywords');
+    const response = await request(server).get('/api/thesis-proposals/keywords');
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
     expect(response.body.length).toBe(13);
@@ -340,7 +340,7 @@ describe('GET /api/thesis-proposals/keywords', () => {
   });
 
   test('Should filter keywords by search_string', async () => {
-    const response = await request(app).get('/api/thesis-proposals/keywords').query({ search: 'web' });
+    const response = await request(server).get('/api/thesis-proposals/keywords').query({ search: 'web' });
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(2);
     expect(response.body).toEqual([
@@ -352,7 +352,7 @@ describe('GET /api/thesis-proposals/keywords', () => {
 
 describe('GET /api/thesis-proposals/teachers', () => {
   test('Should return the list of all teachers', async () => {
-    const response = await request(app).get('/api/thesis-proposals/teachers');
+    const response = await request(server).get('/api/thesis-proposals/teachers');
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
     expect(response.body.length).toBe(220);
@@ -364,7 +364,7 @@ describe('GET /api/thesis-proposals/teachers', () => {
   });
 
   test('Should filter teachers by search_string', async () => {
-    const response = await request(app).get('/api/thesis-proposals/teachers').query({ search: 'mario' });
+    const response = await request(server).get('/api/thesis-proposals/teachers').query({ search: 'mario' });
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(2);
     response.body.forEach(teacher => {
@@ -378,7 +378,7 @@ describe('GET /api/thesis-proposals/teachers', () => {
 describe('GET /api/thesis-proposals/:thesisProposalId', () => {
   test('Should return the thesis proposal with the given id', async () => {
     const thesisProposalId = 12946;
-    const response = await request(app).get('/api/thesis-proposals/12946');
+    const response = await request(server).get('/api/thesis-proposals/12946');
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Object);
     expect(response.body).toHaveProperty('id');
@@ -410,7 +410,7 @@ describe('GET /api/thesis-proposals/:thesisProposalId', () => {
 
   test('Should return the thesis proposal with the given id (in english)', async () => {
     const thesisProposalId = 12946;
-    const response = await request(app).get('/api/thesis-proposals/12946').query({ lang: 'en' });
+    const response = await request(server).get('/api/thesis-proposals/12946').query({ lang: 'en' });
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Object);
     expect(response.body).toHaveProperty('id');
@@ -450,7 +450,27 @@ describe('GET /api/thesis-proposals/:thesisProposalId', () => {
 
   test('Should return a 404 error if the thesis proposal does not exist', async () => {
     const thesisProposalId = 100;
-    const response = await request(app).get(`/api/thesis-proposals/${thesisProposalId}`);
+    const response = await request(server).get(`/api/thesis-proposals/${thesisProposalId}`);
+    expect(response.status).toBe(404);
+    expect(response.body).toBeInstanceOf(Object);
+    expect(response.body).toHaveProperty('error');
+    expect(response.body.error).toEqual('Thesis proposal not found');
+  });
+});
+
+describe('GET /api/thesis-proposals/:thesisProposalId/availability', () => {
+  test('Should return the availability of the thesis proposal', async () => {
+    const thesisProposalId = 12946;
+    const response = await request(server).get(`/api/thesis-proposals/${thesisProposalId}/availability`);
+    expect(response.status).toBe(200);
+    expect(response.body).toBeInstanceOf(Object);
+    expect(response.body).toHaveProperty('available');
+    expect(typeof response.body.available).toBe('boolean');
+  });
+
+  test('Should return a 404 error if the thesis proposal does not exist', async () => {
+    const thesisProposalId = 100;
+    const response = await request(server).get(`/api/thesis-proposals/${thesisProposalId}/availability`);
     expect(response.status).toBe(404);
     expect(response.body).toBeInstanceOf(Object);
     expect(response.body).toHaveProperty('error');
