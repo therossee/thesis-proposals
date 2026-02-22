@@ -737,6 +737,27 @@ VALUES
         "Molinatto",
         "https://avatars.githubusercontent.com/u/126864619",
         "37-18"
+    ),
+    (
+        "321001",
+        "Giulia",
+        "Rossi",
+        "https://avatars.githubusercontent.com/u/188880001",
+        "37-18"
+    ),
+    (
+        "321002",
+        "Marco",
+        "Bianchi",
+        "https://avatars.githubusercontent.com/u/188880002",
+        "37-18"
+    ),
+    (
+        "321003",
+        "Elena",
+        "Conti",
+        "https://avatars.githubusercontent.com/u/188880003",
+        "37-18"
     );
 
 -- ------------------------------------------------------------

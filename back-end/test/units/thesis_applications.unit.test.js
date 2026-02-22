@@ -44,8 +44,12 @@ jest.mock('../../src/models', () => ({
   },
   ThesisApplication: {
     create: jest.fn(),
+    count: jest.fn(),
     findAll: jest.fn(),
     findByPk: jest.fn(),
+  },
+  Thesis: {
+    findOne: jest.fn(),
   },
   ThesisApplicationSupervisorCoSupervisor: {
     bulkCreate: jest.fn(),
@@ -73,6 +77,7 @@ const {
   Company,
   ThesisProposal,
   ThesisApplication,
+  Thesis,
   ThesisApplicationSupervisorCoSupervisor,
   ThesisApplicationStatusHistory,
   sequelize,
@@ -347,6 +352,7 @@ describe('checkStudentEligibility', () => {
 
     LoggedStudent.findOne.mockResolvedValue({ student_id: 1 });
     Student.findByPk.mockResolvedValue({ id: 1 });
+    ThesisApplication.count.mockResolvedValue(0);
     ThesisApplication.findAll.mockResolvedValue([]);
 
     await checkStudentEligibility(req, res);
@@ -361,7 +367,23 @@ describe('checkStudentEligibility', () => {
 
     LoggedStudent.findOne.mockResolvedValue({ student_id: 1 });
     Student.findByPk.mockResolvedValue({ id: 1 });
-    ThesisApplication.findAll.mockResolvedValueOnce([{ id: 1 }]).mockResolvedValueOnce([{ id: 1, status: 'pending' }]);
+    ThesisApplication.count.mockResolvedValue(1);
+
+    await checkStudentEligibility(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ studentId: 1, eligible: false });
+  });
+
+  test('eligible false if approved application has no cancellable thesis', async () => {
+    const req = {};
+    const res = mockRes();
+
+    LoggedStudent.findOne.mockResolvedValue({ student_id: 1 });
+    Student.findByPk.mockResolvedValue({ id: 1 });
+    ThesisApplication.count.mockResolvedValue(0);
+    ThesisApplication.findAll.mockResolvedValue([{ id: 11, status: 'approved' }]);
+    Thesis.findOne.mockResolvedValue({ id: 20, status: 'ongoing' });
 
     await checkStudentEligibility(req, res);
 

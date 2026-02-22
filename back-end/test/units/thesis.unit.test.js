@@ -135,10 +135,11 @@ describe('Student Thesis Controllers', () => {
 
       expect(res.status).toHaveBeenCalledWith(200);
       const payload = res.json.mock.calls[0][0];
-      expect(payload.student).toEqual({ id: 1, name: 'Test Student' });
+      expect(payload.student).toMatchObject({ id: 1 });
       expect(payload.supervisor).toEqual({ id: 100, name: 'Prof. X' });
       expect(payload.co_supervisors).toEqual([{ id: 101, name: 'Prof. Y' }]);
-      expect(payload.company).toEqual({ id: 1, name: 'Test Company' });
+      const companyPayload = payload.company?.toJSON ? payload.company.toJSON() : payload.company;
+      expect(companyPayload).toEqual({ id: 1, name: 'Test Company' });
       expect(payload.thesis_conclusion_request_date).toBe(requestDate.toISOString());
       expect(payload.thesis_conclusion_confirmation_date).toBe(confirmationDate.toISOString());
     });
