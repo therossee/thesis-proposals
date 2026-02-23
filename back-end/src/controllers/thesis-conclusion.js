@@ -315,6 +315,7 @@ const saveThesisConclusionRequestDraft = async (req, res) => {
 
 const getThesisConclusionRequestDraft = async (req, res) => {
   try {
+    const baseUploadDir = path.join(__dirname, '..', '..');
     const logged = await LoggedStudent.findOne();
     if (!logged) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -348,9 +349,9 @@ const getThesisConclusionRequestDraft = async (req, res) => {
       .map(t => teacherOverviewSchema.parse(t));
 
     const [draftThesisFilePath, draftResumePath, draftAdditionalPath] = await Promise.all([
-      resolveValidDraftFilePath(thesis.thesis_file_path, loggedStudent.id),
-      resolveValidDraftFilePath(thesis.thesis_resume_path, loggedStudent.id),
-      resolveValidDraftFilePath(thesis.additional_zip_path, loggedStudent.id),
+      resolveValidDraftFilePath(thesis.thesis_file_path, loggedStudent.id, baseUploadDir),
+      resolveValidDraftFilePath(thesis.thesis_resume_path, loggedStudent.id, baseUploadDir),
+      resolveValidDraftFilePath(thesis.additional_zip_path, loggedStudent.id, baseUploadDir),
     ]);
 
     const draftSdgs = await ThesisSustainableDevelopmentGoal.findAll({

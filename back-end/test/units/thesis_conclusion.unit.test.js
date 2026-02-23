@@ -1440,16 +1440,19 @@ describe('Thesis Conclusion Controller', () => {
         1,
         'uploads/thesis_conclusion_draft/320213/thesis.pdf',
         '320213',
+        expect.any(String),
       );
       expect(resolveValidDraftFilePath).toHaveBeenNthCalledWith(
         2,
         'uploads/thesis_conclusion_draft/320213/resume.pdf',
         '320213',
+        expect.any(String),
       );
       expect(resolveValidDraftFilePath).toHaveBeenNthCalledWith(
         3,
         'uploads/thesis_conclusion_draft/320213/additional.zip',
         '320213',
+        expect.any(String),
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(
