@@ -1429,6 +1429,11 @@ describe('Thesis Conclusion Controller', () => {
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce('uploads/thesis_conclusion_draft/320213/additional.zip');
       ThesisSustainableDevelopmentGoal.findAll.mockResolvedValue([{ goal_id: 5, sdg_level: 'primary' }]);
+      ThesisEmbargo.findOne.mockResolvedValue({ id: 19, duration: '18_months' });
+      ThesisEmbargoMotivation.findAll.mockResolvedValue([
+        { motivation_id: 2, other_motivation: null },
+        { motivation_id: 7, other_motivation: 'Accordo aziendale' },
+      ]);
 
       await getThesisConclusionRequestDraft(req, res);
 
@@ -1468,6 +1473,13 @@ describe('Thesis Conclusion Controller', () => {
           additionalZipPath: 'uploads/thesis_conclusion_draft/320213/additional.zip',
           thesisDraftDate: thesisDraftDate.toISOString(),
           coSupervisors: [expect.objectContaining({ id: 3019, firstName: 'Marco', lastName: 'Torchiano' })],
+          embargo: {
+            duration: '18_months',
+            motivations: [
+              { motivationId: 2, otherMotivation: null },
+              { motivationId: 7, otherMotivation: 'Accordo aziendale' },
+            ],
+          },
           sdgs: [{ goalId: 5, level: 'primary' }],
         }),
       );
@@ -1495,6 +1507,7 @@ describe('Thesis Conclusion Controller', () => {
       ThesisSupervisorCoSupervisor.findAll.mockResolvedValue([]);
       resolveValidDraftFilePath.mockResolvedValue(null);
       ThesisSustainableDevelopmentGoal.findAll.mockResolvedValue([]);
+      ThesisEmbargo.findOne.mockResolvedValue(null);
 
       await getThesisConclusionRequestDraft(req, res);
 
@@ -1512,6 +1525,7 @@ describe('Thesis Conclusion Controller', () => {
         additionalZipPath: null,
         thesisDraftDate: null,
         coSupervisors: [],
+        embargo: null,
         sdgs: [],
       });
     });
@@ -1845,6 +1859,101 @@ describe('Real thesis conclusion utils edge branches', () => {
       [{ thesis_id: 12, goal_id: 5, sdg_level: 'primary' }],
       { transaction: 'tx' },
     );
+  });
+
+  test('saveDraftTransaction should persist embargo data and clear draft license when deny is selected', async () => {
+    const thesisRecord = {
+      id: 13,
+      student_id: '320213',
+      status: 'ongoing',
+      license_id: 2,
+      save: jest.fn().mockResolvedValue(undefined),
+    };
+    Thesis.findOne.mockResolvedValue(thesisRecord);
+    ThesisEmbargo.findOne.mockResolvedValue({ id: 44 });
+    EmbargoMotivation.findAll.mockResolvedValue([{ id: 2 }, { id: 7 }]);
+    ThesisEmbargo.create.mockResolvedValue({ id: 55 });
+
+    await saveDraftTransaction({
+      loggedStudent: { id: '320213' },
+      draftData: {
+        embargo: {
+          duration: '36_months',
+          motivations: [
+            { motivationId: 2, otherMotivation: null },
+            { motivationId: 7, otherMotivation: 'Richiesta aziendale' },
+          ],
+        },
+      },
+      files: {},
+      baseUploadDir: '/tmp/base',
+      draftUploadDir: '/tmp/base/uploads/thesis_conclusion_draft/320213',
+      transaction: 'tx',
+    });
+
+    expect(thesisRecord.license_id).toBeNull();
+    expect(ThesisEmbargo.findOne).toHaveBeenCalledWith({
+      where: { thesis_id: '13' },
+      transaction: 'tx',
+    });
+    expect(ThesisEmbargoMotivation.destroy).toHaveBeenCalledWith({
+      where: { thesis_embargo_id: 44 },
+      transaction: 'tx',
+    });
+    expect(ThesisEmbargo.destroy).toHaveBeenCalledWith({
+      where: { id: 44 },
+      transaction: 'tx',
+    });
+    expect(ThesisEmbargo.create).toHaveBeenCalledWith(
+      {
+        thesis_id: '13',
+        duration: '36_months',
+      },
+      { transaction: 'tx' },
+    );
+    expect(ThesisEmbargoMotivation.bulkCreate).toHaveBeenCalledWith(
+      [
+        { thesis_embargo_id: 55, motivation_id: 2, other_motivation: null },
+        { thesis_embargo_id: 55, motivation_id: 7, other_motivation: 'Richiesta aziendale' },
+      ],
+      { transaction: 'tx' },
+    );
+  });
+
+  test('saveDraftTransaction should clear existing embargo when authorization switches to license', async () => {
+    const thesisRecord = {
+      id: 14,
+      student_id: '320213',
+      status: 'ongoing',
+      save: jest.fn().mockResolvedValue(undefined),
+    };
+    Thesis.findOne.mockResolvedValue(thesisRecord);
+    ThesisEmbargo.findOne.mockResolvedValue({ id: 66 });
+
+    await saveDraftTransaction({
+      loggedStudent: { id: '320213' },
+      draftData: {
+        licenseId: 1,
+      },
+      files: {},
+      baseUploadDir: '/tmp/base',
+      draftUploadDir: '/tmp/base/uploads/thesis_conclusion_draft/320213',
+      transaction: 'tx',
+    });
+
+    expect(thesisRecord.license_id).toBe(1);
+    expect(ThesisEmbargo.findOne).toHaveBeenCalledWith({
+      where: { thesis_id: '14' },
+      transaction: 'tx',
+    });
+    expect(ThesisEmbargoMotivation.destroy).toHaveBeenCalledWith({
+      where: { thesis_embargo_id: 66 },
+      transaction: 'tx',
+    });
+    expect(ThesisEmbargo.destroy).toHaveBeenCalledWith({
+      where: { id: 66 },
+      transaction: 'tx',
+    });
   });
 
   test('executeConclusionRequestTransaction should throw 401 when no logged student is found', async () => {

@@ -28,7 +28,11 @@ export default function useConclusionBootstrap({
   setAbstractText,
   setAbstractEngText,
   setLang,
+  setAuthorization,
   setLicenseChoice,
+  setEmbargoPeriod,
+  setEmbargoMotivations,
+  setOtherEmbargoReason,
   setPrimarySdg,
   setSecondarySdg1,
   setSecondarySdg2,
@@ -90,6 +94,41 @@ export default function useConclusionBootstrap({
             setAbstractText(draftData.abstract || thesisData?.topic || '');
             setAbstractEngText(draftData.abstractEng || '');
             if (draftData.language) setLang(draftData.language);
+
+            const normalizedEmbargoMotivations = Array.isArray(draftData.embargo?.motivations)
+              ? draftData.embargo.motivations
+                  .map(motivation => ({
+                    motivationId: Number(motivation?.motivationId ?? motivation?.motivation_id),
+                    otherMotivation: motivation?.otherMotivation ?? motivation?.other_motivation ?? '',
+                  }))
+                  .filter(motivation => Number.isFinite(motivation.motivationId))
+              : [];
+
+            const hasDraftEmbargo = Boolean(draftData.embargo?.duration) || normalizedEmbargoMotivations.length > 0;
+
+            if (hasDraftEmbargo) {
+              setAuthorization('deny');
+              setEmbargoPeriod(draftData.embargo?.duration || '');
+              setEmbargoMotivations(normalizedEmbargoMotivations.map(motivation => motivation.motivationId));
+              const otherMotivation = normalizedEmbargoMotivations.find(
+                motivation =>
+                  motivation.motivationId === 7 &&
+                  typeof motivation.otherMotivation === 'string' &&
+                  motivation.otherMotivation.trim().length > 0,
+              );
+              setOtherEmbargoReason(otherMotivation?.otherMotivation || '');
+            } else if (draftData.licenseId) {
+              setAuthorization('authorize');
+              setEmbargoPeriod('');
+              setEmbargoMotivations([]);
+              setOtherEmbargoReason('');
+            } else {
+              setAuthorization('');
+              setEmbargoPeriod('');
+              setEmbargoMotivations([]);
+              setOtherEmbargoReason('');
+            }
+
             if (draftData.licenseId) setLicenseChoice(draftData.licenseId);
 
             if (Array.isArray(draftData.coSupervisors)) {

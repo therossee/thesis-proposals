@@ -9,6 +9,8 @@ const {
   Teacher,
   Student,
   EmbargoMotivation,
+  ThesisEmbargo,
+  ThesisEmbargoMotivation,
   License,
   LoggedStudent,
   ThesisApplication,
@@ -354,10 +356,23 @@ const getThesisConclusionRequestDraft = async (req, res) => {
       resolveValidDraftFilePath(thesis.additional_zip_path, loggedStudent.id, baseUploadDir),
     ]);
 
-    const draftSdgs = await ThesisSustainableDevelopmentGoal.findAll({
-      where: { thesis_id: thesis.id },
-      attributes: ['goal_id', 'sdg_level'],
-    });
+    const [draftSdgs, draftEmbargo] = await Promise.all([
+      ThesisSustainableDevelopmentGoal.findAll({
+        where: { thesis_id: thesis.id },
+        attributes: ['goal_id', 'sdg_level'],
+      }),
+      ThesisEmbargo.findOne({
+        where: { thesis_id: String(thesis.id) },
+        attributes: ['id', 'duration'],
+      }),
+    ]);
+
+    const draftEmbargoMotivations = draftEmbargo
+      ? await ThesisEmbargoMotivation.findAll({
+          where: { thesis_embargo_id: draftEmbargo.id },
+          attributes: ['motivation_id', 'other_motivation'],
+        })
+      : [];
 
     return res.status(200).json({
       title: thesis.title ?? null,
@@ -371,6 +386,15 @@ const getThesisConclusionRequestDraft = async (req, res) => {
       additionalZipPath: draftAdditionalPath,
       thesisDraftDate: thesis.thesis_draft_date ? thesis.thesis_draft_date.toISOString() : null,
       coSupervisors,
+      embargo: draftEmbargo
+        ? {
+            duration: draftEmbargo.duration,
+            motivations: draftEmbargoMotivations.map(motivation => ({
+              motivationId: motivation.motivation_id,
+              otherMotivation: motivation.other_motivation,
+            })),
+          }
+        : null,
       sdgs: draftSdgs.map(sdg => ({
         goalId: sdg.goal_id,
         level: sdg.sdg_level,

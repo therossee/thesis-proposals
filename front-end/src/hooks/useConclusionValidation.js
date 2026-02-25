@@ -69,7 +69,7 @@ export default function useConclusionValidation({
       ? true
       : embargoMotivations.length > 0 &&
         String(embargoPeriod || '').trim().length > 0 &&
-        (!embargoMotivations.includes('0') || String(otherEmbargoReason || '').trim().length > 0);
+        (!embargoMotivations.includes(7) || String(otherEmbargoReason || '').trim().length > 0);
 
   const authorizeValid = authorization !== 'authorize' ? true : String(licenseChoice || '').trim().length > 0;
   const authorizationSelected = authorization === 'authorize' || authorization === 'deny';

@@ -82,6 +82,7 @@ describe('GET /api/thesis-conclusion/*', () => {
     expect(response.body).toHaveProperty('abstractEng');
     expect(response.body).toHaveProperty('language');
     expect(response.body).toHaveProperty('coSupervisors');
+    expect(response.body).toHaveProperty('embargo');
     expect(response.body).toHaveProperty('sdgs');
   });
 

@@ -9,6 +9,9 @@ const {
   ThesisSupervisorCoSupervisor,
   SustainableDevelopmentGoal,
   ThesisSustainableDevelopmentGoal,
+  EmbargoMotivation,
+  ThesisEmbargo,
+  ThesisEmbargoMotivation,
 } = require('../models');
 
 const toSnakeCase = require('./snakeCase');
@@ -151,6 +154,92 @@ const saveDraftSdgs = async ({ thesisId, sdgs, transaction }) => {
   );
 };
 
+const clearDraftEmbargo = async ({ thesisId, transaction }) => {
+  const currentEmbargo = await ThesisEmbargo.findOne({
+    where: { thesis_id: String(thesisId) },
+    transaction,
+  });
+  if (!currentEmbargo) return;
+
+  await ThesisEmbargoMotivation.destroy({
+    where: { thesis_embargo_id: currentEmbargo.id },
+    transaction,
+  });
+  await ThesisEmbargo.destroy({
+    where: { id: currentEmbargo.id },
+    transaction,
+  });
+};
+
+const normalizeDraftEmbargoMotivations = motivations => {
+  const normalized = (Array.isArray(motivations) ? motivations : [])
+    .map(motivation =>
+      typeof motivation === 'object'
+        ? {
+            id: Number(motivation?.motivationId ?? motivation?.motivation_id),
+            other: motivation?.otherMotivation ?? motivation?.other_motivation ?? null,
+          }
+        : { id: Number(motivation), other: null },
+    )
+    .filter(motivation => Number.isFinite(motivation.id) && motivation.id > 0);
+
+  const dedupedById = new Map();
+  for (const motivation of normalized) {
+    const current = dedupedById.get(motivation.id);
+    if (!current || motivation.other) {
+      dedupedById.set(motivation.id, {
+        id: motivation.id,
+        other:
+          typeof motivation.other === 'string' && motivation.other.trim().length > 0 ? motivation.other.trim() : null,
+      });
+    }
+  }
+
+  return [...dedupedById.values()];
+};
+
+const saveDraftEmbargo = async ({ thesisId, embargo, transaction }) => {
+  if (embargo === undefined) return;
+
+  await clearDraftEmbargo({ thesisId, transaction });
+  if (!embargo) return;
+
+  const duration = embargo.duration || embargo.duration_months || embargo.embargoPeriod;
+  if (!duration) return;
+
+  const normalizedMotivations = normalizeDraftEmbargoMotivations(embargo.motivations);
+  const motivationIds = normalizedMotivations.map(motivation => motivation.id);
+
+  if (motivationIds.length > 0) {
+    const existingMotivations = await EmbargoMotivation.findAll({
+      where: { id: { [Op.in]: motivationIds } },
+      transaction,
+    });
+    if (existingMotivations.length !== motivationIds.length) {
+      throw httpError(400, 'One or more embargo motivations not found');
+    }
+  }
+
+  const createdEmbargo = await ThesisEmbargo.create(
+    {
+      thesis_id: String(thesisId),
+      duration,
+    },
+    { transaction },
+  );
+
+  if (!normalizedMotivations.length) return;
+
+  await ThesisEmbargoMotivation.bulkCreate(
+    normalizedMotivations.map(motivation => ({
+      thesis_embargo_id: createdEmbargo.id,
+      motivation_id: motivation.id,
+      other_motivation: motivation.other,
+    })),
+    { transaction },
+  );
+};
+
 const parseDraftRequestData = (req, files) =>
   thesisConclusionDraftSchema.parse({
     title: req.body.title,
@@ -209,6 +298,9 @@ const saveDraftTransaction = async ({
   setField('abstract_eng', normalizedTexts.abstractEng);
   setField('language', draftData.language);
   if (draftData.licenseId !== undefined) setField('license_id', draftData.licenseId);
+  if (draftData.embargo !== undefined && draftData.embargo !== null && draftData.licenseId === undefined) {
+    setField('license_id', null);
+  }
   setField('thesis_draft_date', new Date());
 
   await saveDraftFiles({
@@ -238,6 +330,19 @@ const saveDraftTransaction = async ({
     sdgs: draftData.sdgs,
     transaction,
   });
+
+  if (draftData.embargo !== undefined) {
+    await saveDraftEmbargo({
+      thesisId: thesis.id,
+      embargo: draftData.embargo,
+      transaction,
+    });
+  } else if (draftData.licenseId !== undefined && draftData.licenseId !== null) {
+    await clearDraftEmbargo({
+      thesisId: thesis.id,
+      transaction,
+    });
+  }
 };
 
 module.exports = {
