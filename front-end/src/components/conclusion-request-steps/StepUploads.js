@@ -79,6 +79,9 @@ function UploadCard({
 
   const handleRemove = () => {
     onRemove();
+    if (draftFile && onRemoveDraft) {
+      onRemoveDraft();
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }

@@ -28,6 +28,7 @@ export default function useConclusionBootstrap({
   setAbstractText,
   setAbstractEngText,
   setLang,
+  setKeywords,
   setAuthorization,
   setLicenseChoice,
   setEmbargoPeriod,
@@ -94,6 +95,56 @@ export default function useConclusionBootstrap({
             setAbstractText(draftData.abstract || thesisData?.topic || '');
             setAbstractEngText(draftData.abstractEng || '');
             if (draftData.language) setLang(draftData.language);
+
+            if (Array.isArray(draftData.keywords)) {
+              const keywordById = new Map((keywordsData || []).map(keyword => [Number(keyword.id), keyword.keyword]));
+              const normalizedKeywords = draftData.keywords
+                .map(keyword => {
+                  if (typeof keyword === 'string') {
+                    const text = keyword.trim();
+                    if (!text) return null;
+                    return {
+                      value: text,
+                      label: text,
+                      keyword: text,
+                      variant: 'keyword',
+                    };
+                  }
+
+                  const id = Number(keyword?.id ?? keyword?.value);
+                  const text =
+                    keyword?.keyword ??
+                    keyword?.label ??
+                    (Number.isFinite(id) ? keywordById.get(id) : null) ??
+                    (typeof keyword?.value === 'string' ? keyword.value : null);
+
+                  if (Number.isFinite(id) && id > 0 && typeof text === 'string' && text.trim().length > 0) {
+                    const keywordText = text.trim();
+                    return {
+                      id,
+                      value: id,
+                      label: keywordText,
+                      keyword: keywordText,
+                      variant: 'keyword',
+                    };
+                  }
+
+                  if (typeof text === 'string' && text.trim().length > 0) {
+                    const keywordText = text.trim();
+                    return {
+                      value: keywordText,
+                      label: keywordText,
+                      keyword: keywordText,
+                      variant: 'keyword',
+                    };
+                  }
+
+                  return null;
+                })
+                .filter(Boolean);
+
+              setKeywords(normalizedKeywords);
+            }
 
             const normalizedEmbargoMotivations = Array.isArray(draftData.embargo?.motivations)
               ? draftData.embargo.motivations

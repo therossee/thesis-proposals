@@ -139,6 +139,23 @@ export default function Tesi({ initialActiveTab }) {
     }
   };
 
+  const handleCancelThesisRequestResult = success => {
+    if (success) {
+      pendingToastRef.current = {
+        success: true,
+        title: t('carriera.tesi.success_cancel_request'),
+        message: t('carriera.tesi.success_cancel_request_content'),
+      };
+      setRefreshKey(prev => prev + 1);
+    } else {
+      showToast({
+        success: false,
+        title: t('carriera.tesi.error_cancel_request'),
+        message: t('carriera.tesi.error_cancel_request_content'),
+      });
+    }
+  };
+
   const openExternalInBlank = url => {
     const newWindow = globalThis.open(url, '_blank', 'noopener,noreferrer');
     if (newWindow) {
@@ -222,6 +239,7 @@ export default function Tesi({ initialActiveTab }) {
               setShowRequestModal={setShowRequestModal}
               onRequestSubmitResult={handleRequestSubmitResult}
               onCancelApplicationResult={handleCancelApplicationResult}
+              onCancelThesisRequestResult={handleCancelThesisRequestResult}
               showFinalThesis={showFinalThesis}
               setShowFinalThesis={setShowFinalThesis}
               onFinalThesisUploadResult={handleFinalThesisUploadResult}

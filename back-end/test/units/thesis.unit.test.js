@@ -26,7 +26,7 @@ jest.mock('../../src/models', () => ({
   Teacher: { findByPk: jest.fn() },
   Student: { findByPk: jest.fn() },
   LoggedStudent: { findOne: jest.fn() },
-  ThesisApplicationStatusHistory: { findAll: jest.fn() },
+  ThesisApplicationStatusHistory: { findAll: jest.fn(), create: jest.fn() },
   Company: { findByPk: jest.fn() },
 }));
 
@@ -46,7 +46,10 @@ describe('Student Thesis Controllers', () => {
     res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
     req = { body: {} };
     t = { commit: jest.fn(), rollback: jest.fn() };
-    sequelize.transaction.mockResolvedValue(t);
+    sequelize.transaction.mockImplementation(async callback => {
+      if (typeof callback === 'function') return callback(t);
+      return t;
+    });
     jest.clearAllMocks();
 
     // Mock che restituiscono oggetti con toJSON
@@ -479,7 +482,11 @@ describe('Student Thesis Controllers', () => {
     });
 
     test('should set thesis status to cancel_requested and return 200', async () => {
-      const thesis = { status: 'ongoing', save: jest.fn().mockResolvedValue(undefined) };
+      const thesis = {
+        status: 'ongoing',
+        thesis_application_id: 99,
+        save: jest.fn().mockResolvedValue(undefined),
+      };
       LoggedStudent.findOne.mockResolvedValue({ student_id: '1' });
       Student.findByPk.mockResolvedValue({ id: '1' });
       Thesis.findOne.mockResolvedValue(thesis);
@@ -487,7 +494,15 @@ describe('Student Thesis Controllers', () => {
       await sendThesisCancelRequest(req, res);
 
       expect(thesis.status).toBe('cancel_requested');
-      expect(thesis.save).toHaveBeenCalled();
+      expect(thesis.save).toHaveBeenCalledWith({ transaction: t, fields: ['status'] });
+      expect(ThesisApplicationStatusHistory.create).toHaveBeenCalledWith(
+        {
+          thesis_application_id: 99,
+          old_status: 'ongoing',
+          new_status: 'cancel_requested',
+        },
+        { transaction: t },
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ message: 'Thesis cancellation requested successfully.' });
     });

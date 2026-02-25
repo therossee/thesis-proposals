@@ -260,8 +260,21 @@ const sendThesisCancelRequest = async (req, res) => {
       return res.status(400).json({ error: 'Thesis cancellation is not allowed for this thesis status.' });
     }
 
-    thesis.status = 'cancel_requested';
-    await thesis.save();
+    await sequelize.transaction(async transaction => {
+      const previousStatus = thesis.status;
+
+      thesis.status = 'cancel_requested';
+      await thesis.save({ transaction, fields: ['status'] });
+
+      await ThesisApplicationStatusHistory.create(
+        {
+          thesis_application_id: thesis.thesis_application_id,
+          old_status: previousStatus,
+          new_status: 'cancel_requested',
+        },
+        { transaction },
+      );
+    });
 
     return res.status(200).json({ message: 'Thesis cancellation requested successfully.' });
   } catch (error) {

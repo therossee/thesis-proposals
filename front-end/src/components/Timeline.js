@@ -21,7 +21,7 @@ import InfoTooltip from './InfoTooltip';
  *
  * Thesis:
  * - ongoing
- * - Optional cancel flow: cancel_request -> cancel_outcome (waiting/cancel_approved)
+ * - Optional cancel flow: cancel_requested -> cancel_outcome (waiting/cancel_approved)
  * - Normal flow:
  *   - conclusion_requested
  *   - conclusion_outcome (waiting/approved OR rejected detected by history: conclusion_requested -> ongoing)
@@ -40,7 +40,20 @@ import InfoTooltip from './InfoTooltip';
  */
 
 const APPLICATION_OUTCOME_STATUSES = new Set(['approved', 'rejected', 'cancelled']);
-const CANCEL_FLOW_STATUSES = new Set(['cancel_request', 'cancel_approved']);
+const CANCEL_REQUEST_STATUSES = new Set(['cancel_requested']);
+const CANCEL_FLOW_STATUSES = new Set([...CANCEL_REQUEST_STATUSES, 'cancel_approved']);
+const THESIS_STATUSES = new Set([
+  'ongoing',
+  'cancel_requested',
+  'cancel_approved',
+  'conclusion_requested',
+  'conclusion_approved',
+  'almalaurea',
+  'compiled_questionnaire',
+  'final_exam',
+  'final_thesis',
+  'done',
+]);
 
 const VALID_STATUSES = new Set([
   'pending',
@@ -48,7 +61,7 @@ const VALID_STATUSES = new Set([
   'rejected',
   'cancelled',
   'ongoing',
-  'cancel_request',
+  'cancel_requested',
   'cancel_approved',
   'conclusion_requested',
   'conclusion_approved',
@@ -64,7 +77,7 @@ const UI_STEP_KEYS = new Set([
   'pending',
   'application_outcome',
   'ongoing',
-  'cancel_request',
+  'cancel_requested',
   'cancel_outcome',
   'conclusion_requested',
   'conclusion_outcome',
@@ -145,8 +158,8 @@ function getHistoryForStep(visibleHistory, stepKey) {
     case 'ongoing':
       return getLastHistory(visibleHistory, h => h?.newStatus === 'ongoing');
 
-    case 'cancel_request':
-      return getLastHistory(visibleHistory, h => h?.newStatus === 'cancel_request');
+    case 'cancel_requested':
+      return getLastHistory(visibleHistory, h => CANCEL_REQUEST_STATUSES.has(h?.newStatus));
 
     case 'cancel_outcome':
       return getLastHistory(visibleHistory, h => h?.newStatus === 'cancel_approved');
@@ -184,12 +197,15 @@ function deriveFlow(currentStatus) {
 }
 
 function mapStatusToBaseEffectiveActiveStep(currentStatus) {
+  if (currentStatus === 'pending') return 'pending';
+  if (currentStatus === 'cancel_requested') return 'cancel_requested';
+  if (currentStatus === 'conclusion_requested') return 'conclusion_requested';
+
   if (APPLICATION_OUTCOME_STATUSES.has(currentStatus)) return 'application_outcome';
 
-  if (currentStatus === 'cancel_request') return 'cancel_request';
+  if (CANCEL_REQUEST_STATUSES.has(currentStatus)) return 'cancel_requested';
   if (currentStatus === 'cancel_approved') return 'cancel_outcome';
 
-  if (currentStatus === 'conclusion_requested') return 'conclusion_requested';
   if (currentStatus === 'conclusion_approved') return 'almalaurea';
 
   if (currentStatus === 'done') return 'final_upload_outcome';
@@ -215,7 +231,7 @@ function buildSteps(t, currentStatus, hasNoData, hasThesis, conclusionRejected, 
   ];
 
   // application outcome
-  const isApproved = hasThesis || currentStatus === 'approved';
+  const isApproved = hasThesis || THESIS_STATUSES.has(currentStatus) || currentStatus === 'approved';
   const isRejected = !hasThesis && currentStatus === 'rejected';
   const isCancelled = !hasThesis && currentStatus === 'cancelled';
 
@@ -250,7 +266,7 @@ function buildSteps(t, currentStatus, hasNoData, hasThesis, conclusionRejected, 
 
     steps.push(
       {
-        key: 'cancel_request',
+        key: 'cancel_requested',
         label: t('carriera.tesi.thesis_progress.cancel_requested_title'),
         description: t('carriera.tesi.thesis_progress.cancel_requested'),
       },
@@ -346,7 +362,8 @@ function decorateSteps({
 }) {
   const stepKeys = steps.map(s => s.key);
 
-  const baseActiveStep = mapStatusToBaseEffectiveActiveStep(currentStatus);
+  const mappedBaseActiveStep = mapStatusToBaseEffectiveActiveStep(currentStatus);
+  const baseActiveStep = hasNoData ? 'pending' : mappedBaseActiveStep;
   const baseActiveIndex = currentStatus === 'done' ? stepKeys.length : Math.max(stepKeys.indexOf(baseActiveStep), 0);
 
   const specialOutcomeActive =
@@ -362,15 +379,30 @@ function decorateSteps({
     const key = step.key;
     const thisIndex = stepKeys.indexOf(key);
 
+    const isApplicationOutcomeWaiting = currentStatus === 'pending' && key === 'application_outcome';
+    const isCancelOutcomeWaiting = currentStatus === 'cancel_requested' && key === 'cancel_outcome';
+    const isConclusionOutcomeWaiting = currentStatus === 'conclusion_requested' && key === 'conclusion_outcome';
     const isFinalUploadOutcomeWaiting = currentStatus === 'final_thesis' && key === 'final_upload_outcome';
 
-    const isActive = key === baseActiveStep || key === specialOutcomeActive || isFinalUploadOutcomeWaiting;
+    const isActive =
+      key === baseActiveStep ||
+      key === specialOutcomeActive ||
+      isApplicationOutcomeWaiting ||
+      isCancelOutcomeWaiting ||
+      isConclusionOutcomeWaiting ||
+      isFinalUploadOutcomeWaiting;
 
     // Completion uses ONLY the baseActiveIndex (never specialOutcomeActive)
     const isCompleted = thisIndex < baseActiveIndex;
 
     // Future is after base progress, but don't fade the special outcome active or waiting outcome
-    const isFuture = thisIndex > baseActiveIndex && key !== specialOutcomeActive && !isFinalUploadOutcomeWaiting;
+    const isFuture =
+      thisIndex > baseActiveIndex &&
+      key !== specialOutcomeActive &&
+      !isApplicationOutcomeWaiting &&
+      !isCancelOutcomeWaiting &&
+      !isConclusionOutcomeWaiting &&
+      !isFinalUploadOutcomeWaiting;
 
     const historyEntry = getHistoryForStep(visibleHistory, key);
 
@@ -449,7 +481,7 @@ function computeNextDeadline(sortedDeadlines, currentStatus) {
 
   const thesisStatuses = new Set([
     'ongoing',
-    'cancel_request',
+    'cancel_requested',
     'cancel_approved',
     'conclusion_requested',
     'conclusion_approved',
@@ -611,7 +643,7 @@ Timeline.propTypes = {
     'cancelled',
     'none',
     'ongoing',
-    'cancel_request',
+    'cancel_requested',
     'cancel_approved',
     'conclusion_requested',
     'conclusion_approved',

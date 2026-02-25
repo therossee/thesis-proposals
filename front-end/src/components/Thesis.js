@@ -35,6 +35,7 @@ export default function Thesis(props) {
     onRequestSubmitResult,
     onFinalThesisUploadResult,
     onCancelApplicationResult,
+    onCancelThesisRequestResult,
     showFinalThesis,
     setShowFinalThesis,
   } = props;
@@ -72,21 +73,13 @@ export default function Thesis(props) {
   const cancelThesis = () => {
     API.requestThesisCancelation()
       .then(() => {
-        showToast({
-          success: true,
-          title: t('carriera.tesi.success_cancel_request'),
-          message: t('carriera.tesi.success_cancel_request_content'),
-        });
         setShowModal(false);
+        onCancelThesisRequestResult(true);
       })
       .catch(error => {
         console.error('Error cancelling thesis:', error);
-        showToast({
-          success: false,
-          title: t('carriera.tesi.error_cancel_request'),
-          message: t('carriera.tesi.error_cancel_request_content'),
-        });
         setShowModal(false);
+        onCancelThesisRequestResult(false);
       });
   };
 
@@ -298,6 +291,7 @@ Thesis.propTypes = {
   setShowRequestModal: PropTypes.func,
   onRequestSubmitResult: PropTypes.func.isRequired,
   onCancelApplicationResult: PropTypes.func.isRequired,
+  onCancelThesisRequestResult: PropTypes.func.isRequired,
   showFinalThesis: PropTypes.bool,
   setShowFinalThesis: PropTypes.func,
   onFinalThesisUploadResult: PropTypes.func.isRequired,

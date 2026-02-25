@@ -26,6 +26,7 @@ export default function StepSubmit() {
     summaryPdf,
     pdfFile,
     supplementaryZip,
+    draftUploadedFiles,
     declarationsAcceptedCount = 0,
     declarationsTotalCount = 0,
     requiredSummary,
@@ -39,6 +40,9 @@ export default function StepSubmit() {
   const normalizeText = value => String(value || '').trim() || '-';
   const TITLE_MAX = 90;
   const ABSTRACT_MAX = 180;
+  const summaryFileName = summaryPdf?.name || draftUploadedFiles?.summary?.fileName || '-';
+  const thesisFileName = pdfFile?.name || draftUploadedFiles?.thesis?.fileName || '-';
+  const additionalFileName = supplementaryZip?.name || draftUploadedFiles?.additional?.fileName || '-';
 
   return (
     <div className="cr-section cr-submit-summary">
@@ -243,7 +247,7 @@ export default function StepSubmit() {
                 title={t('carriera.conclusione_tesi.summary_for_committee_pdf')}
                 ignoreMoreLines
               >
-                {summaryPdf ? summaryPdf.name : '-'}
+                {summaryFileName}
               </CustomBlock>
             )}
 
@@ -252,11 +256,11 @@ export default function StepSubmit() {
               title={t('carriera.conclusione_tesi.final_thesis_pdfa')}
               ignoreMoreLines
             >
-              {pdfFile ? pdfFile.name : '-'}
+              {thesisFileName}
             </CustomBlock>
 
             <CustomBlock icon="file-zipper" title={t('carriera.conclusione_tesi.supplementary_zip')} ignoreMoreLines>
-              {supplementaryZip ? supplementaryZip.name : '-'}
+              {additionalFileName}
             </CustomBlock>
             <CustomBlock
               icon="clipboard-list"

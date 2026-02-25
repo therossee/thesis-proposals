@@ -205,6 +205,10 @@
             "confirm_cancel": "Si, ritira",
             "success_application_cancelled_content": "Ora puoi candidarti per altre proposte di tesi.",
             "error_application_cancelled_content": "Si è verificato un errore durante il ritiro della candidatura. Riprova più tardi.",
+            "success_cancel_request": "Richiesta di annullamento inviata con successo!",
+            "success_cancel_request_content": "La richiesta è stata inviata al relatore. In attesa dell'esito.",
+            "error_cancel_request": "Errore durante l'invio della richiesta di annullamento.",
+            "error_cancel_request_content": "Si è verificato un errore durante l'invio della richiesta di annullamento. Riprova più tardi.",
             "cancel_application_note_placeholder": "Inserisci qui il motivo del ritiro (opzionale)...",
             "cancel_thesis": "Richiedi annullamento tesi",
             "modal_cancel": {
@@ -477,7 +481,7 @@
             "error_title": "Errore durante l'invio della richiesta.",
             "error_message": "Si è verificato un errore durante l'invio della richiesta. Riprova più tardi.",
             "uploaded": "Documenti caricati",
-            "summary": "Riassunto",
+            "summary_committee": "Riassunto per la commissione",
             "thesis_pdfa": "Tesi in formato PDF/A",
             "additional": "Allegato aggiuntivo",
             "steps": {

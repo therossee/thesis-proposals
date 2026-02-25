@@ -116,6 +116,7 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
     setAbstractText,
     setAbstractEngText,
     setLang,
+    setKeywords,
     setAuthorization,
     setLicenseChoice,
     setEmbargoPeriod,
@@ -178,7 +179,7 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
     needsEnglishTranslation,
     detailsValid,
     allDeclarationsChecked,
-    summaryValid,
+    uploadsValid,
     canSubmit,
     denyValid,
     authorizeValid,
@@ -202,6 +203,7 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
     requiredSummary,
     summaryPdf,
     pdfFile,
+    draftUploadedFiles,
   });
 
   const steps = useMemo(
@@ -224,20 +226,11 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
     () => [
       detailsValid,
       authorizationSelected && denyValid && authorizeValid,
-      !!pdfFile && summaryValid,
+      uploadsValid,
       allDeclarationsChecked(),
       canSubmit,
     ],
-    [
-      detailsValid,
-      authorizationSelected,
-      denyValid,
-      authorizeValid,
-      pdfFile,
-      summaryValid,
-      allDeclarationsChecked,
-      canSubmit,
-    ],
+    [detailsValid, authorizationSelected, denyValid, authorizeValid, uploadsValid, allDeclarationsChecked, canSubmit],
   );
 
   const submitStepIndex = steps.length - 1;
@@ -312,6 +305,50 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
       }
     },
     [showToast, t, thesis?.id],
+  );
+
+  const fetchDraftUploadBlob = useCallback(
+    async (fileType, draftFile, fallbackMimeType) => {
+      if (!thesis?.id || !draftFile?.fileName) return null;
+
+      const response = await API.getThesisFile(thesis.id, fileType);
+      const contentType = response?.headers?.['content-type'] || fallbackMimeType;
+      const blob = response?.data instanceof Blob ? response.data : new Blob([response.data], { type: contentType });
+
+      return {
+        blob,
+        fileName: draftFile.fileName,
+      };
+    },
+    [thesis?.id],
+  );
+
+  const appendDraftFilesToSubmission = useCallback(
+    async formData => {
+      if (!formData) return formData;
+
+      if (!pdfFile && draftUploadedFiles.thesis) {
+        const thesisDraft = await fetchDraftUploadBlob('thesis', draftUploadedFiles.thesis, 'application/pdf');
+        if (thesisDraft) formData.append('thesisFile', thesisDraft.blob, thesisDraft.fileName);
+      }
+
+      if (!summaryPdf && draftUploadedFiles.summary) {
+        const summaryDraft = await fetchDraftUploadBlob('summary', draftUploadedFiles.summary, 'application/pdf');
+        if (summaryDraft) formData.append('thesisSummary', summaryDraft.blob, summaryDraft.fileName);
+      }
+
+      if (!supplementaryZip && draftUploadedFiles.additional) {
+        const additionalDraft = await fetchDraftUploadBlob(
+          'additional',
+          draftUploadedFiles.additional,
+          'application/zip',
+        );
+        if (additionalDraft) formData.append('additionalZip', additionalDraft.blob, additionalDraft.fileName);
+      }
+
+      return formData;
+    },
+    [draftUploadedFiles, fetchDraftUploadBlob, pdfFile, summaryPdf, supplementaryZip],
   );
 
   const toggleMotivation = (code, checked) => {
@@ -451,6 +488,7 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
     try {
       setShowConfirmationModal(false);
       const formData = buildConclusionFormData(false);
+      await appendDraftFilesToSubmission(formData);
       await API.sendThesisConclusionRequest(formData);
 
       setSubmissionOutcome('success');
@@ -471,6 +509,39 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
   const status = thesis?.status;
   const canRequestConclusion = status === 'ongoing';
 
+  const selectedLanguageLabel = selectedLanguage?.label ?? '-';
+  const selectedSdgLabels = useMemo(() => {
+    const selectedIds = [primarySdg, secondarySdg1, secondarySdg2].filter(
+      id => id !== '' && id !== null && id !== undefined,
+    );
+    const labels = selectedIds
+      .map(id => sdgOptions.find(option => option.value === id)?.label || `SDG ${id}`)
+      .filter(Boolean);
+    return [...new Set(labels)];
+  }, [primarySdg, secondarySdg1, secondarySdg2, sdgOptions]);
+
+  const selectedLicenseLabel = useMemo(() => {
+    const selected = licenses.find(license => Number(license.id) === Number(licenseChoice));
+    if (!selected) return '-';
+    return i18n.language === 'it' ? selected.name : selected.name_en || selected.name;
+  }, [licenses, licenseChoice, i18n.language]);
+
+  const selectedEmbargoLabels = useMemo(() => {
+    return embargoMotivations
+      .map(id => embargoMotivationsList.find(motivation => Number(motivation.id) === Number(id)))
+      .filter(Boolean)
+      .map(motivation =>
+        i18n.language === 'it' ? motivation.motivation : motivation.motivation_en || motivation.motivation,
+      );
+  }, [embargoMotivations, embargoMotivationsList, i18n.language]);
+
+  const declarationKeys =
+    authorization === 'authorize'
+      ? ['decl1', 'decl2', 'decl3', 'decl4', 'decl5', 'decl6']
+      : ['decl1', 'decl3', 'decl4', 'decl5', 'decl6'];
+  const declarationsTotalCount = authorization ? declarationKeys.length : 0;
+  const declarationsAcceptedCount = declarationKeys.filter(key => Boolean(decl[key])).length;
+
   const contextValue = useMemo(
     () => ({
       t,
@@ -485,6 +556,7 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
       languageOptions,
       lang,
       selectedLanguage,
+      selectedLanguageLabel,
       setLang,
 
       titleText,
@@ -514,6 +586,7 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
       setSecondarySdg1,
       secondarySdg2,
       setSecondarySdg2,
+      selectedSdgLabels,
 
       authorization,
       setAuthorization,
@@ -527,8 +600,10 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
 
       licenses,
       licenseChoice,
+      selectedLicenseLabel,
       setLicenseChoice,
       checkRecommendedLicense,
+      selectedEmbargoLabels,
 
       summaryPdf,
       setSummaryPdf,
@@ -545,6 +620,8 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
       decl,
       setDecl,
       allDeclarationsChecked,
+      declarationsAcceptedCount,
+      declarationsTotalCount,
 
       submissionOutcome,
       requiredSummary,
@@ -559,6 +636,7 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
       languageOptions,
       lang,
       selectedLanguage,
+      selectedLanguageLabel,
       titleText,
       titleEngText,
       abstractText,
@@ -573,13 +651,16 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
       primarySdg,
       secondarySdg1,
       secondarySdg2,
+      selectedSdgLabels,
       authorization,
       embargoMotivationsList,
       embargoMotivations,
+      selectedEmbargoLabels,
       otherEmbargoReason,
       embargoPeriod,
       licenses,
       licenseChoice,
+      selectedLicenseLabel,
       checkRecommendedLicense,
       summaryPdf,
       pdfFile,
@@ -590,6 +671,8 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
       removeFileText,
       decl,
       allDeclarationsChecked,
+      declarationsAcceptedCount,
+      declarationsTotalCount,
       submissionOutcome,
       requiredSummary,
     ],

@@ -20,6 +20,7 @@ export default function useConclusionValidation({
   requiredSummary,
   summaryPdf,
   pdfFile,
+  draftUploadedFiles,
 }) {
   const needsEnglishTranslation = lang !== 'en';
 
@@ -61,8 +62,11 @@ export default function useConclusionValidation({
     }
   };
 
-  const summaryValid = !requiredSummary || !!summaryPdf;
-  const baseValid = detailsValid && allDeclarationsChecked() && !!pdfFile && summaryValid;
+  const hasThesisUpload = !!pdfFile || !!draftUploadedFiles?.thesis;
+  const hasSummaryUpload = !!summaryPdf || !!draftUploadedFiles?.summary;
+  const summaryValid = !requiredSummary || hasSummaryUpload;
+  const uploadsValid = hasThesisUpload && summaryValid;
+  const baseValid = detailsValid && allDeclarationsChecked() && uploadsValid;
 
   const denyValid =
     authorization !== 'deny'
@@ -80,6 +84,7 @@ export default function useConclusionValidation({
     needsEnglishTranslation,
     detailsValid,
     allDeclarationsChecked,
+    uploadsValid,
     summaryValid,
     canSubmit,
     denyValid,

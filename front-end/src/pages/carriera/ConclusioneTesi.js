@@ -46,7 +46,7 @@ export default function ConclusioneTesi() {
     <>
       <CustomBreadcrumb />
       <div className="proposal-container justify-content-between d-flex tesi-header-bar tesi-header-bar--flush-right">
-        <CustomHeader title={t('carriera.conclusione_tesi.title')} action={() => navigate(-1)} />
+        <CustomHeader title={t('carriera.conclusione_tesi.title')} action={() => navigate('/carriera/tesi')} />
         {!requestSubmittedSuccess && (
           <div className="tesi-header-actions">
             <Button
