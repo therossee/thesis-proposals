@@ -382,11 +382,9 @@ export default function ConclusionRequest({ onSubmitResult, saveDraftTrigger = 0
 
       if (supervisor?.id) formData.append('supervisor', supervisor.id);
 
-      if (coSupervisors?.length) {
-        const toTeacher = makeTeacherOverviewPayload(teachers);
-        const coSupervisorsPayload = coSupervisors.map(toTeacher).filter(Boolean);
-        formData.append('coSupervisors', JSON.stringify(coSupervisorsPayload));
-      }
+      const toTeacher = makeTeacherOverviewPayload(teachers);
+      const coSupervisorsPayload = (coSupervisors || []).map(toTeacher).filter(Boolean);
+      formData.append('coSupervisors', JSON.stringify(coSupervisorsPayload));
 
       if (keywords?.length) {
         const keywordPayload = keywords.map(toKeywordPayload).filter(Boolean);

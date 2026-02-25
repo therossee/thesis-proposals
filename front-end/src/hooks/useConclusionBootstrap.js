@@ -182,7 +182,7 @@ export default function useConclusionBootstrap({
 
             if (draftData.licenseId) setLicenseChoice(draftData.licenseId);
 
-            if (Array.isArray(draftData.coSupervisors)) {
+            if (Array.isArray(draftData.coSupervisors) && draftData.thesisDraftDate) {
               setCoSupervisors(draftData.coSupervisors.map(toOption));
             }
 
